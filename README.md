@@ -6,7 +6,7 @@
 
 ---
 
-![Imagen de portada de Recetagram](./assets/Frame.png)
+![Imagen de portada de Recetagram](./src/assets/Frame.png)
 
 ## 📌 Idea de la Aplicación
 
@@ -99,7 +99,7 @@ Existen plataformas similares en el mercado, como:
 
 ## 💖 Apartado de Donaciones
 
-[![Donaciones](./assets/Boton-Donar2.png)](https://www.paypal.com/donate/?hosted_button_id=EB3DVQQSPB88Q)
+[![Donaciones](./src/assets/Boton-Donar2.png)](https://www.paypal.com/donate/?hosted_button_id=EB3DVQQSPB88Q)
 
 ---
 
