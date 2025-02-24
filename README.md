@@ -69,33 +69,45 @@ Existen plataformas similares en el mercado, como:
 
 ## 🎯 Roadmap de Desarrollo
 
+### Web minimos
+
 - [x] **Diseñar wireframe**
 - [x] **Diseñar maqueta**
-- [x] **Integrar maqueta a código**
 - [x] **Hacer README**
-- [x] **Publicar en redes**
-- [x] **Añadir botón de donaciones**
-- [x] **Diseño Responsive**
-- [x] **Implementar Iconos**
 - [x] **Implementar Sistema de "Likes"**
-- [ ] **Implementar Comentarios**
-- [x] **Implementar roles de admins 🍴**
-- [x] **Implementar roles de moderador 🍽️**
-- [x] **Implementar roles de verificado ✅**
 - [x] **Implementar Sistema de Compartir**
+- [x] **Diseño Responsive**
+- [ ] **Integrar maqueta a código**
 - [ ] **Implementar Perfiles por Cada Persona**
-- [ ] **Implementar Sistema de Aprobación de Publicaciones**
 - [ ] **Búsqueda de Recetas**
+- [ ] **Edición del perfil del usuario**
+- [ ] **Funcionalidades de Edición de Recetas**
+- [ ] **Integración de modo oscuro/claro**
+- [ ] **Integración de temas personalizados**
+---
+
+### Api minimos
+
+- [ ] **Implementar Comentarios**
+- [ ] **Implementar roles de admins 🍴**
+- [ ] **Implementar roles de moderador 🍽️**
+- [ ] **Implementar roles de verificado ✅**
+- [ ] **Implementar Sistema de Aprobación de Publicaciones**
 - [ ] **Categorización de Recetas**
 - [ ] **Sistema de Mensajería Privada**
-- [ ] **Edición del perfil del usuario**
 - [ ] **Notificaciones**
 - [ ] **Estadísticas de Recetas**
 - [ ] **Recetas Destacadas**
 - [ ] **Integración de Videos**
-- [ ] **Funcionalidades de Edición de Recetas**
 - [ ] **Eventos de Cocina**
 - [ ] **Logros**
+
+---
+### Opcionales
+
+- [x] **Publicar en redes**
+- [x] **Añadir botón de donaciones**
+
 
 ## 💖 Apartado de Donaciones
 

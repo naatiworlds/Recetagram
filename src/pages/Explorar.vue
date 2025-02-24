@@ -1,5 +1,4 @@
 <template>
-
   <Posts />
 </template>
 
@@ -8,19 +7,13 @@ import Posts from '../components/Posts.vue';
 
 export default {
   components: {
-    Posts,
-  },
-  data() {
-    return {
-      menuVisible: true, // El menú inicia visible
-    };
+    Posts
   },
   
 };
 </script>
 
 <style scoped>
-
 .oculto~#main {
   position: absolute;
   top: 9%;
