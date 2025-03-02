@@ -1,10 +1,13 @@
 <template>
-  <button id="scrollLeftButton"><i class="fa-solid fa-arrow-left"></i></button>
-  <button id="scrollRightButton"><i class="fa-solid fa-arrow-right"></i></button>
-
   <main id="main" ref="mainContainer">
     <div id="main-scroll-container">
-      <section id="publicaciones">
+      <!-- Botón para mover hacia la izquierda -->
+      <button id="scrollLeftButton" @click="scrollLeft">
+        <i class="fa-solid fa-arrow-left"></i>
+      </button>
+
+      <!-- Contenedor de publicaciones -->
+      <section id="publicaciones" ref="publicaciones">
         <article v-for="(post, index) in posts" :key="post.id" :id="'post-' + post.id">
           <div class="post-header">
             <img :src="getProfileImage(post)" alt="Profile image" class="profile-img" />
@@ -14,7 +17,7 @@
             </div>
           </div>
 
-          <img :src="getPostImage(post)" alt="Post image" class="post-img" @error="handleImageError" />
+          <img :src="getPostImage(post)" alt="Post image" class="post-img" />
           <h2>{{ post.title }}</h2>
           <p>{{ post.description }}</p>
           <div class="ingredients">
@@ -27,17 +30,24 @@
           <p><strong>Date:</strong> {{ new Date(post.created_at).toLocaleDateString() }}</p>
 
           <div class="actions">
-            <i :id="'tenedor' + index" class="fas fa-utensils" :class="{ liked: likedPosts.includes(index) }"
-              @click="toggleLike(index)"></i>
-            <span :id="'numeroTenedor' + index">{{ likeCounters[index] || 0 }}</span>
+            <i :id="'tenedor' + index" class="fas fa-utensils like-button" :class="{ liked: likedPosts.includes(index) }"
+              @click="toggleLike(index)">
+              <span :id="'numeroTenedor' + index">{{ likeCounters[index] || 0 }}</span>
+            </i>
 
-            <i class="fa-solid fa-comments"></i>
-            <span>0</span>
+            <i class="fa-solid fa-comments comment-button">
+              <span>0</span>
+            </i>
 
-            <i class="fa-solid fa-share" @click="compartirPost(index, post.image)"></i>
+            <i class="fa-solid fa-share share-button" @click="compartirPost(index, post.image)"></i>
           </div>
         </article>
       </section>
+
+      <!-- Botón para mover hacia la derecha -->
+      <button id="scrollRightButton" @click="scrollRight">
+        <i class="fa-solid fa-arrow-right"></i>
+      </button>
     </div>
   </main>
 </template>
@@ -56,57 +66,53 @@ export default {
   },
   mounted() {
     fetch(`${API_BASE_URL}/posts`)
-      .then(response => response.json())
-      .then(response => {
-        console.log('API Response:', response);
+      .then((response) => response.json())
+      .then((response) => {
+        console.log("API Response:", response);
         if (response && response.data) {
-          // Simply use the data array as is, without mapping
           this.posts = Array.isArray(response.data) ? response.data : [response.data];
         } else {
-          console.error('Invalid response format:', response);
+          console.error("Invalid response format:", response);
           this.posts = [];
         }
         const fragmento = window.location.hash.substring(1);
         post(fragmento);
       })
-      .catch(error => {
-        console.error('Error fetching posts:', error);
+      .catch((error) => {
+        console.error("Error fetching posts:", error);
         this.posts = [];
       });
-
-    this.addScrollListeners();
   },
   methods: {
-    addScrollListeners() {
-      const scrollLeftButton = document.getElementById("scrollLeftButton");
-      const scrollRightButton = document.getElementById("scrollRightButton");
-      const mainContainer = this.$refs.mainContainer;
-
-      scrollLeftButton.addEventListener("click", () => {
-        // Desplazar hacia la izquierda
-        mainContainer.scrollLeft -= ANIMATION.SCROLL_AMOUNT; // Puedes ajustar la cantidad de desplazamiento según tus necesidades
-      });
-
-      scrollRightButton.addEventListener("click", () => {
-        // Desplazar hacia la derecha
-        mainContainer.scrollLeft += ANIMATION.SCROLL_AMOUNT; // Puedes ajustar la cantidad de desplazamiento según tus necesidades
+    scrollLeft() {
+      const publicaciones = this.$refs.publicaciones;
+      const postCardWidth = publicaciones.children[0].offsetWidth ; // Obtener el ancho de un post
+      publicaciones.scrollBy({
+        left: -postCardWidth,  // Desplazar hacia la izquierda en el ancho de un post
+        behavior: "smooth",    // Desplazamiento suave
       });
     },
 
+    scrollRight() {
+      const publicaciones = this.$refs.publicaciones;
+      const postCardWidth = publicaciones.children[0].offsetWidth ; // Obtener el ancho de un post
+      publicaciones.scrollBy({
+        left: postCardWidth + 20,   // Desplazar hacia la derecha en el ancho de un post
+        behavior: "smooth",    // Desplazamiento suave
+      });
+    },
     toggleLike(index) {
       const tenedorIcon = document.getElementById(`tenedor${index}`);
       const numeroTenedor = document.getElementById(`numeroTenedor${index}`);
 
       if (this.likedPosts.includes(index)) {
-        // Se quita el like (partículas rojas)
         this.likeCounters[index] = (this.likeCounters[index] || 1) - 1;
         this.likedPosts = this.likedPosts.filter(i => i !== index);
-        this.crearParticulas(tenedorIcon, "#18C894"); // Color rojo
+        this.crearParticulas(tenedorIcon, "#18C894");
       } else {
-        // Se da like (partículas verdes)
         this.likeCounters[index] = (this.likeCounters[index] || 0) + 1;
         this.likedPosts.push(index);
-        this.crearParticulas(tenedorIcon, "#18C894"); // Color verde
+        this.crearParticulas(tenedorIcon, "#18C894");
       }
 
       numeroTenedor.textContent = this.likeCounters[index];
@@ -115,6 +121,19 @@ export default {
       localStorage.setItem("likedPosts", JSON.stringify(this.likedPosts));
     },
 
+    compartirPost(index, imagenSrc) {
+      const enlaceUnico = `${window.location.href.split("#")[0]}#post-${index}`;
+
+      if (navigator.share) {
+        navigator.share({
+          title: "Recetagram",
+          text: "¡Mira esta increíble receta en Recetagram!",
+          url: enlaceUnico
+        });
+      } else {
+        alert("La funcionalidad de compartir no está disponible en este navegador.");
+      }
+    },
     crearParticulas(element) {
       const rect = element.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2 + window.scrollX;
@@ -156,37 +175,19 @@ export default {
       }
     },
 
-    compartirPost(index, imagenSrc) {
-      const enlaceUnico = `${window.location.href.split("#")[0]}#post-${index}`;
-
-      if (navigator.share) {
-        navigator.share({
-          title: "Recetagram",
-          text: "¡Mira esta increíble receta en Recetagram!",
-          url: enlaceUnico
-        });
-      } else {
-        alert("La funcionalidad de compartir no está disponible en este navegador.");
-      }
-    },
-
     getProfileImage(post) {
-      if (post.user && post.user.avatar) {
-        return `${STORAGE_URL}/${post.user.avatar}`;
-      }
-      // Fallback a un avatar generado usando el nombre del usuario
-      return `${DEFAULT_AVATAR_URL}/?name=${encodeURIComponent(post.user?.name || 'User')}&background=random`;
+      return post.user && post.user.avatar
+        ? `${STORAGE_URL}/${post.user.avatar}`
+        : `${DEFAULT_AVATAR_URL}/?name=${encodeURIComponent(post.user?.name || 'User')}&background=random`;
     },
 
     getPostImage(post) {
-      if (post.imagen && post.imagen.startsWith('http')) {
-        return post.imagen;
-      }
-      return `${STORAGE_URL}/${post.imagen}`;
+      return post.imagen && post.imagen.startsWith('http')
+        ? post.imagen
+        : `${STORAGE_URL}/${post.imagen}`;
     },
 
     handleImageError(e) {
-      // Establecer una imagen por defecto si la carga falla
       e.target.src = 'ruta/a/tu/imagen/por/defecto.jpg';
     }
   }
@@ -194,19 +195,15 @@ export default {
 </script>
 
 <style scoped>
-/* Estilos CSS */
 #main {
   grid-area: var(--main-area);
-  width: 100%;
+  width: 90%;
   overflow-y: hidden;
   scroll-behavior: smooth;
   -ms-overflow-style: none;
-  /* IE and Edge */
   scrollbar-width: none;
-  /* Firefox */
-  margin: 5% 0;
-  overflow-y: hidden;
-  overflow-y: -webkit-hidden-unscrollable;
+  margin: 5% auto;
+  position: relative;
 }
 
 #scrollLeftButton,
@@ -219,43 +216,55 @@ export default {
   background-color: var(--contrast-color);
   color: #FEFDF4;
   position: absolute;
-  top: 50%;
+  top: 42%;
   transform: translateY(-50%);
+  z-index: 10;
+  height: 500px; /* Aumentamos la altura por defecto */
+
 }
 
 #scrollLeftButton {
-  left: 20%;
+  left: 0;
 }
 
 #scrollRightButton {
-  right: 10px;
-}
-
-#main-scroll-container {
-  position: relative; /* Necesario para que los botones se posicionen correctamente */
-  display: flex;
-  width: 100%;
+  right: 0;
 }
 
 #publicaciones {
   display: flex;
-  gap: 30px;
+  gap: 20px;
   flex-wrap: nowrap;
   margin: 0 auto;
+  overflow-x: scroll;
+  scrollbar-width: none;
+  padding-bottom: 20px;
+  width: calc(100% - 80px);
+  box-sizing: border-box;
+  scroll-behavior: smooth; /* Desplazamiento suave */
 }
 
 article {
   text-align: center;
-  padding: 15px 50px;
+  padding: 20px 40px;
   background-color: var(--sombra-color);
   border-radius: 10px;
   color: var(--text-color);
+  min-width: calc(33.33% - 20px);
+  max-width: calc(33.33% - 20px);
+  flex-shrink: 0;
+  height: 500px; /* Aumentamos la altura por defecto */
+  display: flex;
+  flex-direction: column;
+  
 }
-.post-header{
+
+.post-header {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 .profile-img {
   width: 55px;
   border-radius: 50%;
@@ -263,10 +272,10 @@ article {
 }
 
 .post-img {
-  max-width: 280px;
-  cursor: pointer;
-  aspect-ratio: 1 / 1;
-  object-fit: fill;
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  border-radius: 10px;
 }
 
 .actions {
@@ -276,26 +285,27 @@ article {
 }
 
 .actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  cursor: pointer;
+}
+.like-button,
+.share-button,
+.comment-button {
+  padding: 8px 16px;
+  background-color: var(--contrast-color);
+  border: none;
+  color: #fff;
+  border-radius: 5px;
   cursor: pointer;
 }
 
-.particle {
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  background-color: #18C894;
-  border-radius: 50%;
-  animation: particleAnimation 1s ease-out;
-  z-index: 1000;
+.like-button span,
+.share-button span,
+.comment-button span {
+  margin-left: 10px;
 }
-
-@keyframes particleAnimation {
-  to {
-    transform: translate(0, -30px) scale(0);
-    opacity: 0;
-  }
-}
-
 .user-info {
   display: flex;
   align-items: center;
@@ -318,7 +328,6 @@ article {
 
 .ingredient-tags {
   display: flex;
-  justify-content: center;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 8px;
@@ -331,5 +340,48 @@ article {
   font-size: 0.9em;
   color: #333;
   display: inline-block;
+}
+.particle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: #18C894;
+  border-radius: 50%;
+  animation: particleAnimation 1s ease-out;
+  z-index: 1000;
+}
+
+@keyframes particleAnimation {
+  to {
+    transform: translate(0, -30px) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Media queries para ajuste responsivo */
+@media (max-width: 768px) {
+  article {
+    height: 450px; /* Aumentamos la altura a 450px en pantallas medianas */
+    min-width: calc(50% - 20px); /* Mostrar dos publicaciones por fila */
+    max-width: calc(50% - 20px);
+  }
+
+  #publicaciones {
+    width: calc(100% - 60px); /* Ajuste de ancho */
+  }
+}
+
+
+
+@media (max-width: 480px) {
+  article {
+    height: 350px; /* Aumentamos la altura en pantallas pequeñas */
+    min-width: calc(100% - 20px); /* Mostrar una publicación por fila */
+    max-width: calc(100% - 20px);
+  }
+
+  #publicaciones {
+    width: calc(100% - 40px); /* Ajuste de ancho */
+  }
 }
 </style>
