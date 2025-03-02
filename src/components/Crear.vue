@@ -1,7 +1,7 @@
 <template>
   <div class="modal-overlay" @click.self="closeModal">
     <div class="modal-content">
-      <button class="close-button" @click="closeModal">×</button>
+      
       <section>
         <header>
           <details id="theme">
@@ -20,6 +20,7 @@
             </label>
           </details>
           <h2>Subir un nuevo post</h2>
+          <button class="close-button" @click="closeModal">×</button>
         </header>
         <main class="crear-main">
           <form @submit.prevent="submitPost" id="form">
@@ -167,23 +168,24 @@ export default {
 
 .modal-content {
   position: relative;
-  padding: 20px;
   border-radius: 10px;
-  max-width: 600px;
-  width: 100%;
+  max-width: 35%; /* Aumenta el ancho máximo */
+  width: 90%; /* Usa un porcentaje para adaptarlo a la pantalla */
+  background: var(--secundary-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .close-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
   background: none;
   border: none;
   font-size: 40px;
   cursor: pointer;
   color: var(--text-color-important);
+  align-self: center; /* Centra el botón horizontalmente */
+  margin-bottom: 10px;
 }
-
 header {
   display: flex;
   flex-wrap: wrap;
@@ -210,7 +212,7 @@ section {
   gap: 5px;
   background-color: var(--secundary-color);
   border-radius: 10px;
-  margin: 2em auto;
+  width: 100%;
 }
 
 section header {
@@ -230,17 +232,16 @@ section header h2 {
 }
 
 section main {
-  margin: 10px 0;
-  padding: 0 40px;
+  width: 90%;
+  font-size: 24px;
 }
 
 section main form {
-  margin: 20px auto;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  gap: 10px;
+  gap: .5em;
 }
 
 section main form label {
@@ -304,29 +305,5 @@ footer .mobile-apps button i {
   margin: 0 5px;
 }
 
-@media screen and (max-width: 500px) {
-  header h2 {
-    font-size: 25px;
-  }
 
-  section {
-    width: 90%;
-  }
-
-  section main form {
-    width: 100%;
-  }
-
-  section main form a {
-    font-size: 12px;
-  }
-
-  section main form span {
-    font-size: 12px;
-  }
-
-  .registro {
-    font-size: 12px;
-  }
-}
 </style>

@@ -1,25 +1,34 @@
 <template>
-  <button id="scrollRightButton"><i class="fa-solid fa-arrow-right"></i></button>
   <button id="scrollLeftButton"><i class="fa-solid fa-arrow-left"></i></button>
+  <button id="scrollRightButton"><i class="fa-solid fa-arrow-right"></i></button>
 
-  <main id="main">
+  <main id="main" ref="mainContainer">
     <div id="main-scroll-container">
       <section id="publicaciones">
         <article v-for="(post, index) in posts" :key="post.id" :id="'post-' + post.id">
           <div class="post-header">
-            <img :src="post.profileImage" alt="Profile image" class="profile-img" />
-            <h3>{{ post.author }}</h3>
+            <img :src="getProfileImage(post)" alt="Profile image" class="profile-img" />
+            <div class="user-info">
+              <h3>{{ post.user.name }}</h3>
+              <span class="user-role">{{ post.user.role }}</span>
+            </div>
           </div>
 
-          <img :src="post.image" alt="Post image" class="post-img" />
+          <img :src="getPostImage(post)" alt="Post image" class="post-img" @error="handleImageError" />
           <h2>{{ post.title }}</h2>
-          <p>{{ post.content }}</p>
-          <p><strong>Date:</strong> {{ post.date }}</p>
+          <p>{{ post.description }}</p>
+          <div class="ingredients">
+            <div class="ingredient-tags">
+              <span v-for="(ingredient, idx) in post.ingredients" :key="idx" class="ingredient-tag">
+                {{ ingredient.name }} - {{ ingredient.quantity }}
+              </span>
+            </div>
+          </div>
+          <p><strong>Date:</strong> {{ new Date(post.created_at).toLocaleDateString() }}</p>
 
           <div class="actions">
             <i :id="'tenedor' + index" class="fas fa-utensils" :class="{ liked: likedPosts.includes(index) }"
-              @click="toggleLike(index)">
-            </i>
+              @click="toggleLike(index)"></i>
             <span :id="'numeroTenedor' + index">{{ likeCounters[index] || 0 }}</span>
 
             <i class="fa-solid fa-comments"></i>
@@ -35,7 +44,7 @@
 
 <script>
 import { post } from '../utils/post.js';
-import { nextTick } from 'vue';
+import { API_BASE_URL, STORAGE_URL, ANIMATION, DEFAULT_AVATAR_URL } from '../utils/globalConstants';
 
 export default {
   data() {
@@ -46,21 +55,44 @@ export default {
     };
   },
   mounted() {
-    fetch("/posts.json")
+    fetch(`${API_BASE_URL}/posts`)
       .then(response => response.json())
-      .then(data => {
-        this.posts = data.map((post, index) => ({
-          ...post,
-          profileImage: `https://xsgames.co/randomusers/assets/avatars/pixel/${index}.jpg`
-        }));
-        // Llamar a la función post después de cargar los posts
-        nextTick(() => {
-          const fragmento = window.location.hash.substring(1);
-          post(fragmento);
-        });
+      .then(response => {
+        console.log('API Response:', response);
+        if (response && response.data) {
+          // Simply use the data array as is, without mapping
+          this.posts = Array.isArray(response.data) ? response.data : [response.data];
+        } else {
+          console.error('Invalid response format:', response);
+          this.posts = [];
+        }
+        const fragmento = window.location.hash.substring(1);
+        post(fragmento);
+      })
+      .catch(error => {
+        console.error('Error fetching posts:', error);
+        this.posts = [];
       });
+
+    this.addScrollListeners();
   },
   methods: {
+    addScrollListeners() {
+      const scrollLeftButton = document.getElementById("scrollLeftButton");
+      const scrollRightButton = document.getElementById("scrollRightButton");
+      const mainContainer = this.$refs.mainContainer;
+
+      scrollLeftButton.addEventListener("click", () => {
+        // Desplazar hacia la izquierda
+        mainContainer.scrollLeft -= ANIMATION.SCROLL_AMOUNT; // Puedes ajustar la cantidad de desplazamiento según tus necesidades
+      });
+
+      scrollRightButton.addEventListener("click", () => {
+        // Desplazar hacia la derecha
+        mainContainer.scrollLeft += ANIMATION.SCROLL_AMOUNT; // Puedes ajustar la cantidad de desplazamiento según tus necesidades
+      });
+    },
+
     toggleLike(index) {
       const tenedorIcon = document.getElementById(`tenedor${index}`);
       const numeroTenedor = document.getElementById(`numeroTenedor${index}`);
@@ -88,7 +120,7 @@ export default {
       const centerX = rect.left + rect.width / 2 + window.scrollX;
       const centerY = rect.top + rect.height / 2 + window.scrollY;
 
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < ANIMATION.PARTICLE_COUNT; i++) {
         const particle = document.createElement("div");
         particle.style.zIndex = '1';
 
@@ -120,7 +152,7 @@ export default {
 
         setTimeout(() => {
           particle.remove();
-        }, 1000); // Espera un poco más para evitar que desaparezcan instantáneamente
+        }, 1000);
       }
     },
 
@@ -136,15 +168,36 @@ export default {
       } else {
         alert("La funcionalidad de compartir no está disponible en este navegador.");
       }
+    },
+
+    getProfileImage(post) {
+      if (post.user && post.user.avatar) {
+        return `${STORAGE_URL}/${post.user.avatar}`;
+      }
+      // Fallback a un avatar generado usando el nombre del usuario
+      return `${DEFAULT_AVATAR_URL}/?name=${encodeURIComponent(post.user?.name || 'User')}&background=random`;
+    },
+
+    getPostImage(post) {
+      if (post.imagen && post.imagen.startsWith('http')) {
+        return post.imagen;
+      }
+      return `${STORAGE_URL}/${post.imagen}`;
+    },
+
+    handleImageError(e) {
+      // Establecer una imagen por defecto si la carga falla
+      e.target.src = 'ruta/a/tu/imagen/por/defecto.jpg';
     }
   }
 };
 </script>
 
 <style scoped>
+/* Estilos CSS */
 #main {
   grid-area: var(--main-area);
-  width: 88%;
+  width: 100%;
   overflow-y: hidden;
   scroll-behavior: smooth;
   -ms-overflow-style: none;
@@ -166,39 +219,43 @@ export default {
   background-color: var(--contrast-color);
   color: #FEFDF4;
   position: absolute;
-  top: 10%;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 #scrollLeftButton {
-  left: 30%;
+  left: 20%;
 }
 
 #scrollRightButton {
-  right: 25%;
+  right: 10px;
 }
 
 #main-scroll-container {
+  position: relative; /* Necesario para que los botones se posicionen correctamente */
   display: flex;
   width: 100%;
-  margin: 50px 0;
 }
 
 #publicaciones {
   display: flex;
-  gap: 20px;
+  gap: 30px;
   flex-wrap: nowrap;
   margin: 0 auto;
 }
 
 article {
-  max-width: 400px;
   text-align: center;
-  padding: 20px;
+  padding: 15px 50px;
   background-color: var(--sombra-color);
   border-radius: 10px;
   color: var(--text-color);
 }
-
+.post-header{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 .profile-img {
   width: 55px;
   border-radius: 50%;
@@ -206,10 +263,9 @@ article {
 }
 
 .post-img {
-  max-width: 300px;
-  max-height: 300px;
+  max-width: 280px;
   cursor: pointer;
-  aspect-ratio: 4 / 4;
+  aspect-ratio: 1 / 1;
   object-fit: fill;
 }
 
@@ -238,5 +294,42 @@ article {
     transform: translate(0, -30px) scale(0);
     opacity: 0;
   }
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-role {
+  background-color: var(--contrast-color);
+  color: #FEFDF4;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  text-transform: capitalize;
+}
+
+.ingredients {
+  text-align: left;
+  margin: 15px 0;
+}
+
+.ingredient-tags {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.ingredient-tag {
+  background-color: #e9e9e9;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.9em;
+  color: #333;
+  display: inline-block;
 }
 </style>

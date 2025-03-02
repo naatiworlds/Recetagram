@@ -63,14 +63,16 @@
 </template>
 
 <script>
+import { DEFAULT_AVATAR_URL } from '../utils/globalConstants';
 import logo from "../assets/descarga.png";
 import setupTheme from "../utils/changeLightDark";
+
 export default {
     data() {
         return {
             imagen: logo,
+            avatarUrl: DEFAULT_AVATAR_URL,
             isDarkMode: false,
-
         }
     },
     mounted() {
@@ -87,7 +89,7 @@ export default {
 </script>
 
 <style scoped>
-div #header {
+#header {
     grid-area: var(--header-area);
     background-color: var(--primary-color);
     color: var(--text-color-important);

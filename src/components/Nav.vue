@@ -2,18 +2,30 @@
   <aside id="aside" :class="{ 'oculto': !menuVisible }">
     <nav>
       <ul>
-        <li><a href="/" class="nav-normal"><i class="fa-solid fa-house"></i> Inicio</a></li>
-        <li class="nav-icon"><a href="/" class="nav-icon"><i class="fa-solid fa-house"></i></a></li>
+        <li><router-link to="/" class="nav-normal"><i class="fa-solid fa-house"></i> Inicio</router-link></li>
+        <li class="nav-icon"><router-link to="/" class="nav-icon"><i class="fa-solid fa-house"></i></router-link></li>
 
-        <li><a href="/explorar" class="nav-normal"><i class="fa-solid fa-magnifying-glass"></i> Explorar</a></li>
-        <li class="nav-icon"><a href="/explorar" class="nav-icon"><i class="fa-solid fa-magnifying-glass"></i></a></li>
+        <li><router-link to="/explorar" class="nav-normal"><i class="fa-solid fa-magnifying-glass"></i> Explorar</router-link></li>
+        <li class="nav-icon"><router-link to="/explorar" class="nav-icon"><i class="fa-solid fa-magnifying-glass"></i></router-link></li>
 
-        <li><a href="#" @click.prevent="openModal" class="nav-normal"><i class="fa-solid fa-upload"></i> Crear</a></li>
-        <li class="nav-icon"><a href="#" @click.prevent="openModal" class="nav-icon"><i
+        <li><a href="#" @click.prevent="handleCrearClick" class="nav-normal"><i class="fa-solid fa-upload"></i> Crear</a></li>
+        <li class="nav-icon"><a href="#" @click.prevent="handleCrearClick" class="nav-icon"><i
               class="fa-solid fa-upload"></i></a></li>
 
-        <li><a href="/sesion" class="nav-normal"><i class="fa-solid fa-user"></i> Perfil</a></li>
-        <li class="nav-icon"><a href="/sesion" class="nav-icon"><i class="fa-solid fa-user"></i></a></li>
+        <li><a href="#" @click.prevent="handleProfileClick" class="nav-normal"><i class="fa-solid fa-user"></i> Perfil</a></li>
+        <li class="nav-icon"><a href="#" @click.prevent="handleProfileClick" class="nav-icon"><i class="fa-solid fa-user"></i></a></li>
+
+        <!-- Añadir el botón de logout -->
+        <li v-if="isAuthenticated">
+          <a href="#" @click.prevent="handleLogout" class="nav-normal">
+            <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+          </a>
+        </li>
+        <li v-if="isAuthenticated" class="nav-icon">
+          <a href="#" @click.prevent="handleLogout" class="nav-icon">
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </a>
+        </li>
 
         <li id="mensajes"><a href="#"><i class="fa-solid fa-message mensajes"></i> Mensajes </a></li>
 
@@ -55,21 +67,24 @@
           </li>
           <li id="copy">
             <div>
-              <a>&copy; 2024 Recetagram - Comparte tu cocina</a>
+              <a>&copy; 2025 Recetagram - Comparte tu cocina</a>
             </div>
           </li>
         </footer>
       </ul>
     </nav>
-    <Crear v-if="showModal" @close="showModal = false" />
+    <Crear v-if="showCrearModal" @close="closeModal" />
   </aside>
 </template>
 
 <script>
-import { changeTheme } from "../utils/changeTheme";
-import Crear from "./Crear.vue";
+import { changeTheme } from "../utils/changeTheme"
+import Crear from "./Crear.vue"
+import { useAuthStore } from '../stores/auth'
+import { useNotificationStore } from '../stores/notification'
 
 export default {
+  name: 'Nav',
   components: {
     Crear
   },
@@ -81,23 +96,58 @@ export default {
   },
   data() {
     return {
-      showModal: false
-    };
+      showCrearModal: false,
+      authStore: useAuthStore(),
+      notificationStore: useNotificationStore()
+    }
+  },
+  computed: {
+    isAuthenticated() {
+      return this.authStore.isAuthenticated
+    }
   },
   methods: {
-    openModal() {
-      this.showModal = true;
+    handleLogout() {
+      this.authStore.logout()
+      this.notificationStore.showNotification('Has cerrado sesión correctamente', 'success', 3000)
+      this.$router.push('/login')
+    },
+    handleCrearClick() {
+      if (!this.isAuthenticated) {
+        this.notificationStore.showNotification(
+          'Debes iniciar sesión para crear un nuevo post',
+          'error',
+          5000
+        )
+        this.$router.push('/login')
+        return
+      }
+      this.showCrearModal = true
+    },
+    closeModal() {
+      this.showCrearModal = false
+    },
+    handleProfileClick() {
+      if (!this.isAuthenticated) {
+        this.notificationStore.showNotification(
+          'Debes iniciar sesión para ver tu perfil',
+          'error',
+          5000
+        )
+        this.$router.push('/login')
+        return
+      }
+      this.$router.push('/sesion')
     },
     setTheme(event) {
-      const selectedTheme = event.target.value;
-      changeTheme(selectedTheme);
-
+      const selectedTheme = event.target.value
+      changeTheme(selectedTheme)
       if (selectedTheme === "default") {
-        location.reload();
+        location.reload()
       }
     }
   }
-};
+}
 </script>
 
 <style scoped>

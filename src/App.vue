@@ -1,11 +1,13 @@
 <script>
 import Header from "./shared/Header.vue";
 import Nav from "./components/Nav.vue";
+import Notification from './components/Notification.vue'
 
 export default {
   components: {
     Header,
-    Nav
+    Nav,
+    Notification
   },
   
   data() {
@@ -20,6 +22,7 @@ export default {
 <template>
   <Header @toggle-menu="menuVisible = !menuVisible" />
   <Nav :menuVisible="menuVisible" />
+  <Notification />
   <router-view />
 
 </template>

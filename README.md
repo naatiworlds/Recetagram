@@ -77,25 +77,30 @@ Existen plataformas similares en el mercado, como:
 - [x] **Implementar Sistema de "Likes"**
 - [x] **Implementar Sistema de Compartir**
 - [x] **Diseño Responsive**
-- [ ] **Integrar maqueta a código**
+- [x] **Implementar Sistema de Login**
+- [x] **Implementar Sistema de Registro**
+- [x] **Implementar Sistema de alertas**
+- [x] **Implementar Sistema de Temas**
+- [x] **Integrar maqueta a código**
+- [ ] **Implementar Sistema de Notificaciones de usuario (likes, comentarios en post, nuevas subidas... )**
 - [ ] **Implementar Perfiles por Cada Persona**
-- [ ] **Búsqueda de Recetas**
+- [ ] **Búsqueda de Recetas ( filtros )**
 - [ ] **Edición del perfil del usuario**
-- [ ] **Funcionalidades de Edición de Recetas**
+- [ ] **Funcionalidades de Edición de Recetas en los posts mediante el perfil**
 - [ ] **Integración de modo oscuro/claro**
 - [ ] **Integración de temas personalizados**
 ---
 
 ### Api minimos
 
-- [ ] **Implementar Comentarios**
-- [ ] **Implementar roles de admins 🍴**
-- [ ] **Implementar roles de moderador 🍽️**
-- [ ] **Implementar roles de verificado ✅**
+- [x] **Implementar roles de admins 🍴**
+- [x] **Implementar roles de moderador 🍽️**
+- [x] **Implementar roles de verificado ✅**
+- [ ] **Implementar Comentarios en los posts**
 - [ ] **Implementar Sistema de Aprobación de Publicaciones**
 - [ ] **Categorización de Recetas**
 - [ ] **Sistema de Mensajería Privada**
-- [ ] **Notificaciones**
+- [ ] **Notificaciones de usuario (likes, comentarios en post, nuevas subidas... )**
 - [ ] **Estadísticas de Recetas**
 - [ ] **Recetas Destacadas**
 - [ ] **Integración de Videos**

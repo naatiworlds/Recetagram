@@ -1,7 +1,7 @@
-@import url(./variables.css);
-@import url(./general.css);
-@import url(./reset.css);
-@import url(./header.css);
-@import url(./aside.css);
-@import url(./main.css);
-@import url(./responsive.css);
+@import './variables.css';
+@import './general.css';
+@import './reset.css';
+@import './header.css';
+@import './aside.css';
+@import './main.css';
+@import './responsive.css';
