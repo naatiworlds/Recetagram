@@ -12,7 +12,7 @@
         <li class="nav-icon"><a href="#" @click.prevent="handleCrearClick" class="nav-icon"><i
               class="fa-solid fa-upload"></i></a></li>
 
-        <li><a href="#" @click.prevent="handleProfileClick" class="nav-normal"><i class="fa-solid fa-user"></i> Perfil</a></li>
+        <li><a href="/profile" @click.prevent="handleProfileClick" class="nav-normal"><i class="fa-solid fa-user"></i> Perfil</a></li>
         <li class="nav-icon"><a href="#" @click.prevent="handleProfileClick" class="nav-icon"><i class="fa-solid fa-user"></i></a></li>
 
         <!-- Añadir el botón de logout -->
@@ -137,7 +137,7 @@ export default {
         this.$router.push('/login')
         return
       }
-      this.$router.push('/sesion')
+      this.$router.push('/profile')
     },
     setTheme(event) {
       const selectedTheme = event.target.value
@@ -153,29 +153,38 @@ export default {
 <style scoped>
 #aside {
   grid-area: var(--aside-area);
-  max-width: var(--aside-width);
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   transition: transform 0.1s ease-in;
   background-color: var(--primary-color);
+  display: flex;
+  flex-direction: column;
 }
 
 .oculto {
   transform: translateX(-100%);
 }
 
+nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+nav ul {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  font-size: 20px;
+  background-color: var(--primary-color);
+  padding: var(--espaciado);
+}
+/* Ocultar los iconos por defecto */
 .nav-icon {
   display: none;
 }
-
-nav ul {
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
-  font-size: 20px;
-  background-color: var(--primary-color);
+footer {
+  margin-top: auto;  /* Empuja el footer al final del contenedor */
 }
-
 nav ul li {
   padding: var(--espaciado);
 }
@@ -239,5 +248,68 @@ nav label:hover {
 nav details label {
   margin: 0 25px;
   display: block;
+}
+/* Ocultar los iconos por defecto */
+.nav-icon {
+  display: none;
+}
+
+@media only screen and (max-width: 600px) {
+  #aside {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 40px; /* Altura fija para la barra de navegación */
+    z-index: 1000;
+  }
+
+  nav {
+    height: 100%; /* Que ocupe el 100% de la altura del aside */
+    position: relative; /* Para asegurar que se mantiene dentro del aside */
+  }
+
+  nav ul {
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    height: 100%; /* Que ocupe el 100% de la altura del nav */
+    padding: 0;
+    background-color: var(--primary-color);
+    margin: 0; /* Eliminar márgenes */
+  }
+
+  nav ul li {
+    padding: 5px 10px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Ocultar los elementos con texto */
+  .nav-normal {
+    display: none;
+  }
+
+  /* Mostrar solo los elementos con iconos */
+  .nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+
+  /* Ocultar elementos adicionales */
+  #mensajes,
+  #theme,
+  footer {
+    display: none;
+  }
+
+  .nav-icon i {
+    font-size: 18px;
+    color: var(--text-color);
+  }
 }
 </style>

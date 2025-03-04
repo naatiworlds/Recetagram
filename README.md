@@ -82,21 +82,24 @@ Existen plataformas similares en el mercado, como:
 - [x] **Implementar Sistema de alertas**
 - [x] **Implementar Sistema de Temas**
 - [x] **Integrar maqueta a código**
-- [ ] **Implementar Sistema de Notificaciones de usuario (likes, comentarios en post, nuevas subidas... )**
+- [x] **Implementar Sistema de Comentarios**
+- [x] **Contador de Comentarios en Posts**
+- [x] **Modal de Comentarios con Cierre al Click Fuera**
+- [ ] **Sistema de Notificaciones de usuario (likes, comentarios en post, nuevas subidas... )**
 - [ ] **Implementar Perfiles por Cada Persona**
 - [ ] **Búsqueda de Recetas ( filtros )**
 - [ ] **Edición del perfil del usuario**
 - [ ] **Funcionalidades de Edición de Recetas en los posts mediante el perfil**
 - [ ] **Integración de modo oscuro/claro**
 - [ ] **Integración de temas personalizados**
----
 
 ### Api minimos
 
 - [x] **Implementar roles de admins 🍴**
 - [x] **Implementar roles de moderador 🍽️**
 - [x] **Implementar roles de verificado ✅**
-- [ ] **Implementar Comentarios en los posts**
+- [x] **Implementar Comentarios en los posts**
+- [x] **CRUD completo de comentarios**
 - [ ] **Implementar Sistema de Aprobación de Publicaciones**
 - [ ] **Categorización de Recetas**
 - [ ] **Sistema de Mensajería Privada**

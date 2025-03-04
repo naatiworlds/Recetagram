@@ -78,147 +78,131 @@ export default {
 section {
     grid-area: var(--main-area);
     background-color: var(--secundary-color);
-    border-radius: 5px;
-    width: 30%;
-    height: 60%;
+    border-radius: 10px;
+    width: 600px;
+    height: 600px;
     margin: auto auto;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
 }
 
 section header {
     background-color: var(--primary-color);
-    border-radius: 5px;
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    align-items: center;
-    color: var(--text-color);
-
+    border-radius: 10px 10px 0 0;
+    padding: 20px;
+    text-align: center;
 }
 
 section header h2 {
-    padding: 5px;
+    font-size: 24px;
     color: var(--text-color-important);
-
 }
 
 section main {
-    margin: 10px 0;
-    padding: 0 40px;
+    padding: 50px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 section main .separador {
     display: flex;
     flex-direction: row;
+    margin-bottom: 30px;
+    align-items: center;
+    width: 100%;
 }
 
 section main .separador .linea {
-    position: relative;
-    top: 0.75em;
-    background-color: black;
+    flex: 1;
     height: 1px;
-    flex-grow: 1;
-    flex-shrink: 1;
+    background-color: var(--text-color-important);
+    opacity: 0.3;
 }
 
 section main .separador .circulo {
-    padding: 0 10px;
+    padding: 0 20px;
+    font-size: 24px;
 }
 
 section main form {
-    margin: 20px auto;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
+    gap: 30px;
     align-items: center;
-    gap: 10px;
+    width: 80%;
+    margin: 0 auto;
 }
 
 section main form label {
-    display: flex;
-    flex-direction: column;
     width: 100%;
     text-align: left;
-    color: var(--text-color);
 }
 
 section main form input {
-    border: 2px solid var(--sombra-color);
-    padding: 5px;
-}
-
-section main form span {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 22px;
-}
-
-section main form a {
-    margin: 0 10px;
-    color: var(--text-color);
-    font-size: 22px;
-}
-
-section main form a:hover {
-    font-weight: bold;
+    width: 100%;
+    padding: 15px;
+    margin-top: 8px;
+    border: 1px solid var(--sombra-color);
+    border-radius: 6px;
+    font-size: 16px;
 }
 
 section main form button {
-    color: var(--text-color);
-    background: var(--contrast-color);
+    width: 100%;
+    padding: 15px;
     border: none;
-    padding: 10px 40px;
-    border-radius: 10px;
-    font-size: 22px;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    background: var(--contrast-color);
+    color: var(--text-color);
+    transition: background-color 0.2s;
 }
 
-section main form label .toolkit {
-    font-size: 12px;
+section main form button:hover {
+    opacity: 0.9;
 }
 
 .registro {
-    padding: 0 0 40px 0;
-    font-size: 22px;
-    color: var(--text-color);
+    text-align: center;
+    margin-top: 20px;
+    font-size: 16px;
 }
 
 .registro a {
-    color: var(--text-color);
+    color: var(--contrast-color);
+    text-decoration: none;
+    font-weight: 500;
 }
 
 .registro a:hover {
-    font-weight: bold;
+    text-decoration: underline;
 }
 
-footer {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+/* Media queries */
+@media (max-width: 768px) {
+    section {
+        width: 80%;
+        height: auto;
+        min-height: 600px;
+    }
+
+    section main {
+        padding: 30px;
+    }
+
+    section main form {
+        width: 90%;
+    }
 }
 
-footer p {
-    font-weight: bold;
-    text-align: center;
-    color: var(--text-color-important);
-}
-
-footer .mobile-apps {
-    text-align: center;
-}
-
-footer .mobile-apps button {
-    width: 120px;
-    background-color: var(--primary-color);
-    border: none;
-    color: var(--text-color);
-    padding: 10px;
-    border-radius: 10px;
-    margin: 10px 0;
-}
-
-footer .mobile-apps button i {
-    margin: 0 5px;
+@media (max-width: 480px) {
+    section {
+        width: 90%;
+        margin: 15px auto;
+    }
 }
 </style>

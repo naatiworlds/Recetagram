@@ -2,38 +2,29 @@ import { defineStore } from 'pinia'
 
 export const useNotificationStore = defineStore('notification', {
   state: () => ({
-    message: '',
-    type: 'info',
-    show: false,
-    timeout: null
+    notifications: []
   }),
-  
-  actions: {
-    showNotification(message, type = 'info', duration = 5000) {
-      // Limpiar timeout anterior si existe
-      if (this.timeout) {
-        clearTimeout(this.timeout)
-      }
 
-      this.message = message
-      this.type = type
-      this.show = true
+  actions: {
+    showNotification(message, type = 'info', duration = 3000) {
+      const id = Date.now()
       
-      // Auto hide after duration
-      if (duration > 0) {
-        this.timeout = setTimeout(() => {
-          this.hideNotification()
-        }, duration)
-      }
+      this.notifications.push({
+        id,
+        message,
+        type
+      })
+
+      setTimeout(() => {
+        this.hideNotification(id)
+      }, duration)
     },
-    
-    hideNotification() {
-      if (this.timeout) {
-        clearTimeout(this.timeout)
+
+    hideNotification(id) {
+      const index = this.notifications.findIndex(n => n.id === id)
+      if (index > -1) {
+        this.notifications.splice(index, 1)
       }
-      this.show = false
-      this.message = ''
-      this.timeout = null
     }
   }
 })

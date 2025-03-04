@@ -17,7 +17,10 @@
             </div>
           </div>
 
-          <img :src="getPostImage(post)" alt="Post image" class="post-img" />
+          <!-- Imagen clickeable -->
+          <router-link :to="`/post/${post.id}`" class="post-image-link">
+            <img :src="getPostImage(post)" alt="Post image" class="post-img" @error="handleImageError" />
+          </router-link>
           <h2>{{ post.title }}</h2>
           <p>{{ post.description }}</p>
           <div class="ingredients">
@@ -30,16 +33,19 @@
           <p><strong>Date:</strong> {{ new Date(post.created_at).toLocaleDateString() }}</p>
 
           <div class="actions">
-            <i :id="'tenedor' + index" class="fas fa-utensils like-button" :class="{ liked: likedPosts.includes(index) }"
-              @click="toggleLike(index)">
-              <span :id="'numeroTenedor' + index">{{ likeCounters[index] || 0 }}</span>
-            </i>
+            <button @click="handleLike(post.id)" :class="{ liked: isLiked(post.id) }">
+              <i class="fas fa-heart"></i>
+              {{ getLikeCount(post.id) }}
+            </button>
+            
+            <router-link :to="`/post/${post.id}?showComments=true`" class="comment-button">
+              <i class="fas fa-comment"></i>
+              {{ commentsStore.getCommentsCountForPost(post.id) }}
+            </router-link>
 
-            <i class="fa-solid fa-comments comment-button">
-              <span>0</span>
-            </i>
-
-            <i class="fa-solid fa-share share-button" @click="compartirPost(index, post.image)"></i>
+            <button @click="handleShare(post)" class="share-button">
+              <i class="fas fa-share"></i>
+            </button>
           </div>
         </article>
       </section>
@@ -55,35 +61,34 @@
 <script>
 import { post } from '../utils/post.js';
 import { API_BASE_URL, STORAGE_URL, ANIMATION, DEFAULT_AVATAR_URL } from '../utils/globalConstants';
+import { useCommentsStore } from '../stores/comments'
 
 export default {
   data() {
     return {
       posts: [],
       likeCounters: JSON.parse(localStorage.getItem("likeCounters")) || {},
-      likedPosts: JSON.parse(localStorage.getItem("likedPosts")) || []
+      likedPosts: JSON.parse(localStorage.getItem("likedPosts")) || [],
+      commentsStore: useCommentsStore()
     };
   },
   mounted() {
-    fetch(`${API_BASE_URL}/posts`)
-      .then((response) => response.json())
-      .then((response) => {
-        console.log("API Response:", response);
-        if (response && response.data) {
-          this.posts = Array.isArray(response.data) ? response.data : [response.data];
-        } else {
-          console.error("Invalid response format:", response);
-          this.posts = [];
-        }
-        const fragmento = window.location.hash.substring(1);
-        post(fragmento);
-      })
-      .catch((error) => {
-        console.error("Error fetching posts:", error);
-        this.posts = [];
-      });
+    this.loadPosts();
   },
   methods: {
+    async loadPosts() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/posts`)
+        const data = await response.json()
+        this.posts = data.data
+        // Cargar el contador de comentarios para cada post
+        this.posts.forEach(post => {
+          this.commentsStore.fetchCommentCount(post.id)
+        })
+      } catch (error) {
+        console.error('Error loading posts:', error)
+      }
+    },
     scrollLeft() {
       const publicaciones = this.$refs.publicaciones;
       const postCardWidth = publicaciones.children[0].offsetWidth ; // Obtener el ancho de un post
@@ -189,6 +194,22 @@ export default {
 
     handleImageError(e) {
       e.target.src = 'ruta/a/tu/imagen/por/defecto.jpg';
+    },
+
+    handleLike(id) {
+      this.toggleLike(id);
+    },
+
+    isLiked(id) {
+      return this.likedPosts.includes(id);
+    },
+
+    getLikeCount(id) {
+      return this.likeCounters[id] || 0;
+    },
+
+    handleShare(post) {
+      this.compartirPost(post.id, this.getPostImage(post));
     }
   }
 };
@@ -197,13 +218,23 @@ export default {
 <style scoped>
 #main {
   grid-area: var(--main-area);
-  width: 90%;
+  width: 100%;
   overflow-y: hidden;
   scroll-behavior: smooth;
   -ms-overflow-style: none;
   scrollbar-width: none;
-  margin: 5% auto;
+  margin: auto auto;
   position: relative;
+}
+
+#main-scroll-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-start;  /* Cambiado de center a flex-start */
+  gap: 10px;
+  padding-top: 20px; 
 }
 
 #scrollLeftButton,
@@ -215,12 +246,13 @@ export default {
   border-radius: 5px;
   background-color: var(--contrast-color);
   color: #FEFDF4;
-  position: absolute;
-  top: 42%;
-  transform: translateY(-50%);
-  z-index: 10;
-  height: 500px; /* Aumentamos la altura por defecto */
-
+  position: sticky;
+  height: 600px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;  /* Cambiado de center a flex-start */
 }
 
 #scrollLeftButton {
@@ -235,13 +267,11 @@ export default {
   display: flex;
   gap: 20px;
   flex-wrap: nowrap;
-  margin: 0 auto;
   overflow-x: scroll;
   scrollbar-width: none;
   padding-bottom: 20px;
-  width: calc(100% - 80px);
-  box-sizing: border-box;
-  scroll-behavior: smooth; /* Desplazamiento suave */
+  flex: 1;  /* Tomar el espacio restante */
+  scroll-behavior: smooth;
 }
 
 article {
@@ -250,12 +280,13 @@ article {
   background-color: var(--sombra-color);
   border-radius: 10px;
   color: var(--text-color);
-  min-width: calc(33.33% - 20px);
-  max-width: calc(33.33% - 20px);
+  min-width: calc(25% - 20px);
+  max-width: calc(25% - 20px);
   flex-shrink: 0;
-  height: 500px; /* Aumentamos la altura por defecto */
+  height: 600px; /* Aumentamos la altura por defecto */
   display: flex;
   flex-direction: column;
+  scroll-behavior: smooth; /* Desplazamiento suave */
   
 }
 
@@ -280,32 +311,50 @@ article {
 
 .actions {
   display: flex;
-  gap: 10px;
-  align-items: center;
+  gap: 15px;
+  justify-content: center;
 }
 
-.actions {
+.actions button, .actions .comment-button {
   display: flex;
-  gap: 10px;
-  justify-content: center;
-  cursor: pointer;
-}
-.like-button,
-.share-button,
-.comment-button {
-  padding: 8px 16px;
+  align-items: center;
+  gap: 5px;
   background-color: var(--contrast-color);
   border: none;
-  color: #fff;
-  border-radius: 5px;
+  color: white;
   cursor: pointer;
+  padding: 8px 15px;
+  border-radius: 5px;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  text-decoration: none; /* Para quitar el subrayado del enlace */
 }
 
-.like-button span,
-.share-button span,
-.comment-button span {
-  margin-left: 10px;
+.actions button i, .actions .comment-button i {
+  font-size: 16px;
 }
+
+.actions button:hover, .actions .comment-button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.actions button.liked {
+  background-color: var(--contrast-color);
+}
+
+.comment-button {
+  text-decoration: none;
+}
+
+.ingredient-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
 .user-info {
   display: flex;
   align-items: center;
@@ -324,13 +373,6 @@ article {
 .ingredients {
   text-align: left;
   margin: 15px 0;
-}
-
-.ingredient-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
 }
 
 .ingredient-tag {
@@ -359,23 +401,27 @@ article {
 }
 
 /* Media queries para ajuste responsivo */
-@media (max-width: 768px) {
+@media (max-width: 1500px) {
   article {
-    height: 450px; /* Aumentamos la altura a 450px en pantallas medianas */
-    min-width: calc(50% - 20px); /* Mostrar dos publicaciones por fila */
+    min-width: calc(33.33% - 20px); /* Mostrar dos publicaciones por fila */
+    max-width: calc(33.33% - 20px);
+  }
+
+  
+}
+
+@media (max-width: 1200px) {
+  article {
+    min-width: calc(50% - 20px); /* Mostrar una publicación por fila */
     max-width: calc(50% - 20px);
   }
 
   #publicaciones {
-    width: calc(100% - 60px); /* Ajuste de ancho */
+    width: calc(100% - 40px); /* Ajuste de ancho */
   }
 }
-
-
-
-@media (max-width: 480px) {
+@media (max-width: 1000px) {
   article {
-    height: 350px; /* Aumentamos la altura en pantallas pequeñas */
     min-width: calc(100% - 20px); /* Mostrar una publicación por fila */
     max-width: calc(100% - 20px);
   }
@@ -383,5 +429,39 @@ article {
   #publicaciones {
     width: calc(100% - 40px); /* Ajuste de ancho */
   }
+}
+@media (max-width: 600px) {
+  #main {
+    grid-area: 1 / 1 / 3 / 4;
+  }
+  #main-scroll-container {
+    margin-left: 10px;
+  }
+}
+
+.post-image-link {
+  display: block;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.post-image-link:hover {
+  transform: scale(1.02);
+}
+
+.comment-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  color: var(--text-color);
+  cursor: pointer;
+  text-decoration: none;
+  padding: 8px;
+}
+
+.comment-button:hover {
+  color: var(--primary-color);
 }
 </style>

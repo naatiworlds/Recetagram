@@ -1,12 +1,14 @@
 <template>
-  <Transition name="notification">
-    <div v-if="notificationStore.show" 
-         :class="['notification', notificationStore.type]">
-      <i :class="getIconClass"></i>
-      {{ notificationStore.message }}
-      <button class="close-btn" @click="notificationStore.hideNotification">×</button>
+  <div class="notification-container">
+    <div 
+      v-for="notification in notifications" 
+      :key="notification.id"
+      class="notification"
+      :class="notification.type"
+    >
+      {{ notification.message }}
     </div>
-  </Transition>
+  </div>
 </template>
 
 <script>
@@ -14,86 +16,53 @@ import { useNotificationStore } from '../stores/notification'
 
 export default {
   name: 'Notification',
-  data() {
+  setup() {
+    const notificationStore = useNotificationStore()
     return {
-      notificationStore: useNotificationStore()
-    }
-  },
-  computed: {
-    getIconClass() {
-      switch (this.notificationStore.type) {
-        case 'error':
-          return 'fas fa-exclamation-circle'
-        case 'success':
-          return 'fas fa-check-circle'
-        case 'info':
-        default:
-          return 'fas fa-info-circle'
-      }
+      notifications: notificationStore.notifications
     }
   }
 }
 </script>
 
 <style scoped>
-.notification {
+.notification-container {
   position: fixed;
   top: 20px;
   right: 20px;
-  padding: 15px 40px 15px 15px;
-  border-radius: 8px;
+  z-index: 9999;
+}
+
+.notification {
+  margin-bottom: 10px;
+  padding: 15px 20px;
+  border-radius: 4px;
   color: white;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   min-width: 300px;
-  max-width: 500px;
-}
-
-.error {
-  background-color: #ff4444;
-}
-
-.info {
-  background-color: var(--primary-color);
+  animation: slideIn 0.3s ease-out;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 .success {
-  background-color: #4CAF50;
+  background-color: #4caf50;
 }
 
-.close-btn {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: white;
-  font-size: 20px;
-  cursor: pointer;
-  opacity: 0.8;
-  transition: opacity 0.3s;
+.error {
+  background-color: #f44336;
 }
 
-.close-btn:hover {
-  opacity: 1;
+.warning {
+  background-color: #ff9800;
 }
 
-i {
-  font-size: 1.2em;
-}
-
-.notification-enter-active,
-.notification-leave-active {
-  transition: all 0.3s ease;
-}
-
-.notification-enter-from,
-.notification-leave-to {
-  opacity: 0;
-  transform: translateX(30px);
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 </style>

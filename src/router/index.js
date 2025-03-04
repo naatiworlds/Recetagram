@@ -31,6 +31,18 @@ const router = createRouter({
       component: () => import('../pages/Contacto.vue')
     },
     {
+      path: '/profile',
+      name: 'Profile',
+      component: () => import('../pages/Profile.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/post/:id',
+      name: 'post',
+      component: () => import('../pages/Post.vue'),
+      props: true
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('../pages/404.vue')

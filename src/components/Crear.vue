@@ -1,59 +1,52 @@
 <template>
   <div class="modal-overlay" @click.self="closeModal">
-    <div class="modal-content">
-      
-      <section>
-        <header>
-          <details id="theme">
-            <summary><i class="fa-solid fa-palette"></i> theme</summary>
-            <label id="switch-black" style="display: block;">
-              Dark
-              <input type="radio" name="tema" value="dark">
-            </label>
-            <label id="switch-light" style="display: block;">
-              Light
-              <input type="radio" name="tema" value="light">
-            </label>
-            <label id="switch-default" style="display: block;">
-              Default
-              <input type="radio" name="tema" value="default" checked>
-            </label>
-          </details>
-          <h2>Subir un nuevo post</h2>
-          <button class="close-button" @click="closeModal">×</button>
-        </header>
-        <main class="crear-main">
-          <form @submit.prevent="submitPost" id="form">
-            <label for="author">
-              Autor
-              <input type="text" id="author" v-model="post.author" placeholder="Nombre del autor" required>
-              <span v-if="errors.author" class="error">{{ errors.author }}</span>
-            </label>
-            <label for="title">
-              Título
-              <input type="text" id="title" v-model="post.title" placeholder="Título del post" required>
-              <span v-if="errors.title" class="error">{{ errors.title }}</span>
-            </label>
-            <label for="content">
-              Contenido
-              <textarea id="content" v-model="post.content" placeholder="Contenido del post" required></textarea>
-              <span v-if="errors.content" class="error">{{ errors.content }}</span>
-            </label>
-            <label for="tags">
-              Etiquetas
-              <input type="text" id="tags" v-model="post.tags" placeholder="Buscar etiquetas" required>
-              <span v-if="errors.tags" class="error">{{ errors.tags }}</span>
-            </label>
-            <label for="image">
-              Imagen
-              <input type="file" id="image" @change="handleImageUpload" accept="image/png, image/jpeg" required>
-              <span v-if="errors.image" class="error">{{ errors.image }}</span>
-            </label>
-            <button type="submit">Subir Post</button>
-          </form>
-        </main>
-      </section>
-    </div>
+    <section>
+      <header>
+        <h2>Subir un nuevo post</h2>
+        <button class="close-button" @click="closeModal">×</button>
+      </header>
+      <main>
+        <div class="separador">
+          <div class="linea"></div>
+          <div class="circulo">📝</div>
+          <div class="linea"></div>
+        </div>
+        
+        <form @submit.prevent="submitPost" id="form">
+          <label>
+            Autor
+            <input type="text" v-model="post.author" placeholder="Nombre del autor" required>
+            <span v-if="errors.author" class="error">{{ errors.author }}</span>
+          </label>
+          
+          <label>
+            Título
+            <input type="text" v-model="post.title" placeholder="Título del post" required>
+            <span v-if="errors.title" class="error">{{ errors.title }}</span>
+          </label>
+          
+          <label>
+            Contenido
+            <textarea v-model="post.content" placeholder="Contenido del post" required></textarea>
+            <span v-if="errors.content" class="error">{{ errors.content }}</span>
+          </label>
+          
+          <label>
+            Etiquetas
+            <input type="text" v-model="post.tags" placeholder="Buscar etiquetas" required>
+            <span v-if="errors.tags" class="error">{{ errors.tags }}</span>
+          </label>
+          
+          <label>
+            Imagen
+            <input type="file" @change="handleImageUpload" accept="image/png, image/jpeg" required>
+            <span v-if="errors.image" class="error">{{ errors.image }}</span>
+          </label>
+          
+          <button type="submit">Subir Post</button>
+        </form>
+      </main>
+    </section>
   </div>
 </template>
 
@@ -166,144 +159,141 @@ export default {
   z-index: 1000;
 }
 
-.modal-content {
-  position: relative;
-  border-radius: 10px;
-  max-width: 35%; /* Aumenta el ancho máximo */
-  width: 90%; /* Usa un porcentaje para adaptarlo a la pantalla */
-  background: var(--secundary-color);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.close-button {
-  background: none;
-  border: none;
-  font-size: 40px;
-  cursor: pointer;
-  color: var(--text-color-important);
-  align-self: center; /* Centra el botón horizontalmente */
-  margin-bottom: 10px;
-}
-header {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around;
-  align-items: center;
-  align-content: center;
-  width: 100%;
-  margin: 0 auto;
-  background-color: var(--primary-color);
-}
-
-header h2 {
-  color: var(--text-color-important);
-}
-
 section {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  align-content: center;
-  text-align: center;
-  margin: 0 auto;
-  gap: 5px;
+  grid-area: var(--main-area);
   background-color: var(--secundary-color);
   border-radius: 10px;
-  width: 100%;
+  width: 600px;
+  height: auto;
+  min-height: 600px;
+  margin: auto;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
 }
 
 section header {
   background-color: var(--primary-color);
-  border-radius: 5px;
-  width: 100%;
+  border-radius: 10px 10px 0 0;
+  padding: 20px;
+  text-align: center;
   display: flex;
-  flex-direction: row;
-  justify-content: space-around;
+  justify-content: center;
   align-items: center;
-  color: var(--text-color);
+  position: relative;
 }
 
 section header h2 {
-  padding: 5px;
+  font-size: 24px;
   color: var(--text-color-important);
 }
 
+.close-button {
+  position: absolute;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--text-color-important);
+  cursor: pointer;
+}
+
 section main {
-  width: 90%;
+  padding: 50px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.separador {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: 30px;
+  align-items: center;
+}
+
+.separador .linea {
+  flex: 1;
+  height: 1px;
+  background-color: var(--text-color-important);
+  opacity: 0.3;
+}
+
+.separador .circulo {
+  padding: 0 20px;
   font-size: 24px;
 }
 
-section main form {
+form {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  gap: .5em;
+  gap: 30px;
+  width: 80%;
+  margin: 0 auto;
 }
 
-section main form label {
-  display: flex;
-  flex-direction: column;
+label {
   width: 100%;
   text-align: left;
-  color: var(--text-color);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-section main form input,
-section main form textarea {
-  border: 2px solid var(--sombra-color);
-  padding: 5px;
+input, textarea {
   width: 100%;
+  padding: 15px;
+  border: 1px solid var(--sombra-color);
+  border-radius: 6px;
+  font-size: 16px;
+  background-color: white;
 }
 
-section main form button {
-  color: var(--text-color);
-  background: var(--contrast-color);
+textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+button[type="submit"] {
+  width: 100%;
+  padding: 15px;
   border: none;
-  padding: 10px 40px;
-  border-radius: 10px;
-  font-size: 22px;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  background: var(--contrast-color);
+  color: var(--text-color);
+  transition: background-color 0.2s;
+}
+
+button[type="submit"]:hover {
+  opacity: 0.9;
 }
 
 .error {
-  color: red;
+  color: var(--contrast-color);
   font-size: 14px;
   margin-top: 5px;
 }
 
-footer {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+@media (max-width: 768px) {
+  section {
+    width: 90%;
+    margin: 20px;
+  }
+  
+  form {
+    width: 90%;
+  }
 }
 
-footer p {
-  font-weight: bold;
-  text-align: center;
-  color: var(--text-color-important);
+@media (max-width: 480px) {
+  section main {
+    padding: 30px;
+  }
+  
+  input, textarea, button[type="submit"] {
+    padding: 12px;
+  }
 }
-
-footer .mobile-apps {
-  text-align: center;
-}
-
-footer .mobile-apps button {
-  width: 120px;
-  background-color: var(--primary-color);
-  border: none;
-  color: var(--text-color);
-  padding: 10px;
-  border-radius: 10px;
-  margin: 10px 0;
-}
-
-footer .mobile-apps button i {
-  margin: 0 5px;
-}
-
-
 </style>

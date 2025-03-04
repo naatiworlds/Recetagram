@@ -10,6 +10,9 @@ import { useAuthStore } from './stores/auth'
 
 loadTheme(); 
 
+axios.defaults.baseURL = "http://localhost:8000" // Reemplaza con tu URL base real
+axios.defaults.headers.common['Accept'] = 'application/json'
+
 // Configurar axios con el token si existe
 const token = localStorage.getItem('token')
 if (token) {

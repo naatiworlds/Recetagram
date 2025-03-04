@@ -18,11 +18,21 @@
                 <div class="user-info">
                     <div v-if="user.name" class="info-item">
                         <label>Nombre:</label>
-                        <p>{{ user.name }}</p>
+                        <input v-if="isEditing" 
+                               v-model="editedUser.name" 
+                               type="text" 
+                               class="edit-input"
+                        >
+                        <p v-else>{{ user.name }}</p>
                     </div>
                     <div v-if="user.email" class="info-item">
                         <label>Email:</label>
-                        <p>{{ user.email }}</p>
+                        <input v-if="isEditing" 
+                               v-model="editedUser.email" 
+                               type="email" 
+                               class="edit-input"
+                        >
+                        <p v-else>{{ user.email }}</p>
                     </div>
                     <div v-if="user.role" class="info-item">
                         <label>Rol:</label>
@@ -34,7 +44,52 @@
                     </div>
                 </div>
             </div>
+            <div class="profile-actions">
+                <button v-if="isEditing" 
+                        class="save-button" 
+                        @click="handleSave"
+                >
+                    <i class="fas fa-save"></i>
+                    Guardar Cambios
+                </button>
+                <button v-if="isEditing" 
+                        class="cancel-button" 
+                        @click="handleCancel"
+                >
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+                <button v-else 
+                        class="edit-button" 
+                        @click="handleEdit"
+                >
+                    <i class="fas fa-edit"></i>
+                    Editar Perfil
+                </button>
+                <button class="delete-button" @click="confirmDelete">
+                    <i class="fas fa-trash-alt"></i>
+                    Eliminar Cuenta
+                </button>
+            </div>
         </main>
+        
+        <!-- Modal de confirmación -->
+        <div v-if="showDeleteModal" class="modal-overlay">
+            <div class="modal-content">
+                <h3>¿Estás seguro?</h3>
+                <p>Esta acción eliminará permanentemente tu cuenta y todos tus datos. Esta acción no se puede deshacer.</p>
+                <div class="modal-actions">
+                    <button class="cancel-button" @click="showDeleteModal = false">
+                        <i class="fas fa-times"></i>
+                        Cancelar
+                    </button>
+                    <button class="delete-button" @click="handleDelete">
+                        <i class="fas fa-trash-alt"></i>
+                        Sí, eliminar mi cuenta
+                    </button>
+                </div>
+            </div>
+        </div>
     </section>
     <section v-else>
         <header>
@@ -52,7 +107,13 @@ export default {
     name: 'Profile',
     data() {
         return {
-            user: null
+            user: null,
+            isEditing: false,
+            editedUser: {
+                name: '',
+                email: ''
+            },
+            showDeleteModal: false
         }
     },
     computed: {
@@ -102,6 +163,64 @@ export default {
                     'error'
                 )
                 this.$router.push('/login')
+            }
+        },
+        handleEdit() {
+            this.editedUser = {
+                name: this.user.name,
+                email: this.user.email
+            }
+            this.isEditing = true
+        },
+        
+        async handleSave() {
+            const authStore = useAuthStore()
+            const notificationStore = useNotificationStore()
+            
+            try {
+                await authStore.updateProfile(this.editedUser)
+                this.user = { ...this.user, ...this.editedUser }
+                this.isEditing = false
+                notificationStore.showNotification('Perfil actualizado correctamente', 'success')
+            } catch (error) {
+                notificationStore.showNotification(
+                    error.message || 'Error al actualizar el perfil',
+                    'error'
+                )
+            }
+        },
+        
+        handleCancel() {
+            this.isEditing = false
+            this.editedUser = {
+                name: this.user.name,
+                email: this.user.email
+            }
+        },
+        
+        confirmDelete() {
+            this.showDeleteModal = true
+        },
+        
+        async handleDelete() {
+            const authStore = useAuthStore()
+            const notificationStore = useNotificationStore()
+            const router = useRouter()
+            
+            try {
+                await authStore.deleteAccount()
+                notificationStore.showNotification(
+                    'Tu cuenta ha sido eliminada correctamente',
+                    'success'
+                )
+                router.push('/login')
+            } catch (error) {
+                notificationStore.showNotification(
+                    error.message || 'Error al eliminar la cuenta',
+                    'error'
+                )
+            } finally {
+                this.showDeleteModal = false
             }
         }
     },
@@ -222,6 +341,83 @@ main {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+.profile-actions {
+    display: flex;
+    gap: 20px;
+    margin-top: 40px;
+    padding: 0 20px;
+    justify-content: center;
+}
+
+.profile-actions button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.edit-button {
+    background-color: var(--primary-color);
+    color: var(--text-color-important);
+}
+
+.edit-button:hover {
+    background-color: var(--primary-color-dark);
+    transform: translateY(-1px);
+}
+
+.delete-button {
+    background-color: #ff4757;
+    color: white;
+}
+
+.delete-button:hover {
+    background-color: #ff6b81;
+    transform: translateY(-1px);
+}
+
+/* Efectos de click */
+.edit-button:active,
+.delete-button:active {
+    transform: translateY(1px);
+}
+
+.edit-input {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid var(--sombra-color);
+    border-radius: 6px;
+    font-size: 16px;
+    background-color: white;
+    color: var(--text-color-important);
+}
+
+.save-button {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.save-button:hover {
+    background-color: #45a049;
+    transform: translateY(-1px);
+}
+
+.cancel-button {
+    background-color: #808080;
+    color: white;
+}
+
+.cancel-button:hover {
+    background-color: #6f6f6f;
+    transform: translateY(-1px);
+}
+
 /* Media queries */
 @media (max-width: 768px) {
     section {
@@ -246,6 +442,104 @@ main {
         width: 100px;
         height: 100px;
         font-size: 36px;
+    }
+
+    .profile-actions {
+        flex-direction: column;
+        padding: 0 10px;
+    }
+
+    .profile-actions button {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: var(--secundary-color);
+    padding: 30px;
+    border-radius: 10px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.modal-content h3 {
+    color: var(--text-color-important);
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.modal-content p {
+    color: var(--text-color);
+    margin-bottom: 30px;
+    line-height: 1.5;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 20px;
+    justify-content: flex-end;
+}
+
+.modal-actions button {
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.modal-actions .delete-button {
+    background-color: #ff4757;
+    color: white;
+}
+
+.modal-actions .delete-button:hover {
+    background-color: #ff6b81;
+    transform: translateY(-1px);
+}
+
+.modal-actions .cancel-button {
+    background-color: #808080;
+    color: white;
+}
+
+.modal-actions .cancel-button:hover {
+    background-color: #6f6f6f;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 480px) {
+    .modal-content {
+        width: 95%;
+        padding: 20px;
+    }
+
+    .modal-actions {
+        flex-direction: column;
+    }
+
+    .modal-actions button {
+        width: 100%;
+        justify-content: center;
     }
 }
 </style> 

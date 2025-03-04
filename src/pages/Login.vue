@@ -81,33 +81,110 @@ export default {
 section {
     grid-area: var(--main-area);
     background-color: var(--secundary-color);
-    border-radius: 5px;
-    width: 30%;
-    height: 60%;
+    border-radius: 10px;
+    width: 600px;
+    height: 600px; /* Aumentado de 450px a 600px */
     margin: auto auto;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
 }
+
 section header {
     background-color: var(--primary-color);
-    border-radius: 5px;
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    align-items: center;
-    color: var(--text-color);
-
+    border-radius: 10px 10px 0 0;
+    padding: 20px;
+    text-align: center;
 }
 
 section header h2 {
-    padding: 5px;
+    font-size: 24px;
     color: var(--text-color-important);
-
 }
 
-section main{
-    margin: 10px 0;
-    padding: 0 40px;
+section main {
+    padding: 50px; /* Aumentado el padding para mejor espaciado */
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
+
+section main form {
+    display: flex;
+    flex-direction: column;
+    gap: 30px; /* Aumentado el espacio entre elementos */
+    align-items: center;
+    width: 80%;
+    margin: 0 auto;
+}
+
+section main form label {
+    width: 100%;
+    text-align: left; /* Alineación del texto a la izquierda */
+}
+
+section main form input {
+    width: 100%;
+    padding: 15px; /* Aumentado el padding de los inputs */
+    margin-top: 8px;
+    border: 1px solid var(--sombra-color);
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+section main form button {
+    width: 100%;
+    padding: 15px; /* Aumentado el padding del botón */
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    background: var(--contrast-color);
+    color: var(--text-color);
+    transition: background-color 0.2s;
+}
+
+section main form button:hover {
+    opacity: 0.9;
+}
+
+.registro {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 16px;
+}
+
+.registro a {
+    color: var(--contrast-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.registro a:hover {
+    text-decoration: underline;
+}
+
+/* Media queries */
+@media (max-width: 768px) {
+    section {
+        width: 80%;
+        height: auto;
+        min-height: 600px; /* Ajustado la altura mínima */
+    }
+}
+
+@media (max-width: 480px) {
+    section {
+        width: 90%;
+        margin: 15px auto;
+    }
+
+    section main form {
+        width: 90%;
+    }
+}
+
 section main .separador{
     display: flex;
     flex-direction: row;
@@ -124,25 +201,6 @@ section main .separador .circulo{
     padding: 0 10px;
 }
 
-section main form {
-    margin: 20px auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 10px;
-}
-section main form label {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    text-align: left;
-    color: var(--text-color);
-}
-section main form input {
-    border: 2px solid var(--sombra-color);
-    padding: 5px;
-}
 section main form span{
     display: flex;
     justify-content: center;
@@ -157,28 +215,8 @@ section main form a {
 section main form a:hover {
     font-weight: bold;
 }
-section main form button {
-    color: var(--text-color);
-    background:  var(--contrast-color);
-    border: none;
-    padding: 10px 40px;
-    border-radius: 10px;
-    font-size: 22px;
-    cursor: pointer;
-}
 section main form label .toolkit{
     font-size: 12px;
-}
-.registro{
-    padding: 0 0 40px 0;
-    font-size: 22px;
-    color: var(--text-color);
-}
-.registro a{
-    color: var(--text-color);
-}
-.registro a:hover{
-    font-weight: bold;
 }
 
 </style>
