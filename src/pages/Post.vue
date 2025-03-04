@@ -1,57 +1,11 @@
 <template>
   <section v-if="post" class="post-detail">
-    <div class="post-content">
-      <!-- Header con avatar y nombre -->
-      <div class="user-info">
-        <div class="avatar">
-          <span class="avatar-text">{{ getInitials(post.user?.name) }}</span>
-        </div>
-        <div class="user-details">
-          <h3>{{ post.user?.name }}</h3>
-          <span v-if="post.user?.role" class="role-badge">
-            {{ post.user.role }}
-          </span>
-        </div>
-      </div>
-
-      <!-- Imagen del post -->
-      <div class="post-image-container">
-        <img :src="getPostImage(post)" class="post-img" :alt="post.title" />
-      </div>
-
-      <!-- Título y descripción -->
-      <h2 class="post-title">{{ post.title }}</h2>
-      <p class="post-description">{{ post.description }}</p>
-
-      <!-- Tags/Ingredientes -->
-      <div class="tags-container">
-        <span v-for="(ingredient, index) in post.ingredients" 
-              :key="index" 
-              class="tag">
-          {{ ingredient.name }} - {{ ingredient.quantity }}
-        </span>
-      </div>
-
-      <!-- Fecha y acciones -->
-      <div class="post-footer">
-        <span class="date">Date: {{ formatDate(post.created_at) }}</span>
-        <div class="actions">
-          <button @click="handleLike" :class="{ liked: isLiked }">
-            <i class="fas fa-heart"></i>
-            {{ likeCount }}
-          </button>
-          <button class="comment-button" @click="openComments">
-            <i class="fas fa-comment"></i>
-            {{ commentsStore.getCommentsCountForPost(post.id) }}
-          </button>
-          <button class="share-button" @click="handleShare">
-            <i class="fas fa-share"></i>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal de comentarios -->
+    <PostCard 
+      :post="post"
+      :show-in-modal="true"
+      @open-comments="showComments = true"
+    />
+    
     <CommentModal 
       :is-open="showComments"
       :post-id="post.id"
@@ -66,14 +20,19 @@
 </template>
 
 <script>
-import { API_BASE_URL, STORAGE_URL, DEFAULT_AVATAR_URL } from '../utils/globalConstants'
+import { API_BASE_URL, STORAGE_URL } from '../utils/globalConstants'
 import CommentModal from '../components/CommentModal.vue'
 import { useCommentsStore } from '../stores/comments'
+import { useLikesStore } from '../stores/likes'
+import { useAuthStore } from '../stores/auth'
+import { useNotificationStore } from '../stores/notification'
+import PostCard from '../components/PostCard.vue'
 
 export default {
   name: 'PostDetail',
   components: {
-    CommentModal
+    CommentModal,
+    PostCard
   },
   props: {
     id: {
@@ -84,69 +43,49 @@ export default {
   data() {
     return {
       post: null,
-      likeCount: 0,
-      isLiked: false,
-      showComments: false,
-      commentsStore: useCommentsStore()
+      showComments: false
     }
   },
   async created() {
-    await this.fetchPost()
-    if (this.post) {
-      await this.commentsStore.fetchCommentCount(this.post.id)
-    }
-  },
-  mounted() {
-    // Verificar si debemos mostrar los comentarios al cargar
-    if (this.$route.query.showComments) {
-      this.showComments = true
-    }
+    await this.fetchPost();
   },
   methods: {
+    
     async fetchPost() {
       try {
-        const response = await fetch(`${API_BASE_URL}/posts/${this.id}`)
-        const data = await response.json()
-        this.post = data.data
-        this.likeCount = this.post.likes_count || 0
+        const response = await fetch(`${API_BASE_URL}/posts/${this.id}`);
+        const data = await response.json();
+        
+        if (!data.data) {
+          this.$router.push('/404');
+          return;
+        }
+        
+        this.post = data.data;
+        
+        // Manejo de likes_count
+        if (!this.post.likes_count) {
+          this.post.likes_count = 0; // Establecer un valor predeterminado
+        }
+        
+        this.likesStore.initializeLikes([this.post]);
+        this.commentsStore.initializeComments([this.post]);
       } catch (error) {
-        console.error('Error fetching post:', error)
+        this.notificationStore.showNotification(
+          'Error al cargar los posts: ' + error.message,
+          'error'
+        )
+        this.posts = []
       }
     },
-    getProfileImage(post) {
-      return post.user && post.user.avatar
-        ? `${STORAGE_URL}/${post.user.avatar}`
-        : `${DEFAULT_AVATAR_URL}/?name=${encodeURIComponent(post.user?.name || 'User')}&background=random`
-    },
-    getPostImage(post) {
-      return post.imagen && post.imagen.startsWith('http')
-        ? post.imagen
-        : `${STORAGE_URL}/${post.imagen}`
-    },
-    formatDate(date) {
-      return new Date(date).toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })
-    },
-    getInitials(name) {
-      return name ? name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U'
-    },
-    async openComments() {
-      this.showComments = true
-      await this.commentsStore.fetchComments(this.post.id)
-    },
     closeComments() {
-      this.showComments = false
-      // Actualizar la URL sin el parámetro showComments
-      this.$router.replace({ query: {} })
+      this.showComments = false;
+      this.$router.replace({ query: {} });
     }
   },
   watch: {
-    // Observar cambios en la ruta para abrir/cerrar comentarios
     '$route.query.showComments'(newVal) {
-      this.showComments = Boolean(newVal)
+      this.showComments = Boolean(newVal);
     }
   }
 }
@@ -155,11 +94,7 @@ export default {
 <style scoped>
 .post-detail {
   grid-area: var(--main-area);
-  background-color: var(--secundary-color);
-  border-radius: 10px;
-  width: 600px;
-  margin: 50px auto;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin: auto auto;
 }
 
 .post-content {

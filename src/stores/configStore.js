@@ -36,8 +36,8 @@ export const useConfigStore = defineStore('config', {
       localStorage.setItem('likedPosts', JSON.stringify(this.likedPosts));
     },
 
-    initializeFromStorage() {
-      const theme = localStorage.getItem('selectedTheme');
+    loadFromLocalStorage() {
+      const theme = localStorage.getItem('theme');
       if (theme) this.theme = theme;
 
       const likeCounters = localStorage.getItem('likeCounters');
