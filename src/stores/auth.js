@@ -1,209 +1,259 @@
 import { defineStore } from "pinia";
-import axios from "axios";
+import { apiService } from '../services/api'
 import { API_BASE_URL } from '../utils/globalConstants'
 
 const API_URL = "http://localhost:8000/api/v1";
 
 export const useAuthStore = defineStore("auth", {
-  state: () => ({
-    user: JSON.parse(localStorage.getItem('user')) || null,
-    token: localStorage.getItem('token') || null,
-    isInitialized: false,
-  }),
+  state: () => {
+    console.log('[AuthStore] Inicializando estado')
+    // Intentar recuperar y parsear el usuario de localStorage de manera segura
+    let user = null;
+    let token = localStorage.getItem('token');
+    
+    console.log('[AuthStore] Token en localStorage:', token ? 'Presente' : 'No encontrado')
+    
+    try {
+      const savedUser = localStorage.getItem('user');
+      console.log('[AuthStore] Usuario en localStorage:', savedUser ? 'Presente' : 'No encontrado')
+      
+      if (savedUser) {
+        user = JSON.parse(savedUser);
+        console.log('[AuthStore] Usuario parseado correctamente:', user ? user.name : 'Sin nombre')
+      }
+    } catch (e) {
+      console.error('[AuthStore] Error al parsear datos de usuario:', e);
+      localStorage.removeItem('user'); // Eliminar datos inválidos
+    }
+
+    return {
+      user: user,
+      token: token,
+      isInitialized: false,
+      authenticated: !!token
+    };
+  },
 
   getters: {
-    isAuthenticated: (state) => !!state.token,
+    isAuthenticated: (state) => {
+      console.log('[AuthStore] isAuthenticated getter llamado, authenticated:', state.authenticated);
+      return state.authenticated;
+    },
   },
 
   actions: {
     initializeAuth() {
-      if (this.isInitialized) return;
+      console.log('[AuthStore] Iniciando initializeAuth, isInitialized:', this.isInitialized);
+      if (this.isInitialized) {
+        console.log('[AuthStore] Ya inicializado, saliendo');
+        return;
+      }
 
       try {
+        // Primero, verificar si hay datos inválidos en localStorage y limpiarlos
+        try {
+          const savedUser = localStorage.getItem('user');
+          if (savedUser) {
+            JSON.parse(savedUser); // Intentar parsear para verificar si es válido
+          }
+        } catch (e) {
+          console.error('[AuthStore] Datos de usuario inválidos en localStorage, limpiando:', e);
+          localStorage.removeItem('user');
+        }
+
         const token = localStorage.getItem("token");
         const savedUser = localStorage.getItem("user");
+        
+        console.log('[AuthStore] Token recuperado:', token ? 'Presente' : 'No encontrado');
+        console.log('[AuthStore] Usuario guardado:', savedUser ? 'Presente' : 'No encontrado');
 
-        if (token && savedUser) {
+        if (token) {
           this.token = token;
-          this.user = JSON.parse(savedUser);
-          axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+          this.authenticated = true;
+          console.log('[AuthStore] Token establecido en el store, authenticated =', this.authenticated);
+          
+          if (savedUser) {
+            try {
+              const parsedUser = JSON.parse(savedUser);
+              this.user = parsedUser;
+              console.log('[AuthStore] Usuario establecido en el store:', parsedUser.name);
+            } catch (e) {
+              console.error('[AuthStore] Error al parsear datos de usuario durante inicialización:', e);
+              localStorage.removeItem('user');
+              // Intentar obtener el perfil del usuario
+              this.getUserProfile().catch(error => {
+                console.error('[AuthStore] No se pudo obtener el perfil después de error de parseo:', error);
+                // No cerramos sesión automáticamente por errores 404
+              });
+            }
+          } else {
+            console.log('[AuthStore] No hay datos de usuario, intentando obtenerlos del servidor');
+            // Si tenemos token pero no datos de usuario, intentamos obtenerlos
+            this.getUserProfile().then(userData => {
+              console.log('[AuthStore] Perfil de usuario obtenido:', userData);
+              this.user = userData;
+              localStorage.setItem('user', JSON.stringify(userData));
+            }).catch(error => {
+              console.error('[AuthStore] Error al obtener perfil de usuario:', error);
+              // Solo cerrar sesión si es un error de autenticación (401)
+              if (error.response?.status === 401) {
+                console.warn('[AuthStore] Token inválido (401), cerrando sesión');
+                this.logout();
+              }
+            });
+          }
+        } else {
+          console.log('[AuthStore] No hay token, usuario no autenticado');
+          this.authenticated = false;
         }
       } catch (e) {
+        console.error('[AuthStore] Error durante la inicialización de autenticación:', e);
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+        this.authenticated = false;
       } finally {
         this.isInitialized = true;
+        console.log('[AuthStore] Inicialización completada, isInitialized:', this.isInitialized);
+        console.log('[AuthStore] Estado de autenticación después de inicializar:', this.authenticated);
       }
     },
 
     async getUserProfile() {
+      console.log('[AuthStore] Solicitando perfil de usuario');
       try {
         // Verificar que tenemos un token
         if (!this.token) {
-          throw new Error("No hay token de autenticación");
+          // Intentar obtener el token de localStorage si no está en el estado
+          const storedToken = localStorage.getItem('token');
+          if (storedToken) {
+            console.log('[AuthStore] Token encontrado en localStorage, actualizando estado');
+            this.token = storedToken;
+            this.authenticated = true;
+          } else {
+            console.error('[AuthStore] No hay token de autenticación');
+            throw new Error("No hay token de autenticación");
+          }
         }
 
-        console.log("Haciendo petición con token:", this.token); // Debug del token
+        console.log("[AuthStore] Haciendo petición con token:", this.token.substring(0, 10) + '...');
 
-        const response = await axios.get("/api/v1/me", {
-          headers: {
-            Authorization: `Bearer ${this.token}`,
-            Accept: "application/json", // Aseguramos que queremos JSON
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await apiService.getUserProfile();
+        console.log("[AuthStore] Respuesta del perfil:", response.data);
 
-        console.log("Respuesta completa:", response.data);
-
-        if (response.data && response.data.data) {
-          return response.data.data;
-        }
-
-        throw new Error("Formato de respuesta inválido");
-      } catch (error) {
-        if (error.response) {
-          // La respuesta fue hecha y el servidor respondió con un código de estado
-          // que cae fuera del rango 2xx
-          console.error("Error de respuesta:", error.response.data);
-          console.error("Status:", error.response.status);
-        } else if (error.request) {
-          // La petición fue hecha pero no se recibió respuesta
-          console.error("Error de petición:", error.request);
+        // La respuesta tiene formato { status, message, data }
+        if (response && response.data && response.data.data) {
+          // Actualizar el usuario en el estado y localStorage
+          this.user = response.data.data;
+          localStorage.setItem('user', JSON.stringify(this.user));
+          return response.data;
         } else {
-          // Algo sucedió al configurar la petición que provocó un error
-          console.error("Error:", error.message);
+          console.error('[AuthStore] Formato de respuesta inesperado:', response.data);
+          throw new Error("Formato de respuesta inválido");
+        }
+      } catch (error) {
+        console.error('[AuthStore] Error en getUserProfile:', error);
+        if (error.response) {
+          console.error("[AuthStore] Error de respuesta:", error.response.data);
+          console.error("[AuthStore] Status:", error.response.status);
+        } else if (error.request) {
+          console.error("[AuthStore] Error de petición:", error.request);
+        } else {
+          console.error("[AuthStore] Error:", error.message);
         }
         throw error;
       }
     },
 
     async login(email, password) {
+      console.log('[AuthStore] Iniciando login para:', email);
       try {
-        console.log('URL de login:', `${API_BASE_URL}/login`)
-        console.log('Datos enviados:', { email, password })
+        const response = await apiService.login({ email, password })
+        console.log('[AuthStore] Login exitoso, respuesta:', response.data);
         
-        const response = await axios.post(`${API_BASE_URL}/login`, {
-          email,
-          password
-        }, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
-        })
-
-        console.log('Respuesta completa:', response)
-        console.log('Datos de respuesta:', response.data)
-
-        // Verificar la estructura de la respuesta
-        if (response.data.status === 'success' && response.data.data) {
-          // Asumiendo que el token y el usuario están dentro de data
-          const { token, user } = response.data.data
-
-          if (!token) {
-            throw new Error('No se recibió token del servidor')
-          }
-
-          this.token = token
-          this.user = user
-          
-          // Configurar axios para futuras peticiones
-          axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`
-          
-          localStorage.setItem('token', this.token)
-          localStorage.setItem('user', JSON.stringify(this.user))
-          
-          return response.data
-        } else {
-          console.error('Respuesta inesperada:', response.data)
-          throw new Error('Formato de respuesta inválido')
+        // Procesar respuesta exitosa
+        const { token, user } = response.data.data;
+        
+        console.log('[AuthStore] Token recibido:', token ? 'Presente' : 'No encontrado');
+        console.log('[AuthStore] Usuario recibido:', user ? user.name : 'No encontrado');
+        
+        if (!token) {
+          throw new Error('No se recibió token en la respuesta');
         }
+        
+        // Guardar token y datos de usuario
+        localStorage.setItem('token', token)
+        localStorage.setItem('user', JSON.stringify(user))
+        console.log('[AuthStore] Token y usuario guardados en localStorage');
+        
+        // Actualizar estado directamente
+        this.token = token;
+        this.user = user;
+        this.authenticated = true;
+        
+        console.log('[AuthStore] Token y usuario establecidos en el store');
+        console.log('[AuthStore] Estado después de login:', 
+          this.authenticated ? 'Autenticado' : 'No autenticado', 
+          'Token:', this.token ? 'Presente' : 'No encontrado');
+        
+        return response
       } catch (error) {
-        console.error('Error completo:', error)
-        console.error('Detalles del error:', {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status
-        })
-        
-        if (error.response?.status === 401) {
-          throw new Error('Email o contraseña incorrectos')
-        }
-        
-        throw new Error(error.response?.data?.message || error.message || 'Error al iniciar sesión')
+        console.error('[AuthStore] Error en login:', error);
+        // Propagar el error para que el componente pueda manejarlo
+        throw error
       }
     },
 
     logout() {
-      this.token = null
-      this.user = null
+      console.log('[AuthStore] Cerrando sesión');
+      
+      // Actualizar estado directamente
+      this.token = null;
+      this.user = null;
+      this.authenticated = false;
+      
       localStorage.removeItem('token')
       localStorage.removeItem('user')
+      console.log('[AuthStore] Sesión cerrada, token y usuario eliminados');
     },
 
     async register(userData) {
+      console.log('[AuthStore] Registrando nuevo usuario:', userData.email);
       try {
-        const response = await axios.post(`${API_URL}/register`, userData);
+        const response = await apiService.register(userData);
+        console.log('[AuthStore] Registro exitoso:', response.data);
         return response;
       } catch (error) {
+        console.error('[AuthStore] Error en registro:', error);
         throw error;
       }
     },
 
-    async updateProfile(userData) {
-      try {
-        if (!this.user?.id) {
-          throw new Error('No se encontró el ID del usuario')
-        }
-
-        const response = await axios.put(`${API_URL}/users/${this.user.id}`, userData, {
-          headers: {
-            'Authorization': `Bearer ${this.token}`,
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
-        })
-        
-        if (response.data) {
-          const updatedUser = { ...this.user, ...userData }
-          this.user = updatedUser
-          localStorage.setItem('user', JSON.stringify(updatedUser))
-          return updatedUser
-        } else {
-          throw new Error('No se recibieron datos actualizados del usuario')
-        }
-      } catch (error) {
-        console.error('Error en updateProfile:', error)
-        if (error.message?.includes('successfully')) {
-          const updatedUser = { ...this.user, ...userData }
-          this.user = updatedUser
-          localStorage.setItem('user', JSON.stringify(updatedUser))
-          return updatedUser
-        }
-        throw new Error(error.response?.data?.message || 'Error al actualizar el perfil')
-      }
+    async updateProfile(data) {
+      console.log('[AuthStore] Actualizando perfil para:', this.user?.name);
+      const response = await apiService.updateProfile(data)
+      console.log('[AuthStore] Perfil actualizado:', response.data);
+      
+      this.user = response.data;
+      localStorage.setItem('user', JSON.stringify(this.user))
     },
 
     async deleteAccount() {
-      try {
-        if (!this.user?.id) {
-          throw new Error('No se encontró el ID del usuario')
-        }
+      console.log('[AuthStore] Eliminando cuenta');
+      await apiService.deleteAccount()
+      console.log('[AuthStore] Cuenta eliminada');
+      this.logout()
+    },
 
-        await axios.delete(`${API_URL}/users/${this.user.id}`, {
-          headers: {
-            'Authorization': `Bearer ${this.token}`,
-            'Accept': 'application/json'
-          }
-        })
-
-        // Limpiar datos del usuario
-        this.logout()
-        return true
-      } catch (error) {
-        console.error('Error al eliminar cuenta:', error)
-        throw new Error(error.response?.data?.message || 'Error al eliminar la cuenta')
-      }
+    setAuth(data) {
+      console.log('[AuthStore] Estableciendo autenticación manualmente');
+      
+      this.token = data.token;
+      this.user = data.user;
+      this.authenticated = true;
+      
+      localStorage.setItem('token', this.token);
+      localStorage.setItem('user', JSON.stringify(this.user));
+      console.log('[AuthStore] Autenticación establecida para:', this.user.name);
     },
   },
 });

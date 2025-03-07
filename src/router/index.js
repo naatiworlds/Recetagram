@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useNotificationStore } from '../stores/notification'
+import PostsAdmin from '../pages/Admin/Posts.vue'
+import CommentsAdmin from '../pages/Admin/Comments.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -43,6 +45,31 @@ const router = createRouter({
       props: true
     },
     {
+      path: '/admin',
+      name: 'admin',
+      component: () => import('../pages/Admin/Dashboard.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true },
+      children: [
+        {
+          path: 'users',
+          name: 'admin-users',
+          component: () => import('../pages/Admin/Users.vue')
+        },
+        {
+          path: 'posts',
+          name: 'PostsAdmin',
+          component: PostsAdmin,
+          meta: { requiresAuth: true, requiresAdmin: true }
+        },
+        {
+          path: 'comments',
+          name: 'CommentsAdmin',
+          component: CommentsAdmin,
+          meta: { requiresAuth: true, requiresAdmin: true }
+        }
+      ]
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('../pages/404.vue')
@@ -76,6 +103,12 @@ router.beforeEach(async (to, from, next) => {
       'info',
       5000
     )
+  }
+  
+  if (to.meta.requiresAdmin && authStore.user?.role?.toLowerCase() !== 'admin') {
+    notificationStore.showNotification('Acceso denegado: Solo administradores', 'error')
+    next('/')
+    return
   }
   
   next()

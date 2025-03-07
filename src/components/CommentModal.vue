@@ -78,7 +78,7 @@ export default {
   props: {
     isOpen: {
       type: Boolean,
-      default: false
+      required: true
     },
     postId: {
       type: [String, Number],
@@ -97,6 +97,7 @@ export default {
   },
   watch: {
     isOpen(newVal) {
+      console.log('CommentModal isOpen changed to:', newVal);
       if (newVal) {
         this.fetchComments()
       }

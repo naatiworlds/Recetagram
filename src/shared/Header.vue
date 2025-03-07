@@ -1,90 +1,121 @@
 <template>
-    <header id="header">
-        <div id="icon-Container">
-            <div class='wrap'>
-                <input name="light-dark" type='checkbox'>
-                <div class='griddle'></div>
-                <div class='cake'></div>
-                <div class='syrup'></div>
-                <div class='butter'></div>
-                <div class='butter two'></div>
-            </div>
-            <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-                <defs>
-                    <filter id="goo">
-                        <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
-                        <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9"
-                            result="goo" />
-                        <feComposite in="SourceGraphic" in2="goo" operator="atop" />
-                    </filter>
-                </defs>
-            </svg>
-            <svg class="svg" viewBox="0 0 400 400">
-                <defs>
-                    <filter id="duotone-filter-post-one">
-                        <feColorMatrix type="matrix"
-                            values="0.14453125 0 0 0 0.33203125 0.71875 0 0 0 0.27734375 -0.34765625 0 0 0 0.73046875 0 0 0 1 0">
-                        </feColorMatrix>
-                    </filter>
-                </defs>
-            </svg>
-            <div class="toggle-switch">
-                <input type="checkbox" id="toggleSwitch" name="toggleSwitch">
-                <label for="toggleSwitch" class="chef-hat">
-                    <div class="hat-top">
-                        <div class="half-circle left"></div>
-                        <div class="half-circle middle"></div>
-                        <div class="half-circle right"></div>
-                    </div>
-                    <div class="hat-body">
-                        <div class="line line1"></div>
-                        <div class="line line2"></div>
-                        <div class="line line3"></div>
-                        <div class="line line4"></div>
-                        <div class="line line5"></div>
-                    </div>
-                    <div class="hat-brim"></div>
-                </label>
-            </div>
-            <i class="fa-solid fa-bars fa-lg" id="toggleMenuButton" @click="toggleMenu"></i>
+  <header id="header">
+    <div id="icon-Container">
+      <div class='wrap'>
+        <input name="light-dark" type='checkbox'>
+        <div class='griddle'></div>
+        <div class='cake'></div>
+        <div class='syrup'></div>
+        <div class='butter'></div>
+        <div class='butter two'></div>
+      </div>
+      <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+        <defs>
+          <filter id="goo">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
+            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" result="goo" />
+            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+          </filter>
+        </defs>
+      </svg>
+      <svg class="svg" viewBox="0 0 400 400">
+        <defs>
+          <filter id="duotone-filter-post-one">
+            <feColorMatrix type="matrix"
+              values="0.14453125 0 0 0 0.33203125 0.71875 0 0 0 0.27734375 -0.34765625 0 0 0 0.73046875 0 0 0 1 0">
+            </feColorMatrix>
+          </filter>
+        </defs>
+      </svg>
+      <div class="toggle-switch">
+        <input type="checkbox" id="toggleSwitch" name="toggleSwitch">
+        <label for="toggleSwitch" class="chef-hat">
+          <div class="hat-top">
+            <div class="half-circle left"></div>
+            <div class="half-circle middle"></div>
+            <div class="half-circle right"></div>
+          </div>
+          <div class="hat-body">
+            <div class="line line1"></div>
+            <div class="line line2"></div>
+            <div class="line line3"></div>
+            <div class="line line4"></div>
+            <div class="line line5"></div>
+          </div>
+          <div class="hat-brim"></div>
+        </label>
+      </div>
+      <i class="fa-solid fa-bars fa-lg" id="toggleMenuButton" @click="toggleMenu"></i>
+    </div>
+    <h1><a href="/">Recetagram</a></h1>
 
-        </div>
-        <h1><a href="/">Recetagram</a></h1>
+    <div class="icon-group">
+      <div class="notification-wrapper">
+        <i class="fa-solid fa-bell fa-lg notificaciones" @click="toggleNotifications"></i>
+        <span v-if="notificationStore.unreadCount" class="notification-badge">
+          {{ notificationStore.unreadCount }}
+        </span>
+      </div>
+      <i class="fa-solid fa-message fa-lg mensaje"></i>
+      <img :src="imagen" alt="Logo" width="50px">
+    </div>
 
-        <div class="icon-group">
-
-            <i class="fa-solid fa-bell fa-lg notificaciones"></i>
-            <i class="fa-solid fa-message fa-lg mensaje"></i>
-            <img :src="imagen" alt="Logo" width="50px">
-            <!-- Contenido adicional -->
-        </div>
-
-    </header>
+    <NotificationModal 
+      :is-open="showNotifications" 
+      @close="toggleNotifications"
+    />
+  </header>
 </template>
 
 <script>
-import { DEFAULT_AVATAR_URL } from '../utils/globalConstants';
+import { DEFAULT_AVATAR_URL, API_BASE_URL } from '../utils/globalConstants';
 import logo from "../assets/descarga.png";
 import setupTheme from "../utils/changeLightDark";
+import { useInteractionNotificationStore } from '../stores/interactionNotifications.js'
+import NotificationModal from '../components/NotificationModal.vue'
 
 export default {
-    data() {
-        return {
-            imagen: logo,
-            avatarUrl: DEFAULT_AVATAR_URL,
-            isDarkMode: false,
-        }
-    },
-    mounted() {
-        // Llamar a la función para configurar el tema cuando el componente se monta
-        setupTheme();
-    },
-    methods: {
-        toggleMenu() {
-            this.$emit("toggle-menu");
-        },
-
+  components: {
+    NotificationModal
+  },
+  
+  data() {
+    return {
+      imagen: logo,
+      avatarUrl: DEFAULT_AVATAR_URL,
+      isDarkMode: false,
+      showNotifications: false
     }
+  },
+  
+  setup() {
+    const notificationStore = useInteractionNotificationStore()
+    return { notificationStore }
+  },
+  
+  async mounted() {
+    setupTheme()
+    if (this.notificationStore) {
+      console.log('Fetching notifications from Header');
+      await this.notificationStore.fetchNotifications()
+      console.log('Notifications after fetch:', this.notificationStore.notifications);
+    }
+  },
+  
+  methods: {
+    toggleMenu() {
+      this.$emit("toggle-menu")
+    },
+    
+    async toggleNotifications() {
+      console.log('Toggling notifications');
+      this.showNotifications = !this.showNotifications
+      if (this.showNotifications) {
+        await this.notificationStore.fetchNotifications()
+        console.log('Notifications after toggle:', this.notificationStore.notifications);
+      }
+    }
+  }
 }
 </script>
 
@@ -768,5 +799,98 @@ body .wrap .griddle:after {
 #toggleSwitch:checked+.chef-hat .hat-brim,
 #toggleSwitch:checked+.chef-hat .line {
     background-color: var(--text-color-important);
+}
+
+.notification-wrapper {
+    position: relative;
+    cursor: pointer;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: var(--contrast-color);
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 12px;
+    min-width: 18px;
+    text-align: center;
+    z-index: 1001; /* Asegurar que el badge esté por encima */
+}
+
+.notifications-modal {
+    position: fixed;
+    top: 60px;
+    right: 20px;
+    background: var(--complementary-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    max-height: 400px;
+    z-index: 1000;
+    overflow: hidden; /* Añadido para asegurar que el contenido no se desborde */
+}
+
+.notifications-content {
+    padding: 15px;
+}
+
+.notifications-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--sombra-color);
+}
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: var(--text-color);
+}
+
+.notifications-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    padding: 10px;
+    border-bottom: 1px solid var(--sombra-color);
+    cursor: pointer;
+}
+
+.notification-item:hover {
+    background: var(--primary-color);
+}
+
+.notification-item.unread {
+    background: var(--primary-color);
+    font-weight: bold;
+}
+
+.notification-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.notification-message {
+    font-size: 1em;
+}
+
+.notification-time {
+    font-size: 0.8em;
+    color: var(--text-color);
+    margin-top: 5px;
+}
+
+.no-notifications {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-color);
 }
 </style>

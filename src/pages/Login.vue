@@ -52,23 +52,41 @@ export default {
     return {
       email: '',
       password: '',
-      loading: false
+      loading: false,
+      errors: {}
     }
   },
   methods: {
     async handleLogin() {
       this.loading = true
+      this.errors = {}
+      
       const authStore = useAuthStore()
       const notificationStore = useNotificationStore()
+      
       try {
         await authStore.login(this.email, this.password)
         this.$router.push('/home')
         notificationStore.showNotification('Inicio de sesión exitoso', 'success')
       } catch (error) {
-        notificationStore.showNotification(
-          error.message || 'Error al iniciar sesión',
-          'error'
-        )
+        // Manejar errores de validación
+        if (error.response?.status === 422) {
+          this.errors = error.validationErrors || {}
+          
+          // Mostrar mensaje de error formateado
+          notificationStore.showNotification(
+            error.formattedMessage || 'Error en los datos de inicio de sesión',
+            'error'
+          )
+        } else {
+          // Otros errores
+          notificationStore.showNotification(
+            error.message || 'Error al iniciar sesión',
+            'error'
+          )
+        }
+        
+        console.error('Error de login:', error)
       } finally {
         this.loading = false
       }

@@ -6,143 +6,141 @@
         <button class="close-button" @click="closeModal">×</button>
       </header>
       <main>
-        <div class="separador">
-          <div class="linea"></div>
-          <div class="circulo">📝</div>
-          <div class="linea"></div>
-        </div>
-        
         <form @submit.prevent="submitPost" id="form">
-          <label>
-            Autor
-            <input type="text" v-model="post.author" placeholder="Nombre del autor" required>
-            <span v-if="errors.author" class="error">{{ errors.author }}</span>
-          </label>
+          <div class="title-image-container">
+            <label>
+              Título
+              <input type="text" v-model="post.title" placeholder="Título del post" required />
+              <span v-if="errors.title" class="error">{{ errors.title }}</span>
+            </label>
+            <label>
+              Imagen
+              <input type="file" @change="handleFileUpload" accept="image/png, image/jpeg" required class="wide-input" />
+              <span v-if="errors.image" class="error">{{ errors.image }}</span>
+            </label>
+          </div>
           
           <label>
-            Título
-            <input type="text" v-model="post.title" placeholder="Título del post" required>
-            <span v-if="errors.title" class="error">{{ errors.title }}</span>
+            Descripción
+            <textarea v-model="post.description" placeholder="Descripción del post" required class="small-textarea"></textarea>
+            <span v-if="errors.description" class="error">{{ errors.description }}</span>
           </label>
           
-          <label>
-            Contenido
-            <textarea v-model="post.content" placeholder="Contenido del post" required></textarea>
-            <span v-if="errors.content" class="error">{{ errors.content }}</span>
-          </label>
-          
-          <label>
-            Etiquetas
-            <input type="text" v-model="post.tags" placeholder="Buscar etiquetas" required>
-            <span v-if="errors.tags" class="error">{{ errors.tags }}</span>
-          </label>
-          
-          <label>
-            Imagen
-            <input type="file" @change="handleImageUpload" accept="image/png, image/jpeg" required>
-            <span v-if="errors.image" class="error">{{ errors.image }}</span>
-          </label>
-          
+          <div class="ingredients-container">
+            <h3>Ingredientes</h3>
+            <div v-for="(ingredient, index) in post.ingredients" :key="index" class="ingredient-input">
+              <input type="text" v-model="ingredient.name" placeholder="Nombre del ingrediente" required />
+              <input type="text" v-model="ingredient.quantity" placeholder="Cantidad" required />
+              <button type="button" @click="removeIngredient(index)" class="remove-button">×</button>
+              <button type="button" @click="addIngredient" class="add-button">+</button>
+            </div>
+          </div>
+
           <button type="submit">Subir Post</button>
         </form>
+        <div v-if="message">{{ message }}</div>
       </main>
     </section>
   </div>
 </template>
 
 <script>
+import { useAuthStore } from '../stores/auth';
+import { API_BASE_URL } from '../utils/globalConstants';
+import axios from 'axios';
+
 export default {
   name: 'Crear',
   data() {
     return {
       post: {
-        author: '',
         title: '',
-        content: '',
-        image: null,
-        tags: ''
+        description: '',
+        imagen: null,
+        ingredients: [{ name: '', quantity: '' }] // Inicializa con un ingrediente vacío
       },
       errors: {
-        author: '',
         title: '',
-        content: '',
+        description: '',
         image: '',
-        tags: ''
-      }
+      },
+      message: ''
     };
   },
   methods: {
-    handleImageUpload(event) {
-      const file = event.target.files[0];
-      const validTypes = ['image/png', 'image/jpeg'];
-      const maxSize = 2 * 1024 * 1024; // 2MB
-
-      this.errors.image = '';
-
-      if (!validTypes.includes(file.type)) {
-        this.errors.image = 'Solo se permiten archivos PNG o JPG.';
-        return;
-      }
-
-      if (file.size > maxSize) {
-        this.errors.image = 'El tamaño del archivo no debe exceder los 2MB.';
-        return;
-      }
-
-      const img = new Image();
-      img.onload = () => {
-        const width = img.width;
-        const height = img.height;
-        if (width !== height) {
-          this.errors.image = 'La imagen debe tener una proporción de 4:4 (cuadrada).';
-          return;
-        }
-        this.post.image = URL.createObjectURL(file);
-      };
-      img.src = URL.createObjectURL(file);
+    handleFileUpload(event) {
+      const file = event.target.files[0]; // Captura el archivo de imagen
+      console.log('Archivo de imagen capturado:', file); // Trazabilidad
+      this.post.imagen = file; // Asigna el archivo a la propiedad 'imagen'
     },
-    submitPost() {
-      this.clearErrors();
+    addIngredient() {
+      this.post.ingredients.push({ name: '', quantity: '' }); // Añade un nuevo ingrediente vacío
+    },
+    removeIngredient(index) {
+      this.post.ingredients.splice(index, 1); // Elimina el ingrediente en el índice especificado
+    },
+    async submitPost() {
+      const formData = new FormData();
+      const authStore = useAuthStore();
+      this.post.author = authStore.user?.name || 'Autor desconocido';
 
-      if (!this.post.author) {
-        this.errors.author = 'El autor es obligatorio.';
-      }
+      // Validaciones
       if (!this.post.title) {
         this.errors.title = 'El título es obligatorio.';
       }
-      if (!this.post.content) {
-        this.errors.content = 'El contenido es obligatorio.';
+      if (!this.post.description) {
+        this.errors.description = 'La descripción es obligatoria.';
       }
-      if (!this.post.tags) {
-        this.errors.tags = 'Las etiquetas son obligatorias.';
-      }
-      if (!this.post.image) {
+      if (!this.post.imagen) {
         this.errors.image = 'La imagen es obligatoria.';
+      }
+      if (this.post.ingredients.some(ingredient => !ingredient.name || !ingredient.quantity)) {
+        this.errors.ingredients = 'Todos los ingredientes deben tener nombre y cantidad.';
       }
 
       if (Object.values(this.errors).some(error => error)) {
+        console.log('Errores encontrados:', this.errors);
         return;
       }
 
-      // Aquí puedes manejar la lógica para subir el post, por ejemplo, enviarlo a un servidor
-      console.log(this.post);
-      alert('Post subido con éxito');
-      this.closeModal();
+      // Preparar los datos para enviar
+      formData.append('author', this.post.author);
+      formData.append('title', this.post.title);
+      formData.append('description', this.post.description);
+      formData.append('imagen', this.post.imagen);
+      formData.append('ingredients', JSON.stringify(this.post.ingredients)); // Asegúrate de que este campo esté presente
+
+      console.log('Datos a enviar:', {
+        author: this.post.author,
+        title: this.post.title,
+        description: this.post.description,
+        imagen: this.post.imagen,
+        ingredients: this.post.ingredients
+      }); // Trazabilidad de los datos enviados
+
+      try {
+        const response = await axios.post(`${API_BASE_URL}/posts`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        this.message = response.data.message;
+
+        // Cerrar el modal y emitir evento de nuevo post
+        this.closeModal(true);
+        this.$emit('reloadPosts'); // Emitir evento para recargar los posts
+      } catch (error) {
+        console.error('Error al subir el post:', error);
+        console.error('Detalles de la respuesta del servidor:', error.response.data);
+        this.message = 'Error al subir el post: ' + (error.response?.data?.message || error.message);
+      }
     },
-    clearErrors() {
-      this.errors = {
-        author: '',
-        title: '',
-        content: '',
-        image: '',
-        tags: ''
-      };
-    },
-    closeModal() {
-      this.$emit('close');
+    closeModal(created = false) {
+      this.$emit('close', created); // Emitir evento con información si se creó un nuevo post
     }
   }
-}
+};
 </script>
 
 <style scoped>
@@ -295,5 +293,50 @@ button[type="submit"]:hover {
   input, textarea, button[type="submit"] {
     padding: 12px;
   }
+}
+
+.title-image-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.wide-input {
+  width: 100%; /* Aumenta el ancho del input de imagen */
+}
+
+.small-textarea {
+  min-height: 80px; /* Ajusta la altura según sea necesario */
+}
+
+.ingredients-container {
+  margin-top: 20px;
+}
+
+.ingredient-input {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px; /* Reduce el espacio vertical */
+}
+
+.ingredient-input input {
+  flex: 1;
+  margin-right: 10px;
+}
+
+.remove-button, .add-button {
+  background-color: red; /* Fondo rojo para los botones */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 5px 10px;
+  width: 40px; /* Establece un ancho fijo para ambos botones */
+  height: 40px; /* Establece una altura fija para ambos botones */
+  font-size: 20px; /* Asegura que el tamaño de la fuente sea consistente */
+}
+
+.add-button {
+  margin-left: 10px; /* Espacio entre la "X" y el botón "+" */
 }
 </style>

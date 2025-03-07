@@ -117,7 +117,10 @@ export default {
     },
 
     handleComments() {
-      this.$emit('open-comments', this.post.id)
+      this.$router.push({ 
+        path: `/post/${this.post.id}`, 
+        query: { showComments: true }
+      });
     },
 
     handleShare() {

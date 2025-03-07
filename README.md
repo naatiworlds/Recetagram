@@ -69,7 +69,7 @@ Existen plataformas similares en el mercado, como:
 
 ## 🎯 Roadmap de Desarrollo
 
-### Web minimos
+### Web mínimos
 
 - [x] **Diseñar wireframe**
 - [x] **Diseñar maqueta**
@@ -85,15 +85,15 @@ Existen plataformas similares en el mercado, como:
 - [x] **Implementar Sistema de Comentarios**
 - [x] **Contador de Comentarios en Posts**
 - [x] **Modal de Comentarios con Cierre al Click Fuera**
-- [ ] **Sistema de Notificaciones de usuario (likes, comentarios en post, nuevas subidas... )**
-- [ ] **Implementar Perfiles por Cada Persona**
-- [ ] **Búsqueda de Recetas ( filtros )**
+- [x] **Implementar Perfiles por Cada Persona**
+- [ ] **Sistema de Notificaciones de usuario (likes, comentarios en post, nuevas subidas...)**
+- [ ] **Búsqueda de Recetas (filtros)**
 - [ ] **Edición del perfil del usuario**
 - [ ] **Funcionalidades de Edición de Recetas en los posts mediante el perfil**
 - [ ] **Integración de modo oscuro/claro**
 - [ ] **Integración de temas personalizados**
 
-### Api minimos
+### Api mínimos
 
 - [x] **Implementar roles de admins 🍴**
 - [x] **Implementar roles de moderador 🍽️**
@@ -103,7 +103,7 @@ Existen plataformas similares en el mercado, como:
 - [ ] **Implementar Sistema de Aprobación de Publicaciones**
 - [ ] **Categorización de Recetas**
 - [ ] **Sistema de Mensajería Privada**
-- [ ] **Notificaciones de usuario (likes, comentarios en post, nuevas subidas... )**
+- [ ] **Notificaciones de usuario (likes, comentarios en post, nuevas subidas...)**
 - [ ] **Estadísticas de Recetas**
 - [ ] **Recetas Destacadas**
 - [ ] **Integración de Videos**
@@ -111,11 +111,11 @@ Existen plataformas similares en el mercado, como:
 - [ ] **Logros**
 
 ---
+
 ### Opcionales
 
 - [x] **Publicar en redes**
 - [x] **Añadir botón de donaciones**
-
 
 ## 💖 Apartado de Donaciones
 
