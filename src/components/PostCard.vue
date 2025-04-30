@@ -1,0 +1,619 @@
+<template>
+  <article class="post-card" :class="{ expanded: showInModal }">
+    <div class="post-header">
+      <router-link :to="`/user/${post.user.id}`" class="username-link">
+        <div class="user-info">
+          <div class="avatar">
+            <span class="avatar-text">{{ getInitials(post.user?.name) }}</span>
+          </div>
+          <div class="user-details">
+            {{ post.user.name }}
+            <span v-if="post.user?.role" class="role-badge">
+              {{ post.user.role }}
+            </span>
+          </div>
+        </div>
+      </router-link>
+    </div>
+
+    <!-- Imagen clickeable -->
+    <router-link :to="postUrl" class="post-image-link">
+      <img :src="getImageUrl(post.imagen)" class="post-img" :alt="post.title" @error="handleImageError" />
+    </router-link>
+
+    <h2 class="post-title">{{ post.title }}</h2>
+    <p class="post-description">{{ post.description }}</p>
+
+    <!-- Usar la propiedad computada parsedIngredients -->
+    <div class="ingredients" v-if="parsedIngredients.length">
+      <div class="ingredient-tags">
+        <span v-for="(ingredient, idx) in parsedIngredients" :key="idx" class="ingredient-tag">
+          {{ ingredient.name }} - {{ ingredient.quantity }}
+        </span>
+      </div>
+    </div>
+
+    <p class="date">{{ formatDate(post.created_at) }}</p>
+
+    <div class="actions">
+      <button @click="handleLike" :class="{ liked: isLiked }">
+        <i class="fas fa-heart"></i>
+        {{ likesCount }}
+      </button>
+
+      <button class="comment-button" @click="handleComments">
+        <i class="fas fa-comment"></i>
+        {{ commentsCount }}
+      </button>
+
+      <button class="share-button" @click="handleShare">
+        <i class="fas fa-share"></i>
+      </button>
+
+      <!-- Botón de edición -->
+      <button v-if="isProfileView && isOwnProfile" @click="handleEdit" class="edit-button">
+        <i class="fas fa-edit"></i>
+      </button>
+      <button v-if="isProfileView && isOwnProfile" @click="confirmDelete" class="action-button delete">
+        <i class="fas fa-trash"></i>
+      </button>
+    </div>
+
+    <!-- Modal de confirmación -->
+    <div v-if="showDeleteModal" class="modal">
+      <div class="modal-content">
+        <h3>¿Estás seguro de que quieres borrar este post?</h3>
+        <p>Esta acción no se puede deshacer.</p>
+        <div class="modal-actions">
+          <button @click="handleDelete" class="confirm-delete">
+            Sí, borrar
+          </button>
+          <button @click="showDeleteModal = false" class="cancel">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  </article>
+</template>
+
+<script>
+import { apiService } from '../services/api'
+import { useUserStore } from '../stores/user'
+import { useNotificationStore } from '../stores/notification'
+import { useUserNotificationStore } from '../stores/interactionNotifications'
+import { STORAGE_URL } from '../utils/globalConstants'
+import router from '@/router'
+
+export default {
+  name: 'PostCard',
+
+  props: {
+    post: {
+      type: Object,
+      required: true
+    },
+    showInModal: {
+      type: Boolean,
+      default: false
+    },
+    isProfileView: {
+      type: Boolean,
+      default: false
+    },
+    isOwnProfile: {
+      type: Boolean,
+      default: false
+    }
+  },
+
+  data() {
+    return {
+      isLiked: false,
+      showDeleteModal: false,
+      userNotifications: useUserNotificationStore()
+    }
+  },
+
+  computed: {
+    userStore() {
+      return useUserStore()
+    },
+    notificationStore() {
+      return useNotificationStore()
+    },
+    likesCount() {
+      const count = this.post?.likes_count || 0;
+      return count;
+    },
+    commentsCount() {
+      const count = this.post?.comments_count || 0;
+      return count;
+    },
+    postUrl() {
+      return `/posts/${this.post.id}`
+    },
+    canEdit() {
+      return (
+        this.userStore.isAuthenticated &&
+        this.isProfileView &&
+        this.post.user_id === this.userStore.user?.id
+      )
+    },
+    parsedIngredients() {
+      const ing = this.post.ingredients
+      if (!ing) return []
+      if (Array.isArray(ing)) return ing
+      if (typeof ing === 'string') {
+        try {
+          const validJSON = ing.replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":')
+          return JSON.parse(validJSON)
+        } catch (error) {
+          console.error('Error parsing ingredients:', error)
+          return []
+        }
+      }
+      return []
+    },
+    isOwnPost() {
+      return this.post.user_id === this.userStore.user?.id
+    }
+  },
+
+  
+
+  methods: {
+    getImageUrl(image) {
+      if (!image) return null;
+      return image.startsWith('http') ? image : `${STORAGE_URL}/${image}`;
+    },
+
+    getInitials(name) {
+      if (!name) return 'U';
+      return name.split(' ').map(n => n[0]).join('').toUpperCase();
+    },
+
+    formatDate(date) {
+      if (!date) return '';
+      return new Date(date).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+    },
+
+    handleLike() {
+      if (!this.userStore.isAuthenticated) {
+        this.notificationStore.show('Debes iniciar sesión para dar like', 'warning');
+        return;
+      }
+      apiService.toggleLike(this.post.id)
+        .then(response => {
+          const wasLiked = this.isLiked;
+          this.isLiked = response.data.data.liked;
+          console.log("[PostCard] Estado del like:", this.isLiked);
+          this.$emit('post-updated', {
+            ...this.post,
+            likes_count: response.data.data.likes_count
+          });
+          this.notificationStore.show(
+            this.isLiked ? 'Like agregado correctamente' : 'Like eliminado correctamente',
+            'success'
+          );
+          if (!wasLiked && this.isLiked) {
+            this.userNotifications.fetchNotifications();
+          }
+        })
+        .catch(error => {
+          this.notificationStore.show(
+            error.response?.data?.message || 'Error al procesar el like',
+            'error'
+          );
+        });
+    },
+
+    handleComments() {
+      if (!this.userStore.isAuthenticated) {
+        this.notificationStore.show('Debes iniciar sesión para ver los comentarios', 'warning');
+        return;
+      }
+      this.$emit('show-comments', this.post.id);
+    },
+
+    handleShare() {
+      const postUrl = `${window.location.origin}/posts/${this.post.id}`
+      if (navigator.share) {
+        navigator.share({
+          title: this.post.title,
+          text: this.post.description || '',
+          url: postUrl
+        }).catch((error) => {
+          console.error('Error compartiendo:', error)
+          window.location.href = postUrl
+        })
+      } else {
+        try {
+          navigator.clipboard.writeText(postUrl)
+            .then(() => {
+              this.notificationStore.show('Enlace copiado al portapapeles', 'success')
+            })
+            .catch(() => {
+              window.location.href = postUrl
+            })
+        } catch {
+          window.location.href = postUrl
+        }
+      }
+    },
+
+    navigateToPost() {
+      if (!this.showInModal) {
+        this.$router.push(this.postUrl)
+      }
+    },
+
+    handleImageError(e) {
+      e.target.src = '/default-post-image.jpg'
+    },
+
+    handleEdit() {
+      this.$emit('edit-post', this.post)
+    },
+    async handlePostUpdated() {
+      this.handleModalClose();
+      // Aquí recargas los posts (ver opción 1)
+    },
+    confirmDelete() {
+      this.showDeleteModal = true
+    },
+
+    handleDelete() {
+      apiService.deletePost(this.post.id)
+        .then(() => {
+          this.notificationStore.show('Post eliminado correctamente', 'success')
+          this.$emit('post-deleted', this.post.id)
+        })
+        .catch(error => {
+          this.notificationStore.show(
+            error.response?.data?.message || 'Error al eliminar el post',
+            'error'
+          )
+        })
+        .finally(() => {
+          this.showDeleteModal = false
+        })
+    },
+
+    async checkLikeStatus() {
+      if (this.userStore.isAuthenticated && this.post?.id) {
+        try {
+          const response = await apiService.toggleLike(this.post.id);
+          this.isLiked = response.data.is_liked;
+        } catch (error) {
+          console.error('Error al verificar estado del like:', error);
+        }
+      }
+    }
+  },
+
+  created() {
+    // Nota: Si tienes dos bloques created en el componente, asegúrate de combinarlos.
+    console.log("[PostCard] created hook finalizado");
+  }
+}
+</script>
+
+
+<style scoped>
+/* === Tarjeta de publicación (PostCard) === */
+.post-card {
+  flex-shrink: 0;
+  text-align: center;
+  background-color: var(--sombra-color);
+  border-radius: 10px;
+  color: var(--text-color);
+  height: calc((100vh - 240px) * 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.2s ease;
+}
+
+
+/* === Cabecera del post === */
+.post-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  align-content: center;
+  justify-content: center;
+  margin-top: .5em;
+}
+
+/* Enlace del nombre de usuario */
+.username-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* === Información de usuario === */
+.user-info {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin-bottom: 10px;
+  align-items: center;
+  width: 100%;
+  align-content: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.avatar {
+  width: 50px;
+  height: 50px;
+  background-color: var(--primary-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.role-badge {
+  background-color: var(--contrast-color);
+  color: #FEFDF4;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  text-transform: capitalize;
+  margin-left: .5em;
+}
+
+/* === Imagen del post === */
+.post-image-link {
+  display: block;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.post-image-link:hover {
+  transform: scale(1.02);
+}
+
+.post-img {
+  width: 100%;
+  height: calc((100vh - 240px) * 0.4);
+  /* 40% de la altura del card */
+  object-fit: cover;
+  border-radius: 10px;
+  margin: 10px 0;
+}
+
+/* === Título y descripción === */
+.post-title {
+  font-size: clamp(.5rem, 1vw, 1rem);
+
+  margin: 10px 0;
+}
+
+.post-description {
+  font-size: 1em;
+  color: var(--text-secondary-color);
+  margin-bottom: 10px;
+}
+
+/* === Sección de ingredientes === */
+.ingredient-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.ingredient-tag {
+  background-color: #e9e9e9;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 0.9em;
+  color: #333;
+}
+
+/* === Fecha === */
+.date {
+  font-size: 0.9em;
+  color: gray;
+}
+
+/* === Acciones (botones de like, comentario y share) === */
+.actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 15px;
+}
+
+.actions button,
+.share-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: var(--contrast-color);
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 8px 15px;
+  border-radius: 5px;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.actions button:hover,
+.share-button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.edit-button {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+
+.post-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.action-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.edit {
+  background-color: var(--primary-color);
+  color: var(--text-color-important);
+}
+
+.delete {
+  background-color: var(--primary-color);
+  color: var(--text-color-important);
+}
+
+.edit:hover {
+  opacity: 0.8;
+  transform: translateY(-2px);
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: var(--primary-color);
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+.modal-actions button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.confirm-delete {
+  background-color: var(--contrast-color);
+  color: white;
+}
+
+.cancel {
+  background-color: var(--secundary-color);
+}
+
+/* Media queries para ajustar la imagen en pantallas más pequeñas */
+@media (max-width: 768px) {
+  .post-card {
+    height: calc(100vh - 260px);
+  }
+
+  .post-img {
+    height: calc((100vh - 260px) * 0.35);
+    /* 35% en tablets */
+  }
+
+  .post-title {
+    font-size: 1.3em;
+    margin: 8px 0;
+  }
+
+  .post-description {
+    font-size: 0.95em;
+    margin-bottom: 8px;
+  }
+
+  .ingredient-tag {
+    font-size: 0.85em;
+    padding: 4px 10px;
+  }
+
+  .date {
+    font-size: 0.85em;
+  }
+}
+
+@media (max-width: 480px) {
+  .post-card {
+    height: calc(100vh - 280px);
+    padding: 10px;
+  }
+
+  .post-img {
+    height: calc((100vh - 280px) * 0.3);
+    /* 30% en móviles */
+  }
+
+  .post-title {
+    font-size: 1.1em;
+    margin: 6px 0;
+  }
+
+  .post-description {
+    font-size: 0.9em;
+    margin-bottom: 6px;
+  }
+
+  .ingredient-tag {
+    font-size: 0.8em;
+    padding: 3px 8px;
+  }
+
+  .date {
+    font-size: 0.8em;
+  }
+
+  /* Ajustar botones y acciones */
+  .actions button,
+  .share-button {
+    font-size: 0.9em;
+    padding: 6px 12px;
+  }
+}
+</style>
