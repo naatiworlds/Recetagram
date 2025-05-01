@@ -287,8 +287,17 @@ export default {
                 const response = await apiService.getUser(targetId)
                 this.user = response.data.data
 
-                // Actualizar followersCount, isFollowing, etc…
-                /* … */
+                // Llamada para obtener si estamos siguiendo al usuario
+                const followInfo = await apiService.getFollowData(this.userId);
+                if (followInfo?.data) {
+                    this.followersCount = followInfo.data?.data.followers_count;
+                    this.followingCount = followInfo.data?.data.following_count;
+                }
+                const checkFollow = await apiService.getFollowStatus(this.userId)
+                console.log(checkFollow.data.data.status)
+                if (checkFollow.data.data.status === "accepted") {
+                    this.isFollowing = true
+                }
             } catch (err) {
                 this.error = err?.message || 'Error al cargar el perfil'
             } finally {
@@ -311,8 +320,8 @@ export default {
 
     async mounted() {
         await this.loadUserProfile();
-    }, 
-    
+    },
+
     watch: {
         // Siempre que cambie el parámetro "id" o incluso la propia path, recargamos
         '$route.params.id': {
