@@ -157,7 +157,7 @@ export default {
     },
 
     viewUser(user) {
-      window.location.href = `/profile/${user.id}`
+      window.location.href = `/user/${user.id}`
     },
 
     formatDate(date) {
