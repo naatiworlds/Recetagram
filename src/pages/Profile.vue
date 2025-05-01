@@ -18,7 +18,7 @@
                     <ProfileStats :followers-count="followersCount" :following-count="followingCount" />
 
                     <div class="user-info">
-                        <ProfilePrivacy v-if="isOwnProfile" :user-id="user.id" :is-private="user.is_private"
+                        <ProfilePrivacy v-if="isOwnProfile" :user-id="user.id" :is-public="user.is_public"
                             :loading="loading" :is-own-profile="isOwnProfile" @update="handlePrivacyUpdate" />
 
                         <ProfileActions :is-own-profile="isOwnProfile" :is-admin="userStore.user?.role === 'admin'"
@@ -41,9 +41,7 @@
                         <button class="edit-button" @click="startEditing">
                             <i class="fas fa-edit"></i> Editar
                         </button>
-                        <button v-if="isAdmin" class="admin-button" @click="goToAdminPanel">
-                            <i class="fas fa-cogs"></i> Panel Admin
-                        </button>
+
                         <button class="delete-button" @click="confirmDelete">
                             <i class="fas fa-trash-alt"></i> Eliminar
                         </button>
@@ -128,7 +126,7 @@ export default {
         },
 
         isOwnProfile() {
-            return this.user && this.userStore.user?.id === this.user.id
+            return this.user && this.userStore.user && (this.userStore.user.id === this.user.id);
         },
 
         isAdmin() {
@@ -136,7 +134,7 @@ export default {
         },
 
         canViewPosts() {
-            return !this.user?.is_private || this.isOwnProfile || this.isFollowing
+            return this.user?.is_public || this.isOwnProfile || this.isFollowing
         }
     },
 
@@ -199,18 +197,19 @@ export default {
             this.loadUserProfile()
         },
 
-        async handlePrivacyUpdate() {
+        async handlePrivacyUpdate(newState) {
             if (!this.user || this.loading) return
             try {
                 this.loading = true
                 const updatedUser = await apiService.updateUser(this.user.id, {
-                    is_private: this.user.is_private
+                    is_public: newState
                 })
                 if (updatedUser.data) {
                     this.user = updatedUser.data
+                    
                 }
             } catch (error) {
-                console.error('Error actualizando privacidad:', error)
+                this.notificationStore.show('Error al actualizar la privacidad', 'error')
             } finally {
                 this.loading = false
             }
@@ -249,7 +248,6 @@ export default {
                     }
                 }
             } catch (error) {
-                console.error('Error al seguir al usuario:', error);
             } finally {
                 this.loading = false;
             }
@@ -258,7 +256,6 @@ export default {
             try {
                 this.loading = true;
                 const response = await apiService.unfollowUser(userId);
-                console.log(response.data.status)
                 if (response?.data?.status === "success") {
                     this.isFollowing = false;  // Actualizar el estado de 'isFollowing'
                     const followInfo = await apiService.getFollowData(this.userId);
@@ -268,7 +265,6 @@ export default {
                     }
                 }
             } catch (error) {
-                console.error('Error al dejar de seguir al usuario:', error);
             } finally {
                 this.loading = false;
             }
@@ -285,7 +281,9 @@ export default {
             try {
                 // Cargar datos
                 const response = await apiService.getUser(targetId)
+                
                 this.user = response.data.data
+                
 
                 // Llamada para obtener si estamos siguiendo al usuario
                 const followInfo = await apiService.getFollowData(this.userId);
@@ -294,12 +292,12 @@ export default {
                     this.followingCount = followInfo.data?.data.following_count;
                 }
                 const checkFollow = await apiService.getFollowStatus(this.userId)
-                console.log(checkFollow.data.data.status)
                 if (checkFollow.data.data.status === "accepted") {
                     this.isFollowing = true
                 }
             } catch (err) {
                 this.error = err?.message || 'Error al cargar el perfil'
+                this.notificationStore.show('Error al cargar el perfil', 'error')
             } finally {
                 this.loading = false
             }
@@ -323,7 +321,7 @@ export default {
     },
 
     watch: {
-        // Siempre que cambie el parámetro "id" o incluso la propia path, recargamos
+        
         '$route.params.id': {
             immediate: true,
             handler() {

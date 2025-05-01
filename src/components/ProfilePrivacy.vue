@@ -3,15 +3,10 @@
     <label>Privacidad del perfil:</label>
     <div class="toggle-switch">
       <div class="switch-container">
-        <input 
-          type="checkbox" 
-          :id="'privacy-toggle-' + userId"
-          :checked="isPrivate"
-          @change="handlePrivacyChange"
-          :disabled="loading"
-        >
+        <!-- Usamos checkedValue para invertir la visualización -->
+        <input type="checkbox" :id="'privacy-toggle-' + userId" :checked="checkedValue" @change="handlePrivacyChange" :disabled="loading">
         <label :for="'privacy-toggle-' + userId" class="toggle-label">
-          {{ isPrivate ? 'Privado' : 'Público' }}
+          {{ isPublic ? 'Público' : 'Privado' }}
         </label>
       </div>
       <div class="privacy-tip">
@@ -31,7 +26,7 @@ export default {
       type: [Number, String],
       required: true
     },
-    isPrivate: {
+    isPublic: {
       type: Boolean,
       required: true
     },
@@ -47,15 +42,27 @@ export default {
 
   emits: ['update'],
 
+  computed: {
+    // Si el perfil es público (isPublic true) mostramos el checkbox sin marcar;
+    // si es privado (isPublic false) el checkbox se marca.
+    checkedValue() {
+      return !this.isPublic;
+    }
+  },
+
   methods: {
-    handlePrivacyChange() {
+    handlePrivacyChange(e) {
       if (!this.loading) {
+        // El nuevo estado del checkbox (true cuando está marcado) se invierte
+        const newCheckboxState = e.target.checked; // true => perfil privado
+        const newIsPublic = !newCheckboxState;
         console.log('🔒 ProfilePrivacy - Toggle privacidad:', {
           userId: this.userId,
-          currentState: this.isPrivate,
-          newState: !this.isPrivate
-        })
-        this.$emit('update')
+          currentIsPublic: this.isPublic,
+          newIsPublic
+        });
+        // Emitir el nuevo valor para actualizar el perfil
+        this.$emit('update', newIsPublic);
       }
     }
   }
@@ -171,4 +178,4 @@ input[type="checkbox"]:disabled {
     display: none;
   }
 }
-</style> 
+</style>

@@ -192,13 +192,10 @@ export default {
                 if (response?.data?.status === 'success') {
                     this.posts = response.data.data;
                     // Debug: Revisa los valores de likes_count y comments_count:
-                    console.log("Posts cargados en Profile:");
                     this.posts.forEach(post => {
-                      console.log(`Post ${post.id}: likes_count=${post.likes_count}, comments_count=${post.comments_count}`);
                     });
                 }
             } catch (err) {
-                console.error('Error al cargar posts:', err);
                 this.error = err.message || 'Error al cargar los posts';
                 this.notificationStore.show(this.error, 'error');
             } finally {

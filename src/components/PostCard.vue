@@ -149,7 +149,6 @@ export default {
           const validJSON = ing.replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":')
           return JSON.parse(validJSON)
         } catch (error) {
-          console.error('Error parsing ingredients:', error)
           return []
         }
       }
@@ -187,7 +186,6 @@ export default {
         .then(response => {
           const wasLiked = this.isLiked;
           this.isLiked = response.data.data.liked;
-          console.log("[PostCard] Estado del like:", this.isLiked);
           this.$emit('post-updated', {
             ...this.post,
             likes_count: response.data.data.likes_count
@@ -224,7 +222,6 @@ export default {
           text: this.post.description || '',
           url: postUrl
         }).catch((error) => {
-          console.error('Error compartiendo:', error)
           window.location.href = postUrl
         })
       } else {
@@ -286,16 +283,10 @@ export default {
           const response = await apiService.toggleLike(this.post.id);
           this.isLiked = response.data.is_liked;
         } catch (error) {
-          console.error('Error al verificar estado del like:', error);
         }
       }
     }
   },
-
-  created() {
-    // Nota: Si tienes dos bloques created en el componente, asegúrate de combinarlos.
-    console.log("[PostCard] created hook finalizado");
-  }
 }
 </script>
 
