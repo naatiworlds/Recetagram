@@ -59,7 +59,6 @@
                     {{ userNotifications.unreadCount }}
                 </span>
             </div>
-            <i class="fa-solid fa-message fa-lg mensaje"></i>
             <img :src="imagen" alt="Logo" width="50px">
         </div>
 
