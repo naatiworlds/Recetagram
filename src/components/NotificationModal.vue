@@ -215,6 +215,7 @@ export default {
   right: 20px;
   margin-left: 20px;
   width: fit-content;
+  max-width: 400px;
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
