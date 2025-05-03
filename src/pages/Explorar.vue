@@ -56,9 +56,8 @@ export default {
 
 <style scoped>
 .explorar-container {
-  grid-area: var(--main-area);
+  grid-area: var(--main-responsive-area);
   width: 100%;
-  padding: var(--espaciado);
   overflow-x: hidden;
 }
 
@@ -75,6 +74,8 @@ export default {
   align-items: center;
   gap: var(--espaciado);
   margin-bottom: var(--espaciado);
+  padding: var(--espaciado);
+
 }
 
 .explorar-filters input,

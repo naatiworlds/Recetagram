@@ -80,7 +80,7 @@ export default {
 
 <style scoped>
 section {
-    grid-area: var(--main-area);
+    grid-area: var(--main-responsive-area);
     background-color: var(--secundary-color);
     border-radius: 10px;
     width: 600px;
@@ -157,6 +157,7 @@ section main form input {
 section main form button {
     width: 100%;
     padding: 15px;
+    margin-top: 20px;
     border: none;
     border-radius: 6px;
     font-size: 16px;
@@ -190,16 +191,18 @@ section main form button:hover {
 @media (max-width: 768px) {
     section {
         width: 80%;
-        height: auto;
-        min-height: 600px;
+        height: fit-content;
     }
 
     section main {
         padding: 30px;
     }
-
+    section main .separador {
+    margin-bottom: 10px;
+}
     section main form {
         width: 90%;
+        gap: 0;
     }
 }
 

@@ -552,20 +552,6 @@ article {
         /* Mostrar dos publicaciones por fila */
         max-width: calc(33.33% - 20px);
     }
-
-
-}
-
-@media (max-width: 1200px) {
-    
-
-    
-}
-
-@media (max-width: 1000px) {
-    
-
-    
 }
 
 @media (max-width: 768px) {
@@ -776,6 +762,23 @@ article {
     .post-actions {
         flex-direction: column;
         gap: 0.5rem;
+    }
+}
+@media (max-width: 370px) {
+    .post-card {
+        height: calc(100vh - 260px);        
+    }
+    article {
+        min-width: 100%;
+    }
+    #scrollLeftButton,
+    #scrollRightButton {
+        height: calc(100vh - 260px);
+    }
+    #scrollLeftButton{
+        left: 0;
+        padding: 0;
+        margin: 0;
     }
 }
 </style>

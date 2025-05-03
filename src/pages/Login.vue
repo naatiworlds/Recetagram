@@ -102,7 +102,7 @@ export default {
 
 <style scoped>
 section {
-    grid-area: var(--main-area);
+    grid-area: var(--main-responsive-area);
     background-color: var(--secundary-color);
     border-radius: 10px;
     width: 600px;
@@ -192,8 +192,7 @@ section main form button:hover {
 @media (max-width: 768px) {
     section {
         width: 80%;
-        height: auto;
-        min-height: 600px; /* Ajustado la altura mínima */
+        height: fit-content; 
     }
 }
 

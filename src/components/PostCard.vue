@@ -27,8 +27,14 @@
     <!-- Usar la propiedad computada parsedIngredients -->
     <div class="ingredients" v-if="parsedIngredients.length">
       <div class="ingredient-tags">
-        <span v-for="(ingredient, idx) in parsedIngredients" :key="idx" class="ingredient-tag">
+        <span v-for="(ingredient, idx) in displayedIngredients" :key="idx" class="ingredient-tag">
           {{ ingredient.name }} - {{ ingredient.quantity }}
+        </span>
+      </div>
+      <div v-if="parsedIngredients.length > 3" class="see-more" @click="showAllIngredients = !showAllIngredients">
+        <span>
+          {{ showAllIngredients ? 'Ver menos' : 'Ver más' }}
+          <i class="fas" :class="showAllIngredients ? 'fa-arrow-up' : 'fa-arrow-down'"></i>
         </span>
       </div>
     </div>
@@ -111,7 +117,8 @@ export default {
     return {
       isLiked: false,
       showDeleteModal: false,
-      userNotifications: useUserNotificationStore()
+      userNotifications: useUserNotificationStore(),
+      showAllIngredients: false
     }
   },
 
@@ -156,6 +163,11 @@ export default {
     },
     isOwnPost() {
       return this.post.user_id === this.userStore.user?.id
+    },
+    displayedIngredients() {
+      return this.showAllIngredients
+        ? this.parsedIngredients
+        : this.parsedIngredients.slice(0, 3);
     }
   },
 
@@ -414,7 +426,26 @@ export default {
   font-size: 0.9em;
   color: #333;
 }
-
+.see-more {
+  color: var(--primary-color); 
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: var(--contrast-color);
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 8px 15px;
+  border-radius: 5px;
+  transition: all 0.2s ease;
+  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  align-content: center;
+  margin: .5em auto;
+  font-size: 10px;
+}
 /* === Fecha === */
 .date {
   font-size: 0.9em;
@@ -607,4 +638,6 @@ export default {
     padding: 6px 12px;
   }
 }
+
+
 </style>
