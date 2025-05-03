@@ -255,24 +255,61 @@ export default {
             this.selectedPostId = null;
         },
 
-        // Método para el scroll a la izquierda
+        // Método para el scroll a la izquierda centrándolo horizontalmente
         scrollLeft() {
             const container = this.$refs.publicaciones;
             if (container && container.children.length > 0) {
-                const postWidth = container.children[0].offsetWidth;
-                container.scrollBy({ left: -postWidth, behavior: 'smooth' });
+                const containerRect = container.getBoundingClientRect();
+                const containerWidth = containerRect.width;
+                const currentScrollLeft = container.scrollLeft;
+                const centerPos = currentScrollLeft + containerWidth / 2;
+                
+                let prevPost = null;
+                // Iterar desde el final hasta el inicio para encontrar el post previo
+                for (let i = container.children.length - 1; i >= 0; i--) {
+                    const child = container.children[i];
+                    const childRect = child.getBoundingClientRect();
+                    const childCenter = childRect.left + childRect.width / 2 + currentScrollLeft - containerRect.left;
+                    if (childCenter < centerPos - 1) { // margen de tolerancia
+                        prevPost = child;
+                        break;
+                    }
+                }
+                if (prevPost) {
+                    prevPost.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                } else {
+                    container.scrollTo({ left: 0, behavior: 'smooth' });
+                }
             }
         },
 
-        // Método para el scroll a la derecha
+        // Método para el scroll a la derecha centrándolo horizontalmente
         scrollRight() {
             const container = this.$refs.publicaciones;
             if (container && container.children.length > 0) {
-                const postWidth = container.children[0].offsetWidth;
-                container.scrollBy({ left: postWidth, behavior: 'smooth' });
+                const containerRect = container.getBoundingClientRect();
+                const containerWidth = containerRect.width;
+                const currentScrollLeft = container.scrollLeft;
+                const centerPos = currentScrollLeft + containerWidth / 2;
+                
+                let nextPost = null;
+                // Iterar de inicio a fin para encontrar el siguiente post
+                for (let i = 0; i < container.children.length; i++) {
+                    const child = container.children[i];
+                    const childRect = child.getBoundingClientRect();
+                    const childCenter = childRect.left + childRect.width / 2 + currentScrollLeft - containerRect.left;
+                    if (childCenter > centerPos + 1) { // margen de tolerancia
+                        nextPost = child;
+                        break;
+                    }
+                }
+                if (nextPost) {
+                    nextPost.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                } else {
+                    container.scrollTo({ left: container.scrollWidth, behavior: 'smooth' });
+                }
             }
         },
-
     },
 
     created() {
@@ -333,7 +370,7 @@ export default {
     align-items: center;
     justify-content: center;
     align-self: stretch;
-    height: calc(100vh - 240px);
+    height: calc(100vh - 130px);
     /* Altura dinámica */
 
 }
@@ -356,6 +393,7 @@ export default {
     flex: 1;
     scroll-behavior: smooth;
     height: 100%;
+    max-height: calc(100vh - 100px);
     scrollbar-width: none;
 
 }
@@ -372,6 +410,8 @@ article {
 .post-card {
     width: 100%;
     max-width: 400px;
+    height: calc(100vh - 130px);
+
     margin: 0 auto;
 }
 
@@ -517,28 +557,15 @@ article {
 }
 
 @media (max-width: 1200px) {
-    article {
-        min-width: calc(50% - 20px);
-        /* Mostrar una publicación por fila */
-        max-width: calc(50% - 20px);
-    }
+    
 
-    #publicaciones {
-        grid-template-columns: repeat(auto-fill, minmax(300px, 350px));
-    }
+    
 }
 
 @media (max-width: 1000px) {
-    article {
-        min-width: calc(100% - 20px);
-        /* Mostrar una publicación por fila */
-        max-width: calc(100% - 20px);
-    }
+    
 
-    #publicaciones {
-        width: calc(100% - 40px);
-        /* Ajuste de ancho */
-    }
+    
 }
 
 @media (max-width: 768px) {
@@ -548,23 +575,15 @@ article {
     article {
 
         min-width: 260px;
-        height: calc(100vh - 270px);
+        height: calc(100vh - 110px);
     }
 
     #scrollLeftButton,
     #scrollRightButton {
-        height: calc(100vh - 260px);
+        height: calc(100vh - 130px);
         width: 30px;
     }
-
-    #publicaciones {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 1rem;
-    }
-
-    #publicaciones {
-        margin-bottom: 1rem;
-    }
+    
 
     .empty-state {
         padding: 2rem;
@@ -596,13 +615,18 @@ article {
     #main {
         grid-area: var(--main-responsive-area);
     }
+    #scrollLeftButton,
+    #scrollRightButton {
+        height: calc(100vh - 130px);
+    }
+    article {
+        min-width: 100%;
+        /* Mostrar dos publicaciones por fila */
+    }
 }
 
 @media (max-width: 480px) {
-    #main {
-        height: calc(100vh - 240px);
-        padding: 10px;
-    }
+    
 
     article {
         min-width: 240px;
