@@ -19,13 +19,18 @@
             required
           />
         </label>
-        <label>
+        <label class="password-label">
           Contraseña:
-          <input 
-            type="password" 
-            v-model="password" 
-            required
-          />
+          <div class="password-input-container">
+            <input 
+              :type="showPassword ? 'text' : 'password'" 
+              v-model="password" 
+              required
+            />
+            <button type="button" class="toggle-password-button" @click="togglePassword">
+              <i :class="['fas', showPassword ? 'fa-eye-slash' : 'fa-eye']"></i>
+            </button>
+          </div>
         </label>
         <button type="submit" :disabled="loading">
           {{ loading ? 'Cargando...' : 'Iniciar sesión' }}
@@ -52,11 +57,14 @@ export default {
       email: '',
       password: '',
       loading: false,
-      errors: {}
+      errors: {},
+      showPassword: false
     }
   },
-
   methods: {
+    togglePassword() {
+      this.showPassword = !this.showPassword;
+    },
     async handleLogin() {
       this.loading = true
       this.errors = {}
@@ -70,22 +78,17 @@ export default {
         const response = await apiService.login(credentials)
 
         if (response.data.status === 'success') {
-          // Usar Pinia para gestionar el estado del usuario
           const userStore = useUserStore()
           userStore.setToken(response.data.data.token)
           userStore.setUser(response.data.data.user)
           
-          // Usar Pinia para mostrar notificación
           const notificationStore = useNotificationStore()
           notificationStore.show('Inicio de sesión exitoso', 'success')
 
-          // Redirigir usando Vue Router (Option API)
-          this.$router.push('/profile') // Usamos `this.$router` para la Option API
+          this.$router.push('/profile')
         }
       } catch (error) {
         console.error('Error de login:', error)
-        
-        // Mostrar error de notificación con Pinia
         const notificationStore = useNotificationStore()
         notificationStore.show(
           error.response?.data?.message || 'Error al iniciar sesión',
@@ -99,10 +102,9 @@ export default {
 }
 </script>
 
-
 <style scoped>
 section {
-    grid-area: var(--main-responsive-area);
+    grid-area: var(--main-area);
     background-color: var(--secundary-color);
     border-radius: 10px;
     width: 600px;
@@ -188,6 +190,11 @@ section main form button:hover {
     text-decoration: underline;
 }
 
+@media (max-width: 600px) {
+    section {
+      grid-area: var(--main-responsive-area);
+    }
+}
 /* Media queries */
 @media (max-width: 768px) {
     section {
@@ -241,4 +248,30 @@ section main form label .toolkit{
     font-size: 12px;
 }
 
+.password-input-container {
+  position: relative;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: center;
+    justify-content: center;
+}
+.password-input-container input {
+  width: 100%;
+  /* Aumenta el padding-right si lo necesitas para que no se superponga el botón */
+  padding-right: 40px;
+}
+.toggle-password-button {
+  background: transparent;
+    width: 0;
+    border: none;
+    cursor: pointer;
+    outline: none;
+    transition: transform 0.3s ease;
+    padding: 0 10px;
+}
+.toggle-password-button:focus {
+  transform: translateY(-50%) scale(1.2);
+}
 </style>

@@ -21,7 +21,16 @@
                 </label>
                 <label>
                     Contraseña:
-                    <input type="password" v-model="password" required />
+                    <div class="password-input-container">
+                        <input 
+                          :type="showPassword ? 'text' : 'password'" 
+                          v-model="password" 
+                          required 
+                        />
+                        <button type="button" class="toggle-password-button" @click="togglePassword">
+                            <i :class="['fas', showPassword ? 'fa-eye-slash' : 'fa-eye']"></i>
+                        </button>
+                    </div>
                 </label>
                 <button type="submit" :disabled="loading">
                     {{ loading ? 'Cargando...' : 'Registrarse' }}
@@ -33,8 +42,6 @@
             </p>
         </main>
     </section>
-
-
 </template>
 
 <script>
@@ -49,10 +56,14 @@ export default {
             name: '',
             email: '',
             password: '',
-            loading: false
+            loading: false,
+            showPassword: false
         }
     },
     methods: {
+        togglePassword() {
+            this.showPassword = !this.showPassword;
+        },
         async handleRegister() {
             this.loading = true
             const userStore = useUserStore()
@@ -80,7 +91,7 @@ export default {
 
 <style scoped>
 section {
-    grid-area: var(--main-responsive-area);
+    grid-area: var(--main-area);
     background-color: var(--secundary-color);
     border-radius: 10px;
     width: 600px;
@@ -156,8 +167,8 @@ section main form input {
 
 section main form button {
     width: 100%;
-    padding: 15px;
-    margin-top: 20px;
+    padding: 15px; /* Aumentado el padding del botón */
+    margin-top: 1em;
     border: none;
     border-radius: 6px;
     font-size: 16px;
@@ -187,6 +198,34 @@ section main form button:hover {
     text-decoration: underline;
 }
 
+/* Estilos para el toggle de contraseña (igual a Login) */
+.password-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: center;
+    justify-content: center;
+}
+.password-input-container input {
+    width: 100%;
+  /* Aumenta el padding-right si lo necesitas para que no se superponga el botón */
+  padding-right: 40px;
+}
+.toggle-password-button {
+    background: transparent;
+    width: 0;
+    border: none;
+    cursor: pointer;
+    outline: none;
+    transition: transform 0.3s ease;
+    padding: 0 10px;
+}
+.toggle-password-button:focus {
+  transform: translateY(-50%) scale(1.2);
+}
+
 /* Media queries */
 @media (max-width: 768px) {
     section {
@@ -205,7 +244,13 @@ section main form button:hover {
         gap: 0;
     }
 }
+@media (max-width: 600px) {
+    section {
+        grid-area: var(--main-responsive-area);
+    }
 
+    
+}
 @media (max-width: 480px) {
     section {
         width: 90%;

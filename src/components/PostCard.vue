@@ -455,6 +455,7 @@ export default {
 /* === Acciones (botones de like, comentario y share) === */
 .actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 15px;
   justify-content: center;
   margin-top: 15px;
