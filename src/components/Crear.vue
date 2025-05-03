@@ -30,21 +30,22 @@
 
           <div class="ingredients-container">
             <h3>Ingredientes</h3>
-            <div v-for="(ingredient, index) in post.ingredients" :key="index" class="ingredient-input">
-              <div class="input-with-error">
-                <input type="text" v-model="ingredient.name" placeholder="Nombre del ingrediente" />
-                <span v-if="errors[`ingredient_name_${index}`]" class="error">{{ errors[`ingredient_name_${index}`]
-                  }}</span>
+            <div class="ingredients-list">
+              <div v-for="(ingredient, index) in post.ingredients" :key="index" class="ingredient-input">
+                <div class="input-with-error">
+                  <input type="text" v-model="ingredient.name" placeholder="Nombre del ingrediente" />
+                  <span v-if="errors[`ingredient_name_${index}`]" class="error">{{ errors[`ingredient_name_${index}`]
+                    }}</span>
+                </div>
+                <div class="input-with-error">
+                  <input type="text" v-model="ingredient.quantity" placeholder="Ej: 500 gr (gr, kg, L, cdas)" />
+                  <span v-if="errors[`ingredient_quantity_${index}`]" class="error">{{
+                    errors[`ingredient_quantity_${index}`] }}</span>
+                </div>
+                <button type="button" @click="removeIngredient(index)" class="remove-button">×</button>
+                <button type="button" @click="addIngredient" class="add-button">+</button>
               </div>
-              <div class="input-with-error">
-                <input type="text" v-model="ingredient.quantity" placeholder="Ej: 500 gr (gr, kg, L, cdas)" />
-                <span v-if="errors[`ingredient_quantity_${index}`]" class="error">{{
-                  errors[`ingredient_quantity_${index}`] }}</span>
-              </div>
-              <button type="button" @click="removeIngredient(index)" class="remove-button">×</button>
-              <button type="button" @click="addIngredient" class="add-button">+</button>
             </div>
-
             <span v-if="errors.ingredients" class="error">{{ errors.ingredients }}</span>
           </div>
 
@@ -435,6 +436,12 @@ button[type="submit"]:hover {
 
 .ingredients-container {
   margin-top: 20px;
+}
+
+.ingredients-list {
+  /* Ajusta la altura según el tamaño real de cada input (en este ejemplo se calcula 3 filas de 60px) */
+  max-height: 180px;
+  overflow-y: auto;
 }
 
 .ingredient-input {
