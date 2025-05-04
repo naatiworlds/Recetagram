@@ -56,7 +56,7 @@ export default {
 
 <style scoped>
 .explorar-container {
-  grid-area: var(--main-responsive-area);
+  grid-area: var(--main-area);
   width: 100%;
   overflow-x: hidden;
 }

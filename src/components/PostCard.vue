@@ -22,7 +22,13 @@
     </router-link>
 
     <h2 class="post-title">{{ post.title }}</h2>
-    <p class="post-description">{{ post.description }}</p>
+    <p class="post-description">{{ displayedDescription }}</p>
+    <div v-if="post.description && post.description.length > 150" class="see-more" @click="toggleDescription">
+      <span>
+        {{ showFullDescription ? 'Ver menos' : 'Ver más' }}
+        <i class="fas" :class="showFullDescription ? 'fa-arrow-up' : 'fa-arrow-down'"></i>
+      </span>
+    </div>
 
     <!-- Usar la propiedad computada parsedIngredients -->
     <div class="ingredients" v-if="parsedIngredients.length">
@@ -118,7 +124,8 @@ export default {
       isLiked: false,
       showDeleteModal: false,
       userNotifications: useUserNotificationStore(),
-      showAllIngredients: false
+      showAllIngredients: false,
+      showFullDescription: false   // <-- Nueva propiedad para alternar descripción completa
     }
   },
 
@@ -168,10 +175,16 @@ export default {
       return this.showAllIngredients
         ? this.parsedIngredients
         : this.parsedIngredients.slice(0, 3);
+    },
+    displayedDescription() {
+      const limit = 44; // Limitar a 44 caracteres
+      if (!this.post.description) return '';
+      if (this.showFullDescription || this.post.description.length <= limit) {
+        return this.post.description;
+      }
+      return this.post.description.substring(0, limit) + '...';
     }
   },
-
-  
 
   methods: {
     getImageUrl(image) {
@@ -297,6 +310,9 @@ export default {
         } catch (error) {
         }
       }
+    },
+    toggleDescription() {
+      this.showFullDescription = !this.showFullDescription;
     }
   },
 }
@@ -405,9 +421,12 @@ export default {
 }
 
 .post-description {
-  font-size: 1em;
+  font-size: clamp(.5rem, 1vw, 1rem);
   color: var(--text-secondary-color);
-  margin-bottom: 10px;
+  margin: 10px;
+  padding: 0 10px;
+  max-width: 100%; /* Se ajusta al ancho del contenedor */
+  word-wrap: break-word;
 }
 
 /* === Sección de ingredientes === */
