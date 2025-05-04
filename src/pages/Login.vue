@@ -19,6 +19,7 @@
             required
           />
         </label>
+        <p v-if="emailError" class="error">{{ emailError }}</p>
         <label class="password-label">
           Contraseña:
           <div class="password-input-container">
@@ -32,7 +33,8 @@
             </button>
           </div>
         </label>
-        <button type="submit" :disabled="loading">
+        <p v-if="passwordError" class="error">{{ passwordError }}</p>
+        <button type="submit" :disabled="loading || emailError || passwordError">
           {{ loading ? 'Cargando...' : 'Iniciar sesión' }}
         </button>
       </form>
@@ -57,8 +59,28 @@ export default {
       email: '',
       password: '',
       loading: false,
-      errors: {},
       showPassword: false
+    }
+  },
+  computed: {
+    emailError() {
+      // Valida que el email no esté vacío y cumpla con el patrón estándar
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!this.email || this.email.trim().length === 0) {
+        return "El email es obligatorio.";
+      } else if (!emailRegex.test(this.email)) {
+        return "Introduce un email válido.";
+      }
+      return null;
+    },
+    passwordError() {
+      // Se valida que la contraseña no esté vacía y tenga al menos 6 caracteres.
+      if (!this.password || this.password.length === 0) {
+        return "La contraseña es obligatoria.";
+      } else if (this.password.length < 6) {
+        return "La contraseña debe tener al menos 6 caracteres.";
+      }
+      return null;
     }
   },
   methods: {
@@ -66,9 +88,9 @@ export default {
       this.showPassword = !this.showPassword;
     },
     async handleLogin() {
+      // Si existen errores de validación, no se envía el formulario.
+      if (this.emailError || this.passwordError) return;
       this.loading = true
-      this.errors = {}
-
       try {
         const credentials = {
           email: this.email.trim(),
@@ -114,6 +136,14 @@ section {
     display: flex;
     flex-direction: column;
 }
+.oculto~section{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: fit-content;
+  z-index: 1;
+}
 
 section header {
     background-color: var(--primary-color);
@@ -138,7 +168,6 @@ section main {
 section main form {
     display: flex;
     flex-direction: column;
-    gap: 30px; /* Aumentado el espacio entre elementos */
     align-items: center;
     width: 80%;
     margin: 0 auto;
@@ -274,5 +303,11 @@ section main form label .toolkit{
 }
 .toggle-password-button:focus {
   transform: translateY(-50%) scale(1.2);
+}
+
+.error {
+  color: red;
+  font-size: 0.9em;
+  margin-top: 5px;
 }
 </style>

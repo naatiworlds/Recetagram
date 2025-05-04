@@ -15,10 +15,14 @@
                     Name:
                     <input type="text" v-model="name" required />
                 </label>
+                <p v-if="nameError" class="error">{{ nameError }}</p>
+                
                 <label>
                     Email:
                     <input type="email" v-model="email" required />
                 </label>
+                <p v-if="emailError" class="error">{{ emailError }}</p>
+                
                 <label>
                     Contraseña:
                     <div class="password-input-container">
@@ -31,8 +35,10 @@
                             <i :class="['fas', showPassword ? 'fa-eye-slash' : 'fa-eye']"></i>
                         </button>
                     </div>
+                    <p v-if="passwordError" class="error">{{ passwordError }}</p>
                 </label>
-                <button type="submit" :disabled="loading">
+                
+                <button type="submit" :disabled="loading || nameError || emailError || passwordError">
                     {{ loading ? 'Cargando...' : 'Registrarse' }}
                 </button>
             </form>
@@ -60,11 +66,38 @@ export default {
             showPassword: false
         }
     },
+    computed: {
+        nameError() {
+            if (!this.name || this.name.trim().length === 0) {
+                return "El nombre es obligatorio.";
+            } else if (this.name.trim().length < 3) {
+                return "El nombre debe tener al menos 3 caracteres.";
+            }
+            return null;
+        },
+        emailError() {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!this.email || this.email.trim().length === 0) {
+                return "El email es obligatorio.";
+            } else if (!emailRegex.test(this.email)) {
+                return "Introduce un email válido.";
+            }
+            return null;
+        },
+        passwordError() {
+            if (this.password && this.password.length > 0 && this.password.length < 6) {
+                return "La contraseña debe tener al menos 6 caracteres.";
+            }
+            return null;
+        }
+    },
     methods: {
         togglePassword() {
             this.showPassword = !this.showPassword;
         },
         async handleRegister() {
+            // Si existe error de validación, no se envía el formulario.
+            if (this.nameError || this.emailError || this.passwordError) return;
             this.loading = true
             const userStore = useUserStore()
             const notificationStore = useNotificationStore()
@@ -100,6 +133,14 @@ section {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
+}
+.oculto~section{
+    position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: fit-content;
+  z-index: 1;
 }
 
 section header {
@@ -145,7 +186,6 @@ section main .separador .circulo {
 section main form {
     display: flex;
     flex-direction: column;
-    gap: 30px;
     align-items: center;
     width: 80%;
     margin: 0 auto;
@@ -257,5 +297,10 @@ section main form button:hover {
         width: 90%;
         margin: 15px auto;
     }
+}
+.error {
+    color: red;
+    font-size: 0.9em;
+    margin-top: 5px;
 }
 </style>
