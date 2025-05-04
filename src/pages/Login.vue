@@ -154,6 +154,7 @@ section main form input {
     padding: 15px; /* Aumentado el padding de los inputs */
     margin-top: 8px;
     border: 1px solid var(--sombra-color);
+    color: black;
     border-radius: 6px;
     font-size: 16px;
 }
@@ -166,7 +167,7 @@ section main form button {
     font-size: 16px;
     cursor: pointer;
     background: var(--contrast-color);
-    color: var(--text-color);
+    color: var(--text-color-important);
     transition: background-color 0.2s;
 }
 

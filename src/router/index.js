@@ -105,7 +105,7 @@ router.beforeEach(async (to, from, next) => {
     return
   }
   
-  if (to.meta.showNotification && !userStore.isAuthenticated) {
+  if (to.meta.show && !userStore.isAuthenticated) {
     notificationStore.show(
       'Inicia sesión para acceder a todas las funcionalidades',
       'info',

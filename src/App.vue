@@ -85,6 +85,7 @@ export default {
   --contrast-color: #FF4456;
   --sombra-color: #FFAA3C;
   --text-color-important: black;
+  --text-color: black;
   --buttom-color: lightgray;
 
   /* heights y widths */
@@ -126,14 +127,9 @@ export default {
   --secundary-color: #717171;
   --complementary-color: #121212;
   --contrast-color: #18C894;
-  /* --contrast-color: #5e43f3; */
-  /* --contrast-color: #FFC763; */
   --sombra-color: #3f3f3f;
   --text-color: white;
   --text-color-important: #18C894;
-  /* --text-color-important: #5e43f3; */
-  /* --text-color-important: #FFAA3C; */
-  --text-color: white;
   --buttom-color: transparent;
   --color-line: rgba(0, 0, 0, 0.2);
 }

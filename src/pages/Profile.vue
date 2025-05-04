@@ -234,9 +234,9 @@ export default {
                 await apiService.deleteUser(this.userStore.user.id)
                 await this.userStore.logout()
                 this.$router.push('/login')
-                this.notificationStore.showNotification('Cuenta eliminada con éxito', 'success')
+                this.notificationStore.show('Cuenta eliminada con éxito', 'success')
             } catch (error) {
-                this.notificationStore.showNotification('Error al eliminar la cuenta: ' + error.message, 'error')
+                this.notificationStore.show('Error al eliminar la cuenta: ' + error.message, 'error')
             }
             this.showDeleteModal = false
         },

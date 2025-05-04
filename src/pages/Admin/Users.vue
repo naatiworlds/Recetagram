@@ -120,7 +120,7 @@ export default {
         this.users = data.data || []
       } catch (err) {
         this.error = 'No se pudieron cargar los usuarios. Por favor, inténtalo de nuevo más tarde.'
-        this.notificationStore.showNotification('Error al cargar usuarios', 'error')
+        this.notificationStore.show('Error al cargar usuarios', 'error')
       } finally {
         this.loading = false
       }
@@ -132,9 +132,9 @@ export default {
       try {
         await apiService.deleteUser(userId)
         this.users = this.users.filter(user => user.id !== userId)
-        this.notificationStore.showNotification('Usuario eliminado con éxito', 'success')
+        this.notificationStore.show('Usuario eliminado con éxito', 'success')
       } catch (err) {
-        this.notificationStore.showNotification('Error al eliminar usuario', 'error')
+        this.notificationStore.show('Error al eliminar usuario', 'error')
       }
     },
 
@@ -150,9 +150,9 @@ export default {
       try {
         await apiService.updateUser(user.id, { role: newRole })
         user.role = newRole
-        this.notificationStore.showNotification(`Rol de ${user.name} actualizado con éxito`, 'success')
+        this.notificationStore.show(`Rol de ${user.name} actualizado con éxito`, 'success')
       } catch (err) {
-        this.notificationStore.showNotification('Error al modificar rol', 'error')
+        this.notificationStore.show('Error al modificar rol', 'error')
       }
     },
 

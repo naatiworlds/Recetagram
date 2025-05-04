@@ -134,10 +134,9 @@ export default {
 
       try {
         await apiService.deleteComment(postId, commentId)
-        this.comments = this.comments.filter(comment => comment.id !== commentId)
-        this.notificationStore.showNotification('Comentario eliminado con éxito', 'success')
+        this.notificationStore.show('Comentario eliminado con éxito', 'success')
       } catch (err) {
-        this.notificationStore.showNotification('Error al eliminar comentario', 'error')
+        this.notificationStore.show('Error al eliminar comentario', 'error')
       }
     },
 

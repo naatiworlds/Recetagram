@@ -75,9 +75,9 @@ export default {
                     password: this.password
                 })
                 this.$router.push('/home')
-                notificationStore.showNotification('Registro exitoso', 'success')
+                notificationStore.show('Registro exitoso', 'success')
             } catch (error) {
-                notificationStore.showNotification(
+                notificationStore.show(
                     error.message || 'Error al registrarse',
                     'error'
                 )
@@ -161,6 +161,7 @@ section main form input {
     padding: 15px;
     margin-top: 8px;
     border: 1px solid var(--sombra-color);
+    color: black;
     border-radius: 6px;
     font-size: 16px;
 }
