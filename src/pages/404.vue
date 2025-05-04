@@ -101,18 +101,12 @@ export default {
 </script>
 
 <style scoped>
-.oculto~#main404 {
-    position: absolute;
-    top: 9%;
-    width: 95%;
-    height: 85%;
-    z-index: 1;
-}
+    #main404 {
+        grid-area: var(--main-area);
+        margin: 3em 3em;
+    }
 
-#main404 {
-    grid-area: var(--main-area);
-    margin: 3em 3em;
-}
+
 
 #juego404 {
     text-align: center;
@@ -193,5 +187,10 @@ export default {
     font-size: 24px;
     color: var(--text-color-important);
 
+}
+@media (max-width: 600px) {
+    #main404 {
+        grid-area: var(--main-responsive-area);
+    }
 }
 </style>
