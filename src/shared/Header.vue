@@ -62,7 +62,7 @@
             <img :src="imagen" alt="Logo" width="50px">
         </div>
 
-        <NotificationModal :is-open="shows" @close="toggleNotifications" />
+        <NotificationModal :is-open="showNotifications" @close="toggleNotifications" />
     </header>
 </template>
 
@@ -85,7 +85,7 @@ export default {
     data() {
         return {
             imagen: logo,
-            shows: false,
+            showNotifications: false,
             avatarUrl: DEFAULT_AVATAR_URL,
             notificationStore: useNotificationStore(),
             userNotifications: useUserNotificationStore()
@@ -102,8 +102,8 @@ export default {
         },
 
         async toggleNotifications() {
-            this.shows = !this.shows
-            if (this.shows) {
+            this.showNotifications = !this.showNotifications
+            if (this.showNotifications) {
                 try {
                     const response = await apiService.getNotifications()
                     if (response.data.status === 'success') {
