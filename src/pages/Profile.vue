@@ -134,8 +134,10 @@ export default {
         },
 
         canViewPosts() {
-            return this.user?.is_public || this.isOwnProfile || this.isFollowing
-        }
+  if (this.isOwnProfile) return true;
+  return this.user?.is_public || this.isFollowing;
+}
+
     },
 
     methods: {
@@ -198,22 +200,26 @@ export default {
         },
 
         async handlePrivacyUpdate(newState) {
-            if (!this.user || this.loading) return
-            try {
-                this.loading = true
-                const updatedUser = await apiService.updateUser(this.user.id, {
-                    is_public: newState
-                })
-                if (updatedUser.data) {
-                    this.user = updatedUser.data
-                    
-                }
-            } catch (error) {
-                this.notificationStore.show('Error al actualizar la privacidad', 'error')
-            } finally {
-                this.loading = false
-            }
-        },
+    if (!this.user || this.loading) return;
+    try {
+        this.loading = true;
+        const updatedUser = await apiService.updateUser(this.user.id, {
+            is_public: newState
+        });
+
+        if (updatedUser.data) {
+            this.user.is_public = newState;
+
+            // ✅ Mostrar notificación amigable
+            const statusMsg = newState ? 'Tu perfil ahora es público' : 'Tu perfil ahora es privado';
+            this.notificationStore.show(statusMsg, 'success');
+        }
+    } catch (error) {
+        this.notificationStore.show('Error al actualizar la privacidad', 'error');
+    } finally {
+        this.loading = false;
+    }
+},
 
         goToAdminPanel() {
             this.$router.push('/admin')
