@@ -289,7 +289,6 @@ export default {
                 const response = await apiService.getUser(targetId)
                 
                 this.user = response.data.data
-                
 
                 // Llamada para obtener si estamos siguiendo al usuario
                 const followInfo = await apiService.getFollowData(this.userId);

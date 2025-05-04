@@ -89,7 +89,8 @@ export default {
       this.editedName = this.user.name;  // Restablecer el nombre original
       this.$emit('cancel-edit');  // Emitir evento de cancelación
     }
-  }
+  },
+  
 }
 </script>
 
@@ -196,4 +197,4 @@ export default {
   border-color: var(--contrast-color);
   box-shadow: 0 0 0 2px rgba(0, 196, 180, 0.2);
 }
-</style> 
+</style>
