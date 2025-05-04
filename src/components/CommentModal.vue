@@ -209,7 +209,7 @@ export default {
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
+  height: 95%;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: flex-end;
@@ -219,7 +219,7 @@ export default {
 .comment-modal {
   position: relative;
   width: 400px;
-  height: 100vh;
+  height: auto;
   background-color: var(--secundary-color);
   box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
@@ -308,6 +308,10 @@ export default {
 }
 
 .comment-form {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-content: center;
   position: relative;
   padding: 20px;
   background-color: var(--primary-color);
@@ -319,7 +323,6 @@ export default {
   padding: 10px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 5px;
-  margin-bottom: 10px;
   resize: none;
   background-color: var(--secundary-color);
   color: var(--text-color);
