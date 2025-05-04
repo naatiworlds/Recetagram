@@ -167,7 +167,7 @@ section main form button {
     font-size: 16px;
     cursor: pointer;
     background: var(--contrast-color);
-    color: var(--text-color-important);
+    color: var(--text-color);
     transition: background-color 0.2s;
 }
 
