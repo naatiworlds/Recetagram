@@ -579,6 +579,8 @@ export default {
 
   .post-img {
     height: calc((100vh - 260px) * 0.35);
+    object-fit: cover;
+    aspect-ratio: 16 / 9;
     /* 35% en tablets */
   }
 

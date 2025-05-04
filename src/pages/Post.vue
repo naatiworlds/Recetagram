@@ -105,24 +105,26 @@ export default {
 .post-container {
   grid-area: var(--main-area);
   width: 100%;
-  margin: auto auto;
+  margin: 1em auto;
+}
+.oculto~.post-container {
+  position: absolute;
+  top: 9%;
+  width: 100%;
+  z-index: 1;
 }
 
 #main-scroll-container {
   width: 100%;
-  height: 100%;
-  overflow-y: auto;
-  scroll-behavior: smooth;
+  height: auto;
 }
-
+.post-card{
+    height: auto;
+    padding: 1em 1em;
+}
 #publicaciones {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  padding: 20px;
-  width: 100%;
-  max-width: var(--max-width-post);
+  width: fit-content;
+  height: fit-content;
   margin: 0 auto;
 }
 
@@ -276,7 +278,11 @@ export default {
     height: 350px;
   }
 }
-
+@media (max-width: 600px) {
+  .post-container {
+    grid-area: var(--main-responsive-area);
+  }
+}
 @media (max-width: 480px) {
   .post-detail {
     width: 95%;
