@@ -114,7 +114,7 @@ export default {
     },
 
     viewPost(post) {
-      window.location.href = `/post/${post.id}`
+      window.location.href = `/posts/${post.id}`
     },
 
     formatDate(date) {

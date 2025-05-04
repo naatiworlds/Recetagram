@@ -146,6 +146,56 @@ export const apiService = {
       throw error;
     }
   },
+  getAdminComments: async (postId) => {
+    try {
+      console.log("[API] Solicitando todos los comentarios");
+
+      // Primero obtenemos todos los posts
+      const postsResponse = await api.get("/posts");
+      const posts = postsResponse.data.data;
+
+      // Luego obtenemos los comentarios de cada post
+      const commentsPromises = posts.map((post) =>
+        api
+          .get(`/posts/${post.id}/comments`)
+          .then((response) => {
+            // Añadimos información del post a cada comentario
+            const comments = response.data.data || [];
+            return comments.map((comment) => ({
+              ...comment,
+              post: {
+                id: post.id,
+                title: post.title,
+              },
+            }));
+          })
+          .catch((error) => {
+            console.error(
+              `[API] Error al obtener comentarios del post ${post.id}:`,
+              error
+            );
+            return []; // Devolvemos array vacío si hay error
+          })
+      );
+
+      // Esperamos a que se resuelvan todas las promesas
+      const commentsArrays = await Promise.all(commentsPromises);
+
+      // Aplanamos el array de arrays de comentarios
+      const allComments = commentsArrays.flat();
+
+      return {
+        data: {
+          status: "success",
+          message: "Comentarios obtenidos con éxito",
+          data: allComments,
+        },
+      };
+    } catch (error) {
+      console.error("[API] Error al obtener todos los comentarios:", error);
+      throw error;
+    }
+  },
   getComment: (postId, commentId) =>
     api.get(`/posts/${postId}/comments/${commentId}`),
   createComment: (postId, comment) =>

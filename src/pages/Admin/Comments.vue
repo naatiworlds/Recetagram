@@ -42,7 +42,8 @@
           </div>
           <div class="card-field">
             <span class="field-label">Post:</span>
-            <span class="field-value">{{ comment.post?.title || 'Desconocido' }}</span>
+            <span class="field-value">
+              {{ comment.post_id || 'Desconocido' }}</span>
           </div>
           <div class="card-field">
             <span class="field-label">Contenido:</span>
@@ -114,8 +115,8 @@ export default {
       this.error = null
 
       try {
-        const postId = this.postFilter || null
-        const response = await apiService.getComments(postId)
+        const postId = this.postFilter
+        const response = await apiService.getAdminComments(postId)
         if (response.data.status === 'success') {
           this.comments = response.data.data
         }
@@ -141,7 +142,7 @@ export default {
     },
 
     viewPost(postId) {
-      window.location.href = `/post/${postId}`
+      window.location.href = `/posts/${postId}`
     },
 
     formatDate(date) {

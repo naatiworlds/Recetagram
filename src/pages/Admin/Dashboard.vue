@@ -33,6 +33,12 @@
   padding: 0;
   overflow-x: hidden;
 }
+.oculto~.admin-dashboard {
+  position: absolute;
+  top: 5%;
+  width: 100%;
+  z-index: 1;
+}
 
 .admin-tabs {
   background-color: var(--secundary-color);
@@ -132,6 +138,11 @@
   .admin-nav {
     justify-content: flex-end;
     flex: 2;
+  }
+}
+@media (max-width: 600px) {
+  .admin-dashboard{
+    grid-area: var(--main-responsive-area);
   }
 }
 </style> 
