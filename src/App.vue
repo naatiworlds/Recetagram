@@ -85,7 +85,6 @@ export default {
   --contrast-color: #FF4456;
   --sombra-color: #FFAA3C;
   --text-color-important: black;
-  --text-color: black;
   --buttom-color: lightgray;
 
   /* heights y widths */

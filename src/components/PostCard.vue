@@ -310,7 +310,7 @@ export default {
   text-align: center;
   background-color: var(--sombra-color);
   border-radius: 10px;
-  color: var(--text-color);
+  color: var(--text-color-important);
   height: calc((100vh - 240px) * 1);
   display: flex;
   flex-direction: column;

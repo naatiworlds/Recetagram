@@ -386,6 +386,7 @@ export default {
   width: 100%;
   padding: 8px;
   border: 1px solid rgba(0, 0, 0, 0.1);
+  color: black;
   border-radius: 4px;
   margin-bottom: 8px;
   resize: vertical;

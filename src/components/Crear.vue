@@ -356,6 +356,7 @@ textarea {
   padding: 15px;
   border: 1px solid var(--sombra-color);
   border-radius: 6px;
+  color: black;
   font-size: 16px;
   background-color: white;
 }
