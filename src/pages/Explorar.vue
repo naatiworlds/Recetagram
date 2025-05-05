@@ -8,7 +8,7 @@
       <input v-model="filters.authorFilter" id="authorFilter" placeholder="Ej: Admin" />
 
       <label for="ingredientFilter">Filtrar por ingrediente: </label>
-      <input v-model="filters.ingredientFilter" id="ingredientFilter" placeholder="Ej: frijo, canela" />
+      <input v-model="filters.ingredientFilter" id="ingredientFilter" placeholder="Ej: frijol, canela" />
 
       <button @click="resetFilters">Resetear filtros</button>
     </div>
