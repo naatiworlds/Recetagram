@@ -37,7 +37,9 @@
                 <template v-else>
                     <PostCard v-for="post in filteredPosts" :key="post.id" :post="post" :show-in-modal="false"
                         :is-profile-view="isProfileView" :is-own-profile="isOwnProfile" @edit-post="handleEditPost"
-                        @post-deleted="handlePostDelete" @show-comments="handleShowComments" @post-updated="handlePostUpdate" />
+                        @post-deleted="handlePostDelete" @show-comments="handleShowComments"
+                        @post-updated="handlePostUpdate" />
+                        <Crear v-if="showPostModal" :post-to-edit="postToEdit" @close="handleModalClose" />
                 </template>
             </section>
 
@@ -110,6 +112,7 @@ export default {
             notificationStore: null,
             userStore: null,
             route: null
+            
         }
     },
 
@@ -263,7 +266,7 @@ export default {
                 const containerWidth = containerRect.width;
                 const currentScrollLeft = container.scrollLeft;
                 const centerPos = currentScrollLeft + containerWidth / 2;
-                
+
                 let prevPost = null;
                 // Iterar desde el final hasta el inicio para encontrar el post previo
                 for (let i = container.children.length - 1; i >= 0; i--) {
@@ -291,7 +294,7 @@ export default {
                 const containerWidth = containerRect.width;
                 const currentScrollLeft = container.scrollLeft;
                 const centerPos = currentScrollLeft + containerWidth / 2;
-                
+
                 let nextPost = null;
                 // Iterar de inicio a fin para encontrar el siguiente post
                 for (let i = 0; i < container.children.length; i++) {
@@ -569,7 +572,7 @@ article {
         height: calc(100vh - 130px);
         width: 30px;
     }
-    
+
 
     .empty-state {
         padding: 2rem;
@@ -601,10 +604,12 @@ article {
     #main {
         grid-area: var(--main-responsive-area);
     }
+
     #scrollLeftButton,
     #scrollRightButton {
         height: calc(100vh - 130px);
     }
+
     article {
         min-width: 100%;
         /* Mostrar dos publicaciones por fila */
@@ -612,7 +617,7 @@ article {
 }
 
 @media (max-width: 480px) {
-    
+
 
     article {
         min-width: 240px;
@@ -764,18 +769,22 @@ article {
         gap: 0.5rem;
     }
 }
+
 @media (max-width: 370px) {
     .post-card {
-        height: calc(100vh - 260px);        
+        height: calc(100vh - 260px);
     }
+
     article {
         min-width: 100%;
     }
+
     #scrollLeftButton,
     #scrollRightButton {
         height: calc(100vh - 260px);
     }
-    #scrollLeftButton{
+
+    #scrollLeftButton {
         left: 0;
         padding: 0;
         margin: 0;

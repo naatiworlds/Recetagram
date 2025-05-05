@@ -48,8 +48,8 @@
     <p class="date">{{ formatDate(post.created_at) }}</p>
 
     <div class="actions">
-      <button @click="handleLike" :class="{ liked: isLiked }">
-        <i class="fas fa-heart"></i>
+      <button @click="handleLike">
+        <i class="fas fa-heart" :class="isLikedByCurrentUser ? 'green-heart' : 'white-heart'"></i>
         {{ likesCount }}
       </button>
 
@@ -136,9 +136,14 @@ export default {
     notificationStore() {
       return useNotificationStore()
     },
+    isLikedByCurrentUser() {
+      // Asegúrate de que existe el usuario y que el post tenga liked_by incluído
+      return this.userStore.user &&
+             this.post.liked_by &&
+             this.post.liked_by.some(like => like.id === this.userStore.user.id);
+    },
     likesCount() {
-      const count = this.post?.likes_count || 0;
-      return count;
+      return this.post?.likes_count || 0;
     },
     commentsCount() {
       const count = this.post?.comments_count || 0;
@@ -185,6 +190,8 @@ export default {
       return this.post.description.substring(0, limit) + '...';
     }
   },
+
+  
 
   methods: {
     getImageUrl(image) {
@@ -302,15 +309,7 @@ export default {
         })
     },
 
-    async checkLikeStatus() {
-      if (this.userStore.isAuthenticated && this.post?.id) {
-        try {
-          const response = await apiService.toggleLike(this.post.id);
-          this.isLiked = response.data.is_liked;
-        } catch (error) {
-        }
-      }
-    },
+
     toggleDescription() {
       this.showFullDescription = !this.showFullDescription;
     }
@@ -421,12 +420,13 @@ export default {
 }
 
 .post-description {
-  font-size: clamp(.5rem, 1vw, 1rem);
-  color: var(--text-secondary-color);
-  margin: 10px;
-  padding: 0 10px;
-  max-width: 100%; /* Se ajusta al ancho del contenedor */
+  font-size: 16px;
+  color: black;
+  margin-top: 10px;
+  max-width: 100%;
   word-wrap: break-word;
+  white-space: pre-wrap;
+  /* Esto hará que se respeten los saltos de línea */
 }
 
 /* === Sección de ingredientes === */
@@ -445,8 +445,9 @@ export default {
   font-size: 0.9em;
   color: #333;
 }
+
 .see-more {
-  color: var(--primary-color); 
+  color: var(--primary-color);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -465,6 +466,7 @@ export default {
   margin: .5em auto;
   font-size: 10px;
 }
+
 /* === Fecha === */
 .date {
   font-size: 0.9em;
@@ -499,6 +501,10 @@ export default {
 .share-button:hover {
   opacity: 0.9;
   transform: translateY(-2px);
+}
+
+.actions button.liked i.fas.fa-heart {
+  color: var(--primary-color);
 }
 
 .edit-button {
@@ -572,6 +578,7 @@ export default {
   gap: 10px;
   margin-top: 20px;
 }
+
 .modal-actions button {
   padding: 10px 20px;
   border: none;
@@ -661,5 +668,11 @@ export default {
   }
 }
 
+.green-heart {
+  color: var(--primary-color);
+}
 
+.white-heart {
+  color: white;
+}
 </style>

@@ -852,4 +852,11 @@ main {
     font-size: 0.9rem;
     color: var(--text-color-secondary);
 }
+.green-heart {
+  color: var(--primary-color);
+}
+
+.white-heart {
+  color: white;
+}
 </style>

@@ -44,6 +44,8 @@
           <button @click="viewPost(post)" class="btn-view">Ver Post</button>
         </div>
       </div>
+      <Crear v-if="showPostModal" :post-to-edit="postToEdit" @close="handleModalClose" />
+
     </div>
   </div>
 </template>
@@ -51,10 +53,15 @@
 <script>
 import { apiService } from '../../services/api'
 import { STORAGE_URL } from '../../utils/globalConstants'
+import Crear from '../../components/Crear.vue'
+
+
 
 export default {
   name: 'PostsManagement',
-
+components: {
+  Crear
+},
   data() {
     return {
       posts: [],
@@ -63,6 +70,8 @@ export default {
       dateFilter: '',
       loading: true,
       error: null,
+      showPostModal: false,
+      postToEdit: null,
     }
   },
 
@@ -110,8 +119,11 @@ export default {
     },
 
     editPost(post) {
-      window.location.href = `/posts/${post.id}/edit`
-    },
+  this.postToEdit = post;
+  this.showPostModal = true;
+},
+
+
 
     viewPost(post) {
       window.location.href = `/posts/${post.id}`
@@ -159,7 +171,13 @@ export default {
         default:
           return true
       }
-    }
+    },
+
+        handleModalClose() {
+            // Cerrar el modal
+            this.showPostModal = false;
+            this.postToEdit = null;
+        },    
   },
 
   created() {

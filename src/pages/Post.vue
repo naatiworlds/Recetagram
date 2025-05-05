@@ -121,6 +121,7 @@ export default {
 .post-card{
     height: auto;
     padding: 1em 1em;
+    max-width: 400px;
 }
 #publicaciones {
   width: fit-content;
@@ -211,9 +212,12 @@ export default {
 }
 
 .post-description {
-  font-size: 0.9em;
-  color: var(--text-color);
-  margin-bottom: 15px;
+  font-size: clamp(.5rem, 1vw, 1rem);
+  color: var(--text-secondary-color);
+  margin: 10px;
+  padding: 0 10px;
+  max-width: 100%; /* Se ajusta al ancho del contenedor */
+  word-wrap: break-word;
 }
 
 .tags-container {

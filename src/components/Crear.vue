@@ -24,8 +24,10 @@
           <label>
             Descripción
             <textarea v-model="post.description" placeholder="Descripción del post"
-              @input="validateDescription"></textarea>
+              @input="updateDescriptionCount" :maxlength="maxDescriptionLength"></textarea>
             <span v-if="errors.content" class="error">{{ errors.content }}</span>
+            <!-- Contador de caracteres -->
+            <span class="counter">{{ post.description.length }} / {{ maxDescriptionLength }} caracteres</span>
           </label>
 
           <div class="ingredients-container">
@@ -83,7 +85,8 @@ export default {
       loading: false,
       errors: {},
       message: '',
-      notificationStore: useNotificationStore()
+      notificationStore: useNotificationStore(),
+      maxDescriptionLength: 300  // Máximo de caracteres permitidos
     }
   },
   watch: {
@@ -249,6 +252,11 @@ export default {
 
     closeModal() {
       this.$emit('close')
+    },
+
+    updateDescriptionCount() {
+      // Aquí puedes incluir lógica adicional si fuera necesario
+      // El contador se actualiza automáticamente gracias al v-model y a post.description.length
     }
   }
 }
@@ -493,5 +501,13 @@ button[type="submit"]:hover {
 
 .submit-button:hover {
   opacity: 0.9;
+}
+
+.counter {
+  font-size: 0.85em;
+  color: var(--text-color);
+  text-align: right;
+  margin-top: 4px;
+  display: block;
 }
 </style>
