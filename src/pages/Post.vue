@@ -123,7 +123,7 @@ export default {
 .post-card{
     height: auto;
     padding: 1em 1em;
-    max-width: 300px;
+    max-width: 400px;
 }
 #publicaciones {
   width: fit-content;
@@ -284,6 +284,9 @@ export default {
 @media (max-width: 600px) {
   .post-container {
     grid-area: var(--main-responsive-area);
+  }
+  .post-card {
+   max-width: 320px;
   }
 }
 @media (max-width: 480px) {
