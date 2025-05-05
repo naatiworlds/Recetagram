@@ -222,6 +222,7 @@ export default {
   z-index: 1000;
   max-height: 500px;
   overflow-y: auto;
+  color: black;
 }
 
 .notification-header {
@@ -307,6 +308,7 @@ export default {
   font-size: 14px;
   line-height: 1.4;
   word-break: break-word;
+  color: black;
 }
 
 .notification-content small {
