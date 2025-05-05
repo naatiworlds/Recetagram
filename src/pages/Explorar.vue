@@ -7,18 +7,12 @@
       <label for="authorFilter">Filtrar por autor: </label>
       <input v-model="filters.authorFilter" id="authorFilter" placeholder="Filtrar por autor" />
 
-      <label for="dateFilter">Filtrar por fecha: </label>
-      <select v-model="filters.dateFilter" id="dateFilter">
-        <option value="" selected>Todas las fechas</option>
-        <option value="today">Hoy</option>
-        <option value="week">Última semana</option>
-        <option value="month">Último mes</option>
-      </select>
-      <button @click="resetFilters">Resetear filtros</button>
+      <label for="ingredientFilter">Filtrar por ingrediente: </label>
+      <input v-model="filters.ingredientFilter" id="ingredientFilter" placeholder="Buscar por ingrediente" />
 
+      <button @click="resetFilters">Resetear filtros</button>
     </div>
     <div class="posts-wrapper">
-
       <Posts :filters="filters" :is-explorar="true" :key="$route.path" />
     </div>
   </div>
@@ -31,19 +25,18 @@ export default {
   components: {
     Posts,
   },
-
   data() {
     return {
-      // Aquí están los filtros que se pasan al componente hijo
+      // Ahora se incluye el filtro de ingrediente en lugar del de fecha
       filters: this.getDefaultFilters()
     }
   },
-  methods:{
+  methods: {
     getDefaultFilters() {
       return {
         searchTerm: '',
         authorFilter: '',
-        dateFilter: ''
+        ingredientFilter: ''
       };
     },
     resetFilters() {

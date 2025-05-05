@@ -141,6 +141,32 @@ export default {
                 );
             }
 
+            // Filtrar por ingredientes (uno o varios separados por comas)
+            if (this.filters.ingredientFilter) {
+                const searchIngredients = this.filters.ingredientFilter
+                    .split(',')
+                    .map(s => s.trim().toLowerCase())
+                    .filter(s => s); // elimina términos vacíos
+
+                posts = posts.filter(post => {
+                    let ingredientsArray = [];
+                    try {
+                        // Si ingredients es un string JSON, se parsea. Si ya es un array se usa tal cual.
+                        ingredientsArray = typeof post.ingredients === 'string'
+                            ? JSON.parse(post.ingredients)
+                            : post.ingredients;
+                    } catch (error) {
+                        return false;
+                    }
+                    // Se requiere que TODOS los términos de búsqueda estén presentes en al menos un ingrediente.
+                    return searchIngredients.some(searchTerm =>
+                        ingredientsArray.some(ingredient =>
+                            ingredient.name.toLowerCase().includes(searchTerm)
+                        )
+                    );
+                });
+            }
+
             // Filtrar por fecha
             if (this.filters.dateFilter) {
                 posts = posts.filter(post => this.isWithinDateRange(post.created_at, this.filters.dateFilter));
