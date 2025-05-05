@@ -2,13 +2,13 @@
   <div class="explorar-container">
     <div class="explorar-filters">
       <label for="searchTerm">Buscar Término: </label>
-      <input v-model="filters.searchTerm" id="searchTerm" placeholder="Buscar por título o descripción" />
+      <input v-model="filters.searchTerm" id="searchTerm" placeholder="Ej: para toda la familia" />
 
       <label for="authorFilter">Filtrar por autor: </label>
-      <input v-model="filters.authorFilter" id="authorFilter" placeholder="Filtrar por autor" />
+      <input v-model="filters.authorFilter" id="authorFilter" placeholder="Ej: Admin" />
 
       <label for="ingredientFilter">Filtrar por ingrediente: </label>
-      <input v-model="filters.ingredientFilter" id="ingredientFilter" placeholder="Buscar por ingrediente" />
+      <input v-model="filters.ingredientFilter" id="ingredientFilter" placeholder="Ej: frijo, canela" />
 
       <button @click="resetFilters">Resetear filtros</button>
     </div>
