@@ -405,9 +405,9 @@ export default {
 
 .post-img {
   width: 100%;
-  height: calc((100vh - 240px) * 0.4);
   /* 40% de la altura del card */
-  object-fit: cover;
+  object-fit: contain;
+  aspect-ratio: 16 / 9;
   border-radius: 10px;
   margin: 10px 0;
 }
@@ -603,13 +603,6 @@ export default {
     height: calc(100vh - 110px);
   }
 
-  .post-img {
-    height: calc((100vh - 260px) * 0.35);
-    object-fit: cover;
-    aspect-ratio: 16 / 9;
-    /* 35% en tablets */
-  }
-
   .post-title {
     font-size: 1.3em;
     margin: 8px 0;
@@ -634,11 +627,6 @@ export default {
   .post-card {
     height: calc(100vh - 280px);
     padding: 10px;
-  }
-
-  .post-img {
-    height: calc((100vh - 280px) * 0.3);
-    /* 30% en móviles */
   }
 
   .post-title {

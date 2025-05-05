@@ -105,7 +105,9 @@ export default {
 .post-container {
   grid-area: var(--main-area);
   width: 100%;
-  margin: 1em auto;
+  margin: 2em auto;
+  max-height: 100vh; /* Altura máxima igual al viewport */
+  overflow-y: auto; /* Permite hacer scroll vertical */
 }
 .oculto~.post-container {
   position: absolute;
@@ -121,7 +123,7 @@ export default {
 .post-card{
     height: auto;
     padding: 1em 1em;
-    max-width: 400px;
+    max-width: 300px;
 }
 #publicaciones {
   width: fit-content;
@@ -199,10 +201,11 @@ export default {
 
 .post-img {
   width: 100%;
-  height: 400px;
-  object-fit: cover;
-  display: block;
-  background-color: transparent;
+  /* 40% de la altura del card */
+  object-fit: contain;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  margin: 10px 0;
 }
 
 .post-title {
@@ -275,11 +278,7 @@ export default {
   }
 
   .post-detail {
-    width: 90%;
-  }
-
-  .post-img {
-    height: 350px;
+    width: 80%;
   }
 }
 @media (max-width: 600px) {
@@ -289,12 +288,8 @@ export default {
 }
 @media (max-width: 480px) {
   .post-detail {
-    width: 95%;
+    width: 70%;
     margin: 20px auto;
-  }
-
-  .post-img {
-    height: 300px;
   }
 }
 </style>
