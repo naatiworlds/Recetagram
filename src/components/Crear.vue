@@ -250,9 +250,18 @@ export default {
           this.closeModal()
         }
       } catch (error) {
-        // Si el servidor responde con un error 413 (Payload Too Large), mostrar mensaje específico.
+        // Si el servidor responde con un error 413 (Payload Too Large)
         if (error.response && error.response.status === 413) {
           this.notificationStore.show('La imagen es demasiado grande. Por favor, comprímela o seleccione otra imagen.', 'error')
+        }
+        // Si se recibe error 422 (Unprocessable Content) y se indica fallo en subir la imagen (posiblemente video)
+        else if (error.response && error.response.status === 422 && error.response.data.message && error.response.data.message.imagen) {
+          const imagenError = error.response.data.message.imagen[0] || ''
+          if (imagenError.toLowerCase().includes('failed to upload')) {
+            this.notificationStore.show('Los videos no están soportados aún. Por favor, seleccione una imagen.', 'error')
+          } else {
+            this.notificationStore.show(error.response.data.message || 'Error al procesar el post', 'error')
+          }
         } else {
           this.notificationStore.show(error.response?.data?.message || 'Error al procesar el post', 'error')
         }
