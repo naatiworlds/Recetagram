@@ -96,6 +96,7 @@ export default {
         if (newPost) {
           this.post.title = newPost.title || ''
           this.post.description = newPost.description || ''
+          // En actualización, la imagen se reinicia; si el usuario no selecciona una nueva, el backend debe conservar la anterior.
           this.post.image = null
           this.post.is_private = newPost.is_private || false
           this.post.ingredients = this.parseIngredients(newPost.ingredients)
@@ -216,6 +217,12 @@ export default {
     async handleSubmit() {
       if (this.loading || !this.validateForm()) return
 
+      // Validar tamaño de imagen (5 MB = 5 * 1024 * 1024 bytes)
+      if (this.post.image && this.post.image.size > 5 * 1024 * 1024) {
+        this.notificationStore.show('La imagen es demasiado grande. Por favor, comprímela o seleccione otra imagen.', 'error')
+        return
+      }
+
       this.loading = true
       this.message = this.postToEdit ? 'Actualizando post...' : 'Creando post...'
 
@@ -243,8 +250,13 @@ export default {
           this.closeModal()
         }
       } catch (error) {
+        // Si el servidor responde con un error 413 (Payload Too Large), mostrar mensaje específico.
+        if (error.response && error.response.status === 413) {
+          this.notificationStore.show('La imagen es demasiado grande. Por favor, comprímela o seleccione otra imagen.', 'error')
+        } else {
+          this.notificationStore.show(error.response?.data?.message || 'Error al procesar el post', 'error')
+        }
         console.error('Error:', error)
-        this.notificationStore.show(error.response?.data?.message || 'Error al procesar el post', 'error')
       } finally {
         this.loading = false
       }

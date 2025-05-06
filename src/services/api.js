@@ -114,7 +114,7 @@ export const apiService = {
   },
 
   updatePost: (postId, formData) => {
-    return api.post(`/posts/${postId}`, formData, {
+    return api.put(`/posts/${postId}`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
