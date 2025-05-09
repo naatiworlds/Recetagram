@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Evita que los motores de búsqueda indexen el Service Worker
+Disallow: /sw.js
