@@ -3,8 +3,8 @@
     "short_name": "Recetagram",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "",
-    "theme_color": "",
+    "background_color": "#ffffff",
+    "theme_color": "#18C894",
     "description": "Red social de recetas de cocina, donde puedes compartir tus recetas y descubrir nuevas.",
     "icons": [
       {
