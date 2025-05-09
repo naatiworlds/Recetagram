@@ -1,36 +1,35 @@
 {
-    "name": "Recetagram,",
-    "short_name": "Recetagram",
-    "start_url": ".",
-    "display": "standalone",
-    "background_color": "#ffffff",
-    "theme_color": "#18C894",
-    "description": "Red social de recetas de cocina, donde puedes compartir tus recetas y descubrir nuevas.",
-    "icons": [
-      {
-        "src": "/icons/icon-192.png",
-        "sizes": "144x144",
-        "type": "image/png"
-      },
-      {
-        "src": "/icons/icon-512.png",
-        "sizes": "144x144",
-        "type": "image/png"
-      }
-    ],
-    "screenshots": [
-        {
-          "src": "screenshots/home.png",
-          "sizes": "1917x902",
-          "type": "image/png",
-          "form_factor": "wide" 
-        },
-        {
-          "src": "screenshots/mobile.png",
-          "sizes": "426x805",
-          "type": "image/png",
-          "form_factor": "narrow" 
-        }
-      ]
-  }
-  
+  "name": "Recetagram",
+  "short_name": "Recetagram",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#18C894",
+  "description": "Red social de recetas de cocina, donde puedes compartir tus recetas y descubrir nuevas.",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshots/home.png",
+      "sizes": "1917x902",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "screenshots/mobile.png",
+      "sizes": "426x805",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ]
+}
