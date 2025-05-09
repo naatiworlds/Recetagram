@@ -3,7 +3,7 @@
     "short_name": "Rc",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#18C894",
+    "background_color": "",
     "theme_color": "#18C894",
     "description": "Red social de recetas de cocina, donde puedes compartir tus recetas y descubrir nuevas.",
     "lang": "es-ES",
