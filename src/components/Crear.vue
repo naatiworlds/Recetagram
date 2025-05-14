@@ -50,28 +50,63 @@
             <h3>Paso 3: Ingredientes</h3>
             <div class="ingredients-container">
               <h3>Ingredientes</h3>
+
+              <!-- Botones de acción para todos los ingredientes -->
+              <div class="global-actions">
+                <button type="button" @click="addIngredient" class="add-button">Añadir ingrediente</button>
+                <button 
+                  type="button" 
+                  @click="removeLastIngredient" 
+                  class="remove-button" 
+                  :disabled="post.ingredients.length <= 1"
+                >
+                  Borrar último ingrediente
+                </button>
+              </div>
+
+              <!-- Lista de ingredientes -->
               <div class="ingredients-list">
                 <div v-for="(ingredient, index) in post.ingredients" :key="index" class="ingredient-input">
-                  <div class="input-group">
-                    <div class="input-with-error">
-                      <input class="input-ingredient" type="text" v-model="ingredient.name"
-                        placeholder="Nombre del ingrediente" @blur="validateIngredientName(index)" />
-                      <span v-if="errors[`ingredient_name_${index}`]" class="error">{{
-                        errors[`ingredient_name_${index}`] }}</span>
-                    </div>
-                    <div class="input-with-error">
-                      <input class="input-ingredient" type="text" v-model="ingredient.quantity"
-                        placeholder="Ej: 500 gr (gr, kg, L, cdas)" @blur="validateIngredientQuantity(index)" />
-                      <span v-if="errors[`ingredient_quantity_${index}`]" class="error">{{
-                        errors[`ingredient_quantity_${index}`] }}</span>
-                    </div>
+                  <!-- Input para el nombre del ingrediente -->
+                  <div class="input-with-error">
+                    <input 
+                      class="input-ingredient" 
+                      type="text" 
+                      v-model="ingredient.name" 
+                      placeholder="Nombre del ingrediente" 
+                      @blur="validateIngredientName(index)" 
+                    />
+                    <span v-if="errors[`ingredient_name_${index}`]" class="error">{{ errors[`ingredient_name_${index}`] }}</span>
                   </div>
-                  <div class="accions-ingredients">
-                    <button type="button" @click="addIngredient" class="add-button">+</button>
-                    <button type="button" @click="removeIngredient(index)" class="remove-button"
-                      :style="{ visibility: index > 0 ? 'visible' : 'hidden' }">
-                      ×
-                    </button>
+
+                  <!-- Inputs para la cantidad y la unidad -->
+                  <div class="input-group">
+                    <div class="input-with-error quantity">
+                      <input 
+                        class="input-ingredient" 
+                        type="number" 
+                        v-model.number="ingredient.quantity" 
+                        placeholder="Cantidad (Ej: 500)" 
+                        @blur="validateIngredientQuantity(index)" 
+                      />
+                      <select 
+                        v-model="ingredient.unit" 
+                        @blur="validateIngredientUnit(index)" 
+                        class="unit-select"
+                      >
+                        <option value="" disabled>Selecciona unidad</option>
+                        <option value="gr">gr</option>
+                        <option value="kg">kg</option>
+                        <option value="L">L</option>
+                        <option value="cdas">cdas</option>
+                      </select>
+                    </div>
+
+                    <!-- Validaciones -->
+                    <div class="input-with-error">
+                      <span v-if="errors[`ingredient_quantity_${index}`]" class="error">{{ errors[`ingredient_quantity_${index}`] }}</span>
+                      <span v-if="errors[`ingredient_unit_${index}`]" class="error">{{ errors[`ingredient_unit_${index}`] }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -84,7 +119,7 @@
             <button type="button" v-if="currentStep > 1" @click="prevStep" class="prev-button">Anterior</button>
             <button type="button" v-if="currentStep < 3" @click="nextStep" class="next-button">Siguiente</button>
           </div>
-          <button type="submit" v-if="currentStep === 3" class="submit-button" :disabled="loading">
+          <button type="submit" v-if="currentStep === 3" class="submit-button" :disabled="loading || !validateForm()">
             {{ postToEdit ? 'Guardar cambios' : 'Subir post' }}
           </button>
         </form>
@@ -114,7 +149,7 @@ export default {
         description: '',
         image: null,
         is_private: false,
-        ingredients: [{ name: '', quantity: '' }]
+        ingredients: [{ name: '', quantity: '', unit: '' }] // Agregar el campo unit
       },
       imagePreviewUrl: '', // URL de la vista previa de la imagen
       loading: false,
@@ -177,21 +212,27 @@ export default {
     addIngredient() {
       const lastIngredient = this.post.ingredients[this.post.ingredients.length - 1];
 
-      // Validar que el último ingrediente tenga nombre y cantidad
+      // Validar que el último ingrediente esté completo antes de añadir uno nuevo
       if (!lastIngredient.name || !lastIngredient.name.trim()) {
         this.errors[`ingredient_name_${this.post.ingredients.length - 1}`] = 'El nombre del ingrediente es requerido.';
         return;
       }
 
-      if (!lastIngredient.quantity || !lastIngredient.quantity.trim()) {
+      if (lastIngredient.quantity == null || lastIngredient.quantity === '') {
         this.errors[`ingredient_quantity_${this.post.ingredients.length - 1}`] = 'La cantidad del ingrediente es requerida.';
         return;
       }
 
-      // Si pasa la validación, limpiar errores y agregar un nuevo ingrediente
+      if (!lastIngredient.unit || !lastIngredient.unit.trim()) {
+        this.errors[`ingredient_unit_${this.post.ingredients.length - 1}`] = 'La unidad del ingrediente es requerida.';
+        return;
+      }
+
+      // Limpiar errores y agregar un nuevo ingrediente
       this.errors[`ingredient_name_${this.post.ingredients.length - 1}`] = '';
       this.errors[`ingredient_quantity_${this.post.ingredients.length - 1}`] = '';
-      this.post.ingredients.push({ name: '', quantity: '' });
+      this.errors[`ingredient_unit_${this.post.ingredients.length - 1}`] = '';
+      this.post.ingredients.push({ name: '', quantity: '', unit: '' });
     },
 
     removeIngredient(index) {
@@ -200,20 +241,26 @@ export default {
       }
     },
 
+    removeLastIngredient() {
+      if (this.post.ingredients.length > 1) {
+        this.post.ingredients.pop();
+      }
+    },
+
     parseIngredients(rawIngredients) {
-      if (!rawIngredients) return [{ name: '', quantity: '' }]
-      if (Array.isArray(rawIngredients)) return rawIngredients.length ? rawIngredients : [{ name: '', quantity: '' }]
+      if (!rawIngredients) return [{ name: '', quantity: '', unit: '' }]
+      if (Array.isArray(rawIngredients)) return rawIngredients.length ? rawIngredients : [{ name: '', quantity: '', unit: '' }]
 
       try {
         const parsed = JSON.parse(rawIngredients)
-        return Array.isArray(parsed) && parsed.length ? parsed : [{ name: rawIngredients, quantity: '' }]
+        return Array.isArray(parsed) && parsed.length ? parsed : [{ name: rawIngredients, quantity: '', unit: '' }]
       } catch {
         try {
           const fixed = rawIngredients.replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":')
           const parsed = JSON.parse(fixed)
-          return Array.isArray(parsed) && parsed.length ? parsed : [{ name: rawIngredients, quantity: '' }]
+          return Array.isArray(parsed) && parsed.length ? parsed : [{ name: rawIngredients, quantity: '', unit: '' }]
         } catch {
-          return [{ name: rawIngredients, quantity: '' }]
+          return [{ name: rawIngredients, quantity: '', unit: '' }]
         }
       }
     },
@@ -240,7 +287,6 @@ export default {
 
     validateIngredients() {
       this.errors.ingredients = '';
-      const quantityRegex = /^[0-9]+(?:\.[0-9]+)?\s*(gr|kg|L|cdas)$/i;
 
       this.post.ingredients.forEach((ingredient, index) => {
         if (!ingredient.name || !ingredient.name.trim()) {
@@ -249,12 +295,18 @@ export default {
           this.errors[`ingredient_name_${index}`] = '';
         }
 
-        if (!ingredient.quantity || !ingredient.quantity.trim()) {
+        if (ingredient.quantity == null || ingredient.quantity === '') {
           this.errors[`ingredient_quantity_${index}`] = 'La cantidad del ingrediente es requerida.';
-        } else if (!quantityRegex.test(ingredient.quantity.trim())) {
-          this.errors[`ingredient_quantity_${index}`] = 'La cantidad debe ser un número seguido de una unidad válida: gr, kg, L o cdas.';
+        } else if (ingredient.quantity <= 0) {
+          this.errors[`ingredient_quantity_${index}`] = 'La cantidad debe ser mayor a 0.';
         } else {
           this.errors[`ingredient_quantity_${index}`] = '';
+        }
+
+        if (!ingredient.unit || !ingredient.unit.trim()) {
+          this.errors[`ingredient_unit_${index}`] = 'La unidad del ingrediente es requerida.';
+        } else {
+          this.errors[`ingredient_unit_${index}`] = '';
         }
       });
     },
@@ -270,14 +322,22 @@ export default {
 
     validateIngredientQuantity(index) {
       const ingredient = this.post.ingredients[index];
-      const quantityRegex = /^[0-9]+(?:\.[0-9]+)?\s*(gr|kg|L|cdas)$/i;
 
-      if (!ingredient.quantity || !ingredient.quantity.trim()) {
+      if (ingredient.quantity == null || ingredient.quantity === '') {
         this.errors[`ingredient_quantity_${index}`] = 'La cantidad del ingrediente es requerida.';
-      } else if (!quantityRegex.test(ingredient.quantity.trim())) {
-        this.errors[`ingredient_quantity_${index}`] = 'La cantidad debe ser un número seguido de una unidad válida: gr, kg, L o cdas.';
+      } else if (ingredient.quantity <= 0) {
+        this.errors[`ingredient_quantity_${index}`] = 'La cantidad debe ser mayor a 0.';
       } else {
         this.errors[`ingredient_quantity_${index}`] = '';
+      }
+    },
+
+    validateIngredientUnit(index) {
+      const ingredient = this.post.ingredients[index];
+      if (!ingredient.unit || !ingredient.unit.trim()) {
+        this.errors[`ingredient_unit_${index}`] = 'La unidad del ingrediente es requerida.';
+      } else {
+        this.errors[`ingredient_unit_${index}`] = '';
       }
     },
 
@@ -288,65 +348,54 @@ export default {
       this.post.ingredients.forEach((_, index) => {
         this.validateIngredientName(index);
         this.validateIngredientQuantity(index);
+        this.validateIngredientUnit(index);
       });
 
+      // Verificar si hay errores
       return !Object.values(this.errors).some(error => error);
     },
 
     async handleSubmit() {
-      if (this.loading || !this.validateForm()) return
-
-      // Validar tamaño de imagen (5 MB = 5 * 1024 * 1024 bytes)
-      if (this.post.image && this.post.image.size > 5 * 1024 * 1024) {
-        this.notificationStore.show('La imagen es demasiado grande. Por favor, comprímela o seleccione otra imagen.', 'error')
-        return
+      // Validar todos los campos antes de enviar
+      const isValid = this.validateForm();
+      if (!isValid) {
+        this.notificationStore.show('Por favor, completa todos los campos requeridos antes de enviar.', 'error');
+        return;
       }
 
-      this.loading = true
-      this.message = this.postToEdit ? 'Actualizando post...' : 'Creando post...'
+      this.loading = true;
 
-      const formData = new FormData()
-      if (this.postToEdit) formData.append('_method', 'PUT')
+      // Combinar cantidad y unidad en un solo campo antes de enviar
+      const ingredients = this.post.ingredients.map(ingredient => ({
+        name: ingredient.name,
+        quantity: `${ingredient.quantity} ${ingredient.unit}`.trim() // Combinar cantidad y unidad
+      }));
 
-      formData.append('title', this.post.title)
-      formData.append('description', this.post.description)
-      formData.append('is_private', this.post.is_private)
-      formData.append('ingredients', JSON.stringify(this.post.ingredients))
+      const formData = new FormData();
+      formData.append('title', this.post.title);
+      formData.append('description', this.post.description);
+      formData.append('is_private', this.post.is_private);
+      formData.append('ingredients', JSON.stringify(ingredients)); // Enviar ingredientes combinados
       if (this.post.image) {
-        formData.append('imagen', this.post.image)
+        formData.append('imagen', this.post.image);
       }
 
       try {
         const response = this.postToEdit
           ? await apiService.updatePost(this.postToEdit.id, formData)
-          : await apiService.createPost(formData)
+          : await apiService.createPost(formData);
 
         if (response.data.status === 'success') {
-          const msg = this.postToEdit ? 'Post actualizado correctamente' : 'Post creado correctamente'
-          this.message = msg
-          this.notificationStore.show(msg, 'success')
-          this.$emit(this.postToEdit ? 'post-updated' : 'post-created', response.data.data)
-          this.closeModal()
+          const msg = this.postToEdit ? 'Post actualizado correctamente' : 'Post creado correctamente';
+          this.notificationStore.show(msg, 'success');
+          this.$emit(this.postToEdit ? 'post-updated' : 'post-created', response.data.data);
+          this.closeModal();
         }
       } catch (error) {
-        // Si el servidor responde con un error 413 (Payload Too Large)
-        if (error.response && error.response.status === 413) {
-          this.notificationStore.show('La imagen es demasiado grande. Por favor, comprímela o seleccione otra imagen.', 'error')
-        }
-        // Si se recibe error 422 (Unprocessable Content) y se indica fallo en subir la imagen (posiblemente video)
-        else if (error.response && error.response.status === 422 && error.response.data.message && error.response.data.message.imagen) {
-          const imagenError = error.response.data.message.imagen[0] || ''
-          if (imagenError.toLowerCase().includes('failed to upload')) {
-            this.notificationStore.show('Los videos no están soportados aún. Por favor, seleccione una imagen.', 'error')
-          } else {
-            this.notificationStore.show(error.response.data.message || 'Error al procesar el post', 'error')
-          }
-        } else {
-          this.notificationStore.show(error.response?.data?.message || 'Error al procesar el post', 'error')
-        }
-        console.error('Error:', error)
+        console.error('Error al procesar el post:', error);
+        this.notificationStore.show('Ocurrió un error al procesar el formulario.', 'error');
       } finally {
-        this.loading = false
+        this.loading = false;
       }
     },
 
@@ -516,24 +565,28 @@ textarea {
   color: var(--contrast-color);
   font-size: 14px;
   margin-top: 5px;
+  width: 90%;
 }
 
 .input-with-error {
   display: flex;
   flex-direction: row;
   flex: 1;
-  margin-right: 10px;
   align-content: center;
-  align-items: center;
+  align-items: stretch;
   gap: 1em;
+  width: 100%;
 }
 
 .input-ingredient {
-  width: fit-content;
+  width: 100px;
+  padding: 10px;
+  border: 1px solid var(--sombra-color);
+  border-radius: 6px;
+  background-color: white;
+  color: black;
+  font-size: 14px;
 }
-
-
-
 
 .title-image-container {
   display: flex;
@@ -577,11 +630,11 @@ textarea {
 
 .ingredient-input {
   display: flex;
+  flex-direction: column;
   align-items: baseline;
   margin-bottom: 5px;
   align-content: center;
   justify-content: center;
-  flex-direction: row;
   flex-wrap: wrap;
   gap: 1em;
 }
@@ -595,6 +648,7 @@ textarea {
   justify-content: center;
   align-items: stretch;
   gap: 1em;
+  width: 100%;
 }
 
 
@@ -609,7 +663,7 @@ textarea {
   gap: 1em;
 }
 
-.add-button,
+/* .add-button,
 .remove-button {
   background-color: var(--primary-color);
   color: white;
@@ -621,11 +675,10 @@ textarea {
   font-size: 20px;
   text-align: center;
   margin-right: 1em;
-}
+  width: 100%;
+} */
 
-.remove-button {
-  background-color: var(--contrast-color);
-}
+
 
 .submit-button {
   width: 100%;
@@ -727,6 +780,49 @@ textarea {
 .submit-button:hover {
   background-color: var(--primary-color-dark);
 }
+
+.unit-select {
+  padding: 10px;
+  border: 1px solid var(--sombra-color);
+  border-radius: 6px;
+  background-color: white;
+  color: black;
+  font-size: 14px;
+  width: 100%;
+}
+
+.global-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 1em;
+}
+
+.add-button,
+.remove-button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 10px 20px;
+  font-size: 14px;
+}
+
+.remove-button {
+  background-color: var(--contrast-color);
+}
+
+.add-button:hover,
+.remove-button:hover {
+  opacity: 0.9;
+}
+
+.remove-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
   section {
     width: 90%;
@@ -746,10 +842,11 @@ textarea {
 
 @media (max-width: 600px) {
 
-  .input-ingredient{
+  .input-ingredient {
     width: 100%;
   }
-  .ingredient-input{
+
+  .ingredient-input {
     gap: 0;
   }
 }
@@ -764,12 +861,18 @@ textarea {
   button[type="submit"] {
     padding: 12px;
   }
-  button[type="submit"]{
+
+  button[type="submit"] {
     margin: 1em;
   }
-  .input-with-error{
+
+  .input-with-error {
     flex-direction: column;
     gap: 0;
+  }
+
+  .unit-select {
+    width: 100%;
   }
 }
 </style>
