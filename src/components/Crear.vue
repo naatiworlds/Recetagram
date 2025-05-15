@@ -7,7 +7,7 @@
       </header>
       <main class="form-container">
         <!-- Vista previa de la imagen -->
-        <div class="image-preview" v-if="post.image">
+        <div class="image-preview" v-if="imagePreviewUrl">
           <img :src="imagePreviewUrl" alt="Vista previa de la imagen" />
         </div>
 
@@ -164,12 +164,23 @@ export default {
       immediate: true,
       handler(newPost) {
         if (newPost) {
-          this.post.title = newPost.title || ''
-          this.post.description = newPost.description || ''
-          // En actualización, la imagen se reinicia; si el usuario no selecciona una nueva, el backend debe conservar la anterior.
-          this.post.image = null
-          this.post.is_private = newPost.is_private || false
-          this.post.ingredients = this.parseIngredients(newPost.ingredients)
+
+          // Inicializar título, descripción y privacidad
+          this.post.title = newPost.title || '';
+          this.post.description = newPost.description || '';
+          this.post.is_private = newPost.is_private || false;
+
+          // Inicializar ingredientes
+          this.post.ingredients = this.parseIngredients(newPost.ingredients);
+
+          // Inicializar la imagen
+          if (newPost.imagen) {
+            this.imagePreviewUrl = newPost.imagen; // URL de la imagen existente
+            this.post.image = newPost.imagen; // Usar la URL como valor inicial
+          } else {
+            this.imagePreviewUrl = ''; // Si no hay imagen, limpiar la vista previa
+            this.post.image = null;
+          }
         }
       }
     },
@@ -197,15 +208,15 @@ export default {
       const file = event.target.files[0];
       if (file) {
         this.selectedFileName = file.name;
-        this.post.image = file;
-        this.errors.image = ''; // Limpia el error si se selecciona un archivo
+        this.post.image = file; // Almacenar el archivo seleccionado
+        this.errors.image = ''; // Limpiar errores de imagen
 
         // Crear una URL para la vista previa de la imagen
         this.imagePreviewUrl = URL.createObjectURL(file);
       } else {
         this.selectedFileName = '';
         this.post.image = null;
-        this.imagePreviewUrl = ''; // Limpia la vista previa si no hay archivo
+        this.imagePreviewUrl = ''; // Limpiar la vista previa si no hay archivo
       }
     },
 
@@ -248,20 +259,21 @@ export default {
     },
 
     parseIngredients(rawIngredients) {
-      if (!rawIngredients) return [{ name: '', quantity: '', unit: '' }]
-      if (Array.isArray(rawIngredients)) return rawIngredients.length ? rawIngredients : [{ name: '', quantity: '', unit: '' }]
+      if (!rawIngredients) return [{ name: '', quantity: '', unit: '' }];
 
       try {
-        const parsed = JSON.parse(rawIngredients)
-        return Array.isArray(parsed) && parsed.length ? parsed : [{ name: rawIngredients, quantity: '', unit: '' }]
-      } catch {
-        try {
-          const fixed = rawIngredients.replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":')
-          const parsed = JSON.parse(fixed)
-          return Array.isArray(parsed) && parsed.length ? parsed : [{ name: rawIngredients, quantity: '', unit: '' }]
-        } catch {
-          return [{ name: rawIngredients, quantity: '', unit: '' }]
-        }
+        const parsed = JSON.parse(rawIngredients); // Intentar parsear la cadena JSON
+        return parsed.map(ingredient => {
+          const [quantity, unit] = ingredient.quantity.split(' '); // Separar cantidad y unidad
+          return {
+            name: ingredient.name,
+            quantity: quantity || '', // Asignar cantidad
+            unit: unit || '' // Asignar unidad
+          };
+        });
+      } catch (error) {
+        console.error('Error al parsear los ingredientes:', error);
+        return [{ name: '', quantity: '', unit: '' }];
       }
     },
 
@@ -356,35 +368,34 @@ export default {
     },
 
     async handleSubmit() {
-      // Validar todos los campos antes de enviar
       const isValid = this.validateForm();
       if (!isValid) {
         this.notificationStore.show('Por favor, completa todos los campos requeridos antes de enviar.', 'error');
         return;
       }
-
+    
       this.loading = true;
-
-      // Combinar cantidad y unidad en un solo campo antes de enviar
+    
       const ingredients = this.post.ingredients.map(ingredient => ({
         name: ingredient.name,
-        quantity: `${ingredient.quantity} ${ingredient.unit}`.trim() // Combinar cantidad y unidad
+        quantity: `${ingredient.quantity} ${ingredient.unit}`.trim()
       }));
-
+    
       const formData = new FormData();
       formData.append('title', this.post.title);
       formData.append('description', this.post.description);
       formData.append('is_private', this.post.is_private);
-      formData.append('ingredients', JSON.stringify(ingredients)); // Enviar ingredientes combinados
+      formData.append('ingredients', JSON.stringify(ingredients));
+    
       if (this.post.image) {
         formData.append('imagen', this.post.image);
       }
-
+    
       try {
         const response = this.postToEdit
           ? await apiService.updatePost(this.postToEdit.id, formData)
           : await apiService.createPost(formData);
-
+    
         if (response.data.status === 'success') {
           const msg = this.postToEdit ? 'Post actualizado correctamente' : 'Post creado correctamente';
           this.notificationStore.show(msg, 'success');
@@ -398,6 +409,7 @@ export default {
         this.loading = false;
       }
     },
+    
 
     closeModal() {
       this.$emit('close')
