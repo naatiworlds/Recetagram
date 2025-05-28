@@ -39,7 +39,7 @@
                         :is-profile-view="isProfileView" :is-own-profile="isOwnProfile" @edit-post="handleEditPost"
                         @post-deleted="handlePostDelete" @show-comments="handleShowComments"
                         @post-updated="handlePostUpdate" />
-                        <Crear v-if="showPostModal" :post-to-edit="postToEdit" @close="handleModalClose" />
+                    <Crear v-if="showPostModal" :post-to-edit="postToEdit" @close="handleModalClose" />
                 </template>
             </section>
 
@@ -112,7 +112,7 @@ export default {
             notificationStore: null,
             userStore: null,
             route: null
-            
+
         }
     },
 
@@ -367,7 +367,6 @@ export default {
     overflow: hidden;
     margin: auto;
     padding: 20px;
-    max-width: 1200px;
     scroll-behavior: smooth;
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -429,7 +428,7 @@ export default {
 
 article {
     flex: 0 0 auto;
-    width: calc(25% - 20px);
+    width: calc(33.33% - 20px);
     min-width: 280px;
     max-width: 400px;
     overflow-y: auto;
@@ -438,9 +437,8 @@ article {
 
 .post-card {
     width: 100%;
-    max-width: 400px;
+    max-width: calc(33.33% - 20px);
     height: calc(100vh - 130px);
-
     margin: 0 auto;
 }
 
@@ -577,21 +575,24 @@ article {
 
 
     article {
-        min-width: calc(33.33% - 20px);
+        min-width: calc(50% - 10px);
         /* Mostrar dos publicaciones por fila */
-        max-width: calc(33.33% - 20px);
     }
+    
+
+    
+}
+@media (max-width: 900px) {
+
+    article {
+        min-width: calc(100% - 0px);
+        /* Mostrar dos publicaciones por fila */
+    }
+
+    
 }
 
 @media (max-width: 768px) {
-
-
-
-    article {
-
-        min-width: 260px;
-        height: calc(100vh - 110px);
-    }
 
     #scrollLeftButton,
     #scrollRightButton {
@@ -646,7 +647,6 @@ article {
 
 
     article {
-        min-width: 240px;
         height: calc(100vh - 280px);
     }
 
@@ -722,15 +722,18 @@ article {
     background-color: var(--sombra-color);
     border-radius: 10px;
     width: 100%;
-    height: 600px;
     text-align: center;
     color: var(--text-color);
+    height: calc(100vh - 130px);
+
 }
 
 .empty-state i {
     font-size: 3rem;
+}
+
+.fa-inbox {
     color: var(--contrast-color);
-    margin-bottom: 1rem;
 }
 
 .empty-state h3 {
@@ -797,18 +800,12 @@ article {
 }
 
 @media (max-width: 370px) {
-    .post-card {
-        height: calc(100vh - 260px);
-    }
 
     article {
         min-width: 100%;
     }
 
-    #scrollLeftButton,
-    #scrollRightButton {
-        height: calc(100vh - 260px);
-    }
+
 
     #scrollLeftButton {
         left: 0;

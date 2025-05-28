@@ -599,9 +599,7 @@ export default {
 
 /* Media queries para ajustar la imagen en pantallas más pequeñas */
 @media (max-width: 768px) {
-  .post-card {
-    height: calc(100vh - 110px);
-  }
+  
 
   .post-title {
     font-size: 1.3em;
