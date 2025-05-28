@@ -30,12 +30,7 @@
 
                 <div v-if="isOwnProfile" class="profile-actions">
                     <template v-if="isEditing">
-                        <button class="save-button" @click="handleSave" :disabled="loading">
-                            <i class="fas fa-save"></i> Guardar
-                        </button>
-                        <button class="cancel-button" @click="handleCancel">
-                            <i class="fas fa-times"></i> Cancelar
-                        </button>
+                        
                     </template>
                     <template v-else>
                         <button class="edit-button" @click="startEditing">

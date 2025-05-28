@@ -19,13 +19,8 @@
         No tienes notificaciones nuevas
       </div>
 
-      <div
-        v-else
-        v-for="notification in notifications"
-        :key="notification.id"
-        class="notification-item"
-        :class="{ 'unread': !notification.read }"
-      >
+      <div v-else v-for="notification in notifications" :key="notification.id" class="notification-item"
+        :class="{ 'unread': !notification.read }">
         <div class="notification-icon">
           <i :class="getNotificationIcon(notification.type)"></i>
         </div>
@@ -37,20 +32,12 @@
         </div>
 
         <div v-if="notification.type === 'follow_request'" class="follow-request-actions">
-          <button
-            @click="handleFollowRequest(notification.follow_id, true)"
-            class="accept-button"
-            title="Aceptar solicitud"
-            :disabled="notification.follow && notification.follow.status !== 'pending'"
-          >
+          <button @click="handleFollowRequest(notification.follow_id, true)" class="accept-button"
+            title="Aceptar solicitud" :disabled="notification.follow && notification.follow.status !== 'pending'">
             <i class="fas fa-check"></i>
           </button>
-          <button
-            @click="handleFollowRequest(notification.follow_id, false)"
-            class="reject-button"
-            title="Rechazar solicitud"
-            :disabled="notification.follow && notification.follow.status !== 'pending'"
-          >
+          <button @click="handleFollowRequest(notification.follow_id, false)" class="reject-button"
+            title="Rechazar solicitud" :disabled="notification.follow && notification.follow.status !== 'pending'">
             <i class="fas fa-times"></i>
           </button>
         </div>
@@ -60,7 +47,7 @@
 </template>
 
 <script>
-import { useUserNotificationStore } from '../stores/interactionNotifications' 
+import { useUserNotificationStore } from '../stores/interactionNotifications'
 import { useNotificationStore } from '../stores/notification'
 
 import { apiService } from '../services/api'
@@ -206,8 +193,6 @@ export default {
 }
 </script>
 
-
-
 <style scoped>
 .notification-modal {
   position: absolute;
@@ -318,7 +303,8 @@ export default {
   margin-top: 4px;
 }
 
-.loading, .no-notifications {
+.loading,
+.no-notifications {
   padding: 20px;
   text-align: center;
   color: #666;

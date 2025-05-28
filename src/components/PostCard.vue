@@ -49,7 +49,7 @@
 
     <div class="actions">
       <button @click="handleLike">
-        <i class="fas fa-heart" :class="isLiked ? 'green-heart' : 'white-heart'"></i>
+        <i class="fas fa-heart" :class="isLikedByCurrentUser ? 'green-heart' : 'white-heart'"></i>
         {{ likesCount }}
       </button>
 
@@ -191,9 +191,7 @@ export default {
     }
   },
 
-  mounted() {
-    this.isLiked = this.post.liked_by?.some(like => like.id === this.userStore.user?.id);
-  },
+  
 
   methods: {
     getImageUrl(image) {
@@ -218,7 +216,8 @@ export default {
       }
       apiService.toggleLike(this.post.id)
         .then(response => {
-          this.isLiked = response.data.data.liked; // Actualiza el estado del like
+          const wasLiked = this.isLiked;
+          this.isLiked = response.data.data.liked;
           this.$emit('post-updated', {
             ...this.post,
             likes_count: response.data.data.likes_count
@@ -227,6 +226,9 @@ export default {
             this.isLiked ? 'Like agregado correctamente' : 'Like eliminado correctamente',
             'success'
           );
+          if (!wasLiked && this.isLiked) {
+            this.userNotifications.fetchNotifications();
+          }
         })
         .catch(error => {
           this.notificationStore.show(

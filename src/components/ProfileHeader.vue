@@ -20,8 +20,14 @@
           @keyup.esc="cancelEdit"
           ref="nameInput"
         >
-        <button @click="saveName">✓</button>
-        <button @click="cancelEdit">✗</button>
+        <div class="profile-actions">
+          <button class="edit-button" @click="saveName">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+          <button class="delete-button" @click="cancelEdit">
+            <i class="fas fa-times"></i> Cancelar
+          </button>
+        </div>
       </div>
       <!-- Si no está en edición, mostrar el nombre normal -->
       <h3 v-else>{{ user.name }}</h3>
@@ -73,28 +79,21 @@ export default {
       return name ? name.split(' ').map(word => word[0].toUpperCase()).join('') : '';
     },
 
-    startEditing() {
-      this.$emit('start-editing');  // Emitimos el evento al componente padre para cambiar el estado
-    },
-
     saveName() {
       if (this.editedName.trim() && this.editedName !== this.user.name) {
-        this.$emit('update-name', this.editedName.trim());  // Emitir el nuevo nombre
+        this.$emit('update-name', this.editedName.trim());
       } else {
-        this.$emit('cancel-edit');  // Si no hay cambio, cancelar la edición
+        this.$emit('cancel-edit');
       }
     },
 
     cancelEdit() {
-      this.editedName = this.user.name;  // Restablecer el nombre original
-      this.$emit('cancel-edit');  // Emitir evento de cancelación
+      this.editedName = this.user.name;
+      this.$emit('cancel-edit');
     }
-  },
-  
+  }
 }
 </script>
-
-
 
 <style scoped>
 .profile-header {
@@ -170,18 +169,6 @@ export default {
   color: var(--text-color);
 }
 
-@media (max-width: 768px) {
-  .profile-header {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-
-  .info-item {
-    justify-content: center;
-  }
-}
-
 .edit-input {
   width: 100%;
   padding: 8px 12px;
@@ -196,5 +183,51 @@ export default {
   outline: none;
   border-color: var(--contrast-color);
   box-shadow: 0 0 0 2px rgba(0, 196, 180, 0.2);
+}
+
+.profile-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.edit-button {
+  background-color: var(--primary-color);
+  color: var(--text-color-important);
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.edit-button:hover {
+  background-color: var(--primary-color-dark);
+  transform: translateY(-1px);
+}
+
+.delete-button {
+  background-color: #ff4757;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.delete-button:hover {
+  background-color: #ff6b81;
+  transform: translateY(-1px);
+}
+
+/* Efectos de click */
+.edit-button:active,
+.delete-button:active {
+  transform: translateY(1px);
 }
 </style>
