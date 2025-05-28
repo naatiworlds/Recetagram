@@ -100,7 +100,7 @@ export const apiService = {
     const endpoint = params.public ? "/posts/public" : "/posts/following";
   },
   getAllPosts: () => api.get("/posts"),
-  
+
   async getPost(postId) {
     return api.get(`/posts/${postId}`);
   },
@@ -277,6 +277,21 @@ export const apiService = {
 
   // Obtener posts de usuarios seguidos (feed)
   getFollowingPosts: () => api.get("/posts/following"),
+  /**
+   * Enviar acciones agrupadas al endpoint /batch
+   * @param {Object} batchData - Objeto con las acciones agrupadas (likes, comments, notifications, follows)
+   * @returns {Promise} - Respuesta del servidor
+   */
+  async sendBatchRequests(batchData) {
+    try {
+      const response = await api.post('/batch', batchData);
+      console.log('[API] Peticiones en lote enviadas con éxito:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('[API] Error al enviar peticiones en lote:', error);
+      throw error;
+    }
+  },
 };
 
 export default apiService;

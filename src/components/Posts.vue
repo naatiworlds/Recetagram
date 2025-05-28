@@ -374,6 +374,7 @@ export default {
     /* Ajustado para considerar el header y los filtros */
 }
 
+
 #main-scroll-container {
     position: relative;
     width: 100%;

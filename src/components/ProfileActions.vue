@@ -1,11 +1,19 @@
 <template>
   <div class="profile-actions">
     <!-- Botón de follow/unfollow para perfiles ajenos -->
-    <button v-if="!isOwnProfile" @click="handleClick" :class="['follow-button', { 'following': isFollowing }]"
-      :disabled="loading">
-      {{ isFollowing ? 'Dejar de seguir' : 'Seguir' }}
+    <button
+      v-if="!isOwnProfile"
+      @click="handleClick"
+      :class="['follow-button', { 'following': isFollowing, 'pending': isPendingFollow }]"
+      :disabled="loading || isPendingFollow"
+    >
+      <template v-if="isPendingFollow">
+        <i class="fas fa-clock"></i> Pendiente
+      </template>
+      <template v-else>
+        {{ isFollowing ? 'Dejar de seguir' : 'Seguir' }}
+      </template>
     </button>
-
 
     <!-- Botones para perfil propio -->
     <template v-if="isOwnProfile">
@@ -31,6 +39,11 @@ export default {
     },
     isFollowing: {
       type: Boolean,
+      default: false
+    },
+    isPendingFollow: {
+      type: Boolean,
+      default: false // Estado reactivo para solicitudes pendientes
     },
     loading: {
       type: Boolean,
@@ -42,31 +55,22 @@ export default {
     }
   },
 
-
-
-  emits: ['follow', 'unfollow', 'admin', 'delete'],  // Asegúrate de agregar 'unfollow' aquí
+  emits: ['follow', 'unfollow', 'admin', 'delete'],
 
   methods: {
-    handleFollow() {
-      if (this.userId) {
-        if (this.isFollowing) {
-          this.$emit('unfollow', this.userId);  // Emitir evento 'unfollow'
-        } else {
-          this.$emit('follow', this.userId);  // Emitir evento 'follow'
-        }
-      }
-    },
     handleClick() {
+      if (this.isPendingFollow) {
+        return; // No hacer nada si la solicitud está pendiente
+      }
+
       if (this.isFollowing) {
-        this.$emit('unfollow', this.userId)
+        this.$emit('unfollow', this.userId);
       } else {
-        this.$emit('follow', this.userId)
+        this.$emit('follow', this.userId);
       }
     }
-
-
   }
-}
+};
 </script>
 
 <style scoped>
