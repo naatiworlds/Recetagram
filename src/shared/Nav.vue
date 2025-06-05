@@ -49,7 +49,7 @@
                     </a>
                 </li>
                 <li class="nav-icon">
-                    <a href="/profile" class="nav-icon">
+                    <a href="/profile" @click.prevent="handleProfileClick" class="nav-icon">
                         <i class="fa-solid fa-user">
                         </i>
                     </a>
