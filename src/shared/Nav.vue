@@ -2,6 +2,9 @@
     <aside id="aside" :class="{ 'oculto': !menuVisible }">
         <nav>
             <ul>
+                <h1>
+                    <a href="/">Recetagram</a>
+                </h1>
                 <li><router-link to="/" class="nav-normal"><i class="fa-solid fa-house"></i> Inicio</router-link></li>
                 <li class="nav-icon"><router-link to="/" class="nav-icon"><i
                             class="fa-solid fa-house"></i></router-link></li>
@@ -19,40 +22,14 @@
                 <li><a href="/profile" @click.prevent="handleProfileClick" class="nav-normal"><i
                             class="fa-solid fa-user"></i>
                         Perfil</a></li>
-                <li class="nav-icon"><a href="#" @click.prevent="handleProfileClick" class="nav-icon"><i
-                            class="fa-solid fa-user"></i></a></li>
+                <li class="nav-icon"><a href="#" class="nav-icon"><i class="fa-solid fa-user"></i></a></li>
 
-                <!-- Añadir el botón de logout -->
                 <li v-if="isAuthenticated">
-                    <a href="#" @click.prevent="handleLogout" class="nav-normal">
-                        <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
-                    </a>
-                </li>
-                <li v-if="isAuthenticated" class="nav-icon">
-                    <a href="#" @click.prevent="handleLogout" class="nav-icon">
-                        <i class="fa-solid fa-right-from-bracket"></i>
+                    <a href="/settings" class="nav-normal">
+                        <i class="fa-solid fa-cog"></i> Configuración
                     </a>
                 </li>
 
-                <!-- <li id="mensajes"><a href="#"><i class="fa-solid fa-message mensajes"></i> Mensajes </a></li> -->
-
-                <li id="theme">
-                    <details>
-                        <summary><i class="fa-solid fa-palette"></i> theme</summary>
-                        <label id="switch-aqua">
-                            Aqua
-                            <input type="radio" name="tema" value="aqua" @change="setTheme">
-                        </label>
-                        <label id="switch-pink">
-                            Pink
-                            <input type="radio" name="tema" value="pink" @change="setTheme">
-                        </label>
-                        <label id="switch-default">
-                            Default
-                            <input type="radio" name="tema" value="default" checked @change="setTheme">
-                        </label>
-                    </details>
-                </li>
                 <footer>
                     <li id="redes">
                         <div>
@@ -81,21 +58,24 @@
             </ul>
         </nav>
         <Crear v-if="showCrearModal" @close="closeModal" />
+        <UserConfig v-if="showConfigModal" @close="closeConfigModal" />
     </aside>
 </template>
 
 <script>
-import Crear from '../components/Crear.vue'
-import { useUserStore } from '../stores/user'
-import { useNotificationStore } from '../stores/notification'
-import { useRouter } from 'vue-router'
-import { changeTheme } from '../utils/changeTheme'
+import Crear from '../components/Crear.vue';
+import UserConfig from '../pages/UserConfig.vue';
+import { useUserStore } from '../stores/user';
+import { useNotificationStore } from '../stores/notification';
+import { useRouter } from 'vue-router';
+import { changeTheme } from '../utils/changeTheme';
 
 export default {
     name: 'Nav',
 
     components: {
-        Crear
+        Crear,
+        UserConfig
     },
 
     props: {
@@ -108,30 +88,26 @@ export default {
     data() {
         return {
             showCrearModal: false,
+            showConfigModal: false, // Estado para el modal de configuración
             userStore: null,
             notificationStore: null,
             router: null
-        }
+        };
     },
 
     created() {
-        this.userStore = useUserStore()
-        this.notificationStore = useNotificationStore()
-        this.router = useRouter()
+        this.userStore = useUserStore();
+        this.notificationStore = useNotificationStore();
+        this.router = useRouter();
     },
 
     computed: {
         isAuthenticated() {
-            return this.userStore?.isAuthenticated
+            return this.userStore?.isAuthenticated;
         }
     },
 
     methods: {
-        handleLogout() {
-            this.userStore.logout()
-            this.notificationStore.show('Has cerrado sesión correctamente', 'success', 3000)
-            this.router.push('/login')
-        },
 
         handleCrearClick() {
             if (!this.isAuthenticated) {
@@ -139,35 +115,42 @@ export default {
                     'Debes iniciar sesión para crear un nuevo post',
                     'warning',
                     5000
-                )
-                this.router.push('/login')
-                return
+                );
+                this.router.push('/login');
+                return;
             }
-            this.showCrearModal = true
+            this.showCrearModal = true;
         },
 
         closeModal() {
-            this.showCrearModal = false
+            this.showCrearModal = false;
         },
 
         handleProfileClick() {
             if (!this.isAuthenticated) {
-                this.notificationStore.show('Debes iniciar sesión para ver tu perfil', 'warning')
-                this.router.push('/login')
-                return
+                this.notificationStore.show('Debes iniciar sesión para ver tu perfil', 'warning');
+                this.router.push('/login');
+                return;
             }
-            this.router.push('/profile')
-        },  
+            this.router.push('/profile');
+        },
 
-        setTheme(event) {
-            const selectedTheme = event.target.value
-            changeTheme(selectedTheme)
-            if (selectedTheme === "default") {
-                location.reload()
+        handleConfigClick() {
+            if (!this.isAuthenticated) {
+                this.notificationStore.show('Debes iniciar sesión para acceder a la configuración', 'warning');
+                this.router.push('/login');
+                return;
             }
-        }
+            this.showConfigModal = true; // Mostrar el modal de configuración
+        },
+
+        closeConfigModal() {
+            this.showConfigModal = false; // Cerrar el modal de configuración
+        },
+
+
     }
-}
+};
 </script>
 
 
@@ -199,6 +182,18 @@ nav ul {
     font-size: 20px;
     background-color: var(--primary-color);
     padding: var(--espaciado);
+}
+
+h1 {
+    margin: 0;
+    padding-bottom: var(--espaciado);
+    font-size: 1.2em;
+    border-bottom: 1px solid black;
+}
+
+h1 a {
+    color: var(--text-color-important);
+    text-decoration: none;
 }
 
 /* Ocultar los iconos por defecto */
@@ -307,6 +302,10 @@ nav details label {
         background-color: var(--primary-color);
         margin: 0;
         /* Eliminar márgenes */
+    }
+
+    h1 {
+        display: none;
     }
 
     nav ul li {

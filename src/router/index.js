@@ -49,6 +49,11 @@ const routes = [
     component: Post,
     props: true
   },
+  {
+    path: '/settings',
+    name: 'UserConfig',
+    component: () => import('../pages/UserConfig.vue'),
+  },
   
   {
     path: '/admin',
