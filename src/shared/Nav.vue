@@ -5,28 +5,64 @@
                 <h1>
                     <a href="/">Recetagram</a>
                 </h1>
-                <li><router-link to="/" class="nav-normal"><i class="fa-solid fa-house"></i> Inicio</router-link></li>
-                <li class="nav-icon"><router-link to="/" class="nav-icon"><i
-                            class="fa-solid fa-house"></i></router-link></li>
+                <li class="nav-normal">
+                    <router-link to="/" class="nav-normal">
+                        <i class="fa-solid fa-house"></i>
+                        Inicio
+                    </router-link>
+                </li>
+                <li class="nav-icon">
+                    <router-link to="/" class="nav-icon">
+                        <i class="fa-solid fa-house">
+                        </i>
+                    </router-link>
+                </li>
 
-                <li><router-link to="/explorar" class="nav-normal"><i class="fa-solid fa-magnifying-glass"></i>
-                        Explorar</router-link></li>
-                <li class="nav-icon"><router-link to="/explorar" class="nav-icon"><i
-                            class="fa-solid fa-magnifying-glass"></i></router-link></li>
+                <li class="nav-normal">
+                    <router-link to="/explorar" class="nav-normal">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        Explorar
+                    </router-link>
+                </li>
+                <li class="nav-icon">
+                    <router-link to="/explorar" class="nav-icon">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </router-link>
+                </li>
 
-                <li><a href="#" @click.prevent="handleCrearClick" class="nav-normal"><i class="fa-solid fa-upload"></i>
-                        Crear</a></li>
-                <li class="nav-icon"><a href="#" @click.prevent="handleCrearClick" class="nav-icon"><i
-                            class="fa-solid fa-upload"></i></a></li>
+                <li class="nav-normal">
+                    <a href="#" @click.prevent="handleCrearClick" class="nav-normal">
+                        <i class="fa-solid fa-upload"></i>
+                        Crear
+                    </a>
+                </li>
+                <li class="nav-icon">
+                    <a href="#" @click.prevent="handleCrearClick" class="nav-icon">
+                        <i class="fa-solid fa-upload"></i>
+                    </a>
+                </li>
 
-                <li><a href="/profile" @click.prevent="handleProfileClick" class="nav-normal"><i
-                            class="fa-solid fa-user"></i>
-                        Perfil</a></li>
-                <li class="nav-icon"><a href="#" class="nav-icon"><i class="fa-solid fa-user"></i></a></li>
+                <li class="nav-normal">
+                    <a href="/profile" @click.prevent="handleProfileClick" class="nav-normal">
+                        <i class="fa-solid fa-user"></i>
+                        Perfil
+                    </a>
+                </li>
+                <li class="nav-icon">
+                    <a href="/profile" class="nav-icon">
+                        <i class="fa-solid fa-user">
+                        </i>
+                    </a>
+                </li>
 
-                <li v-if="isAuthenticated">
+                <li v-if="isAuthenticated" class="nav-normal">
                     <a href="/settings" class="nav-normal">
                         <i class="fa-solid fa-cog"></i> Configuración
+                    </a>
+                </li>
+                <li v-if="isAuthenticated" class="nav-icon">
+                    <a href="/settings" class="nav-icon">
+                        <i class="fa-solid fa-cog"></i>
                     </a>
                 </li>
 

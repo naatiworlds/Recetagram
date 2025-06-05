@@ -225,14 +225,13 @@ export default {
   grid-area: var(--main-area);
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - var(--header-height));
-  background-color: var(--background-color);
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: 20px;
 }
-.oculto ~ .modal-overlay {
+
+.oculto~.modal-overlay {
   position: absolute;
   top: 5%;
   width: 100%;
@@ -310,7 +309,7 @@ section header h2 {
   flex-wrap: wrap;
   align-content: center;
   align-items: center;
-  justify-content: space-around; 
+  justify-content: space-around;
   gap: 4em;
 }
 
@@ -857,7 +856,7 @@ body .wrap .griddle:after {
   display: none;
 }
 
-form, 
+form,
 .close-session {
   width: 100%;
   display: flex;
@@ -965,5 +964,11 @@ form,
 
 .blocked-users button:hover {
   background: darken(var(--danger-color), 10%);
+}
+
+@media (max-width: 600px) {
+  .modal-overlay {
+    grid-area: var(--main-responsive-area);
+  }
 }
 </style>
