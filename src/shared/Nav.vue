@@ -379,11 +379,7 @@ nav details label {
 }
 
 @media (max-width: 480px) {
-    nav ul {
-        justify-content: center;
-        align-items: center;
-    }
-
+    
     nav ul li {
         padding: 0 10px;
     }
