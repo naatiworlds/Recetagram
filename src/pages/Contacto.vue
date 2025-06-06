@@ -259,7 +259,31 @@ export default {
 @media (max-width: 600px) {
     .contact-page {
         grid-area: var(--main-responsive-area);
-        height: 90%;
+        height: 80%;
+    }
+    .contact-page h1 {
+        font-size: 1.5rem;
+        padding: 15px;
+    }
+    .contact-page p {
+        font-size: 0.9rem;
+        padding: 15px;
+    }
+    .contact-form {
+        padding: 15px;
+    }
+    .form-group input,
+    .form-group textarea {
+        font-size: 0.9rem;
+        padding: 5px;
+        
+    }
+    .submit-button {
+        font-size: 0.9rem;
+        padding: 8px 16px;
+    }
+    .char-counter {
+        font-size: 0.8rem;
     }
 }
 </style>

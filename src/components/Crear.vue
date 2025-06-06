@@ -1,6 +1,6 @@
 <template>
   <div class="modal-overlay" @click.self="closeModal">
-    <section>
+    <section class="crear-post-container">
       <header>
         <h2>{{ postToEdit ? 'Editar post' : 'Subir un nuevo post' }}</h2>
         <button class="close-button" @click="closeModal">×</button>
@@ -75,7 +75,7 @@
           </div>
 
           <!-- Botones de navegación -->
-          <div class="navigation-buttons">
+          <div class="navegation-buttons">
             <button type="button" v-if="currentStep > 1" @click="prevStep" class="prev-button">
               ⏪ Anterior
             </button>
@@ -425,20 +425,20 @@ export default {
   z-index: 1000;
 }
 
-section {
+.crear-post-container {
   grid-area: var(--main-area);
   background-color: var(--secundary-color);
   border-radius: 10px;
-  width: 100%;
+  width: 90%;
   margin: auto;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   max-width: 700px;
-  min-height: 600px;
+  max-height: 600px;
 }
 
-section header {
+.crear-post-container header {
   background-color: var(--primary-color);
   border-radius: 10px 10px 0 0;
   padding: 20px;
@@ -449,7 +449,7 @@ section header {
   position: relative;
 }
 
-section header h2 {
+.crear-post-container header h2 {
   font-size: 24px;
   color: var(--text-color-important);
 }
@@ -481,6 +481,7 @@ form {
   align-items: stretch;
   justify-content: center;
   flex-wrap: wrap;
+  align-content: center;
 }
 
 .image-preview {
@@ -556,8 +557,6 @@ textarea {
   align-content: stretch;
   justify-content: space-evenly;
   align-items: baseline;
-  gap: 1em;
-  margin-top: 1em;
 }
 
 .ingredient-input {
@@ -680,10 +679,10 @@ textarea {
   word-wrap: break-word;
 }
 
-.navigation-buttons {
+.navegation-buttons {
   display: flex;
   justify-content: space-between;
-  margin: 20px;
+  margin-top: 20px;
 }
 
 .prev-button,
@@ -707,19 +706,16 @@ textarea {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  margin-bottom: 20px;
 }
 
 /* Media queries para responsivo */
 @media (max-width: 768px) {
-  section {
-    width: 90%;
-    margin: 20px;
-  }
 
-  section main {
+  .crear-post-container main {
     flex-direction: column;
     align-items: center;
+    margin: 0;
+    padding: 20px;
   }
 
   form {
@@ -728,6 +724,10 @@ textarea {
 }
 
 @media (max-width: 600px) {
+  .ingredients-container {
+    margin: 0;
+  }
+
   .input-ingredient {
     width: 100%;
   }
