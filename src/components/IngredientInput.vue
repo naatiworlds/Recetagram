@@ -274,6 +274,10 @@ main {
         padding: 0;
         margin: 0;
     }
+    .scrollable-list {
+        max-height: 100px;
+        /* Aumentar la altura máxima en pantallas pequeñas */
+    }
 
 }
 </style>

@@ -735,6 +735,10 @@ textarea {
   .ingredient-input {
     gap: 0;
   }
+
+  .image-preview {
+    width: 20%;
+  }
 }
 
 @media (max-width: 480px) {
