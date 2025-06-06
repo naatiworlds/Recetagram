@@ -491,7 +491,7 @@ form {
 
 img {
   max-width: 100%;
-  max-height: 300px;
+  max-height: 80px;
   margin: 20px auto;
   border-radius: 10px;
 }
@@ -707,6 +707,11 @@ textarea {
   flex-direction: column;
   align-items: stretch;
 }
+.step h3 {
+  font-size: 20px;
+  margin-bottom: 15px;
+  color: var(--text-color-important);
+}
 
 /* Media queries para responsivo */
 @media (max-width: 768px) {
@@ -738,6 +743,9 @@ textarea {
 
   .image-preview {
     width: 20%;
+  }
+  img{
+    margin: 0;
   }
 }
 
