@@ -1,20 +1,17 @@
 <template>
-  <div class="user-config-page">
-    <div class="user-config-grid">
-      <!-- Header -->
+  <div class="modal-overlay" @click.self="closeModal">
+    <section class="user-config-container">
       <header>
-        <h1>Configuración</h1>
+        <h2>Configuración de Usuario</h2>
+        <button class="close-button" @click="closeModal">×</button>
       </header>
-      <!-- Navegación vertical -->
-      <nav class="user-config-nav">
-        <button v-for="tab in tabs" :key="tab.name" :class="{ active: activeTab === tab.name }"
-          @click="activeTab = tab.name">
-          <i :class="tab.icon"></i> {{ tab.label }}
-        </button>
-      </nav>
-
-      <!-- Contenido de configuración -->
-      <main class="user-config-content">
+      <main class="form-container">
+        <div class="tabs">
+          <button v-for="tab in tabs" :key="tab.name" :class="{ active: activeTab === tab.name }"
+            @click="activeTab = tab.name">
+            {{ tab.label }}
+          </button>
+        </div>
         <div class="tab-content">
           <!-- Edición de Usuario -->
           <div v-if="activeTab === 'user'" class="user-edit">
@@ -24,11 +21,11 @@
                 <h4>Cambiar nombre</h4>
                 <p>Esta acción cambiará el nombre que los usuarios verán al buscarte</p>
               </div>
-              <li v-if="isAuthenticated">
-                <a href="#" @click.prevent="handleLogout" class="nav-normal">
-                  <i class="fa-solid fa-edit"></i> Editar usuario
-                </a>
-              </li>
+              <label>
+                Nombre:
+                <input type="text" v-model="user.name" placeholder="Nombre de usuario" />
+              </label>
+              <button type="submit" class="save-button">Guardar Cambios</button>
             </form>
             <div class="close-session">
               <div class="title-description">
@@ -113,21 +110,13 @@
           <div v-if="activeTab === 'security'" class="security-privacy">
             <h3>Seguridad y Privacidad</h3>
             <div class="privacy-settings">
-              <div class="title-description">
-                <h4>Privacidad del perfil público/privado</h4>
-                <p>Esta acción cambiará la privacidad de tu perfil modificando quien puede ver tus posts</p>
-              </div>
               <label>
                 <input type="checkbox" v-model="user.isPrivate" @change="togglePrivacy">
                 Perfil Privado
               </label>
             </div>
             <div class="blocked-users">
-              <div class="title-description">
-                <h4>Usuarios Bloqueados</h4>
-                <p>Lista de usuarios que has bloqueado</p>
-              </div>
-
+              <h4>Usuarios Bloqueados</h4>
               <ul>
                 <li v-for="user in blockedUsers" :key="user.id">
                   {{ user.name }}
@@ -136,10 +125,7 @@
               </ul>
             </div>
             <div class="change-password">
-              <div class="title-description">
-                <h4>Cambiar Contraseña</h4>
-                <p>Esta acción cambiará la contraseña de tu cuenta [Ten mucho cuidado]</p>
-              </div>
+              <h4>Cambiar Contraseña</h4>
               <form @submit.prevent="changePassword">
                 <label>
                   Contraseña Actual:
@@ -155,7 +141,7 @@
           </div>
         </div>
       </main>
-    </div>
+    </section>
   </div>
 </template>
 
@@ -171,12 +157,11 @@ export default {
   emits: ['close'],
   data() {
     return {
-      isMenuVisible: false,
       activeTab: 'user', // Tab activa
       tabs: [
-        { name: 'user', label: 'Cuenta', icon: 'fa-lg fa-solid fa-user' },
-        { name: 'preferences', label: 'Preferencias del Sistema', icon: 'fa-lg fa-solid fa-sliders' },
-        { name: 'security', label: 'Seguridad y Privacidad', icon: 'fa-lg fa-solid fa-lock' }
+        { name: 'user', label: 'Cuenta' },
+        { name: 'preferences', label: 'Preferencias del Sistema' },
+        { name: 'security', label: 'Seguridad y Privacidad' }
       ],
       user: {
         name: '',
@@ -206,7 +191,6 @@ export default {
     }
   },
   methods: {
-
     closeModal() {
       this.$emit('close');
     },
@@ -237,93 +221,85 @@ export default {
 </script>
 
 <style scoped>
-.user-config-page {
+.modal-overlay {
   grid-area: var(--main-area);
-  display: grid;
-  height: 100vh;
-  background-color: var(--background-color);
-  padding: 0 2em;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: 20px;
 }
 
-.oculto~.user-config-page {
+.oculto~.modal-overlay {
   position: absolute;
   top: 5%;
   width: 100%;
   z-index: 1;
-  margin-top: .2em;
-  padding: 0 5em;
 }
 
-.user-config-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
-  grid-template-rows: 60px repeat(4, 1fr);
-  /* gap: 8px; */
-  height: 100%;
-}
 
-.user-config-grid header {
-  border-top: 1px solid black;
-  grid-column: span 5 / span 5;
-  background-color: var(--primary-color);
-  color: var(--text-color-important);
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.user-config-nav {
-  grid-row: span 4 / span 4;
-  grid-row-start: 2;
+.user-config-container {
   background-color: var(--secundary-color);
-  padding: var(--espaciado);
+  border-radius: 10px;
+  margin: 1em 0;
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  border-right: 1px solid var(--border-color);
 }
 
-.user-config-nav button {
-  padding: 10px 15px;
+section header {
+  background-color: var(--primary-color);
+  border-radius: 10px 10px 0 0;
+  padding: var(--espaciado);
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+section header h2 {
+  font-size: 24px;
+  color: var(--text-color-important);
+}
+
+.close-button {
+  position: absolute;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--text-color-important);
+  cursor: pointer;
+}
+
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: var(--espaciado);
+}
+
+.tabs button {
+  padding: 10px 20px;
   border: none;
   background-color: var(--primary-color);
   color: var(--text-color-important);
   cursor: pointer;
   border-radius: 5px;
-  text-align: left;
 }
 
-.user-config-nav button.active {
+.tabs button.active {
   background-color: var(--contrast-color);
   color: var(--text-color);
 }
 
-.user-config-content {
-  width: 100%;
-  grid-column: span 4 / span 4;
-  grid-row: span 4 / span 4;
-  grid-row-start: 2;
-  padding: 20px;
-  overflow-y: auto;
-}
-
 .tab-content {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
+  padding: var(--espaciado);
 
-.tab-content h3 {
-  background-color: var(--sombra-color);
-  color: var(--text-color-important);
-  width: 100%;
-  text-align: center;
-  padding: 1em 1em;
-}
-
-.title-description {
-  width: 50%;
 }
 
 .tab-content>div {
@@ -337,23 +313,6 @@ export default {
   gap: 4em;
 }
 
-form {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1em;
-  width: 100%;
-}
-
-.close-session {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1em;
-  width: 100%;
-}
 
 .tab-content .system-preferences {
   display: flex;
@@ -361,68 +320,12 @@ form {
   align-items: center;
   justify-content: center;
   gap: 2em;
+  /* Aumentar el espacio entre los elementos */
   width: 100%;
+  /* Asegurar que ocupe todo el ancho disponible */
+  margin: 0 auto;
+  /* Centrar el contenido horizontalmente */
 }
-
-.save-button {
-  background-color: var(--primary-color);
-  color: var(--text-color-important);
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.save-button:hover {
-  background-color: var(--contrast-color);
-}
-
-.theme-switch {
-  display: flex;
-  align-items: center;
-  /* gap: 2em; */
-  justify-content: space-between;
-  align-content: center;
-  flex-wrap: wrap;
-  width: 100%;
-}
-
-.theme-options {
-  display: flex;
-  flex-direction: row;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-  align-content: center;
-  width: 100%;
-  justify-content: space-between;
-}
-
-.theme-options label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  /* Espacio entre el texto y el input */
-  cursor: pointer;
-}
-
-
-@media (max-width: 600px) {
-
-  .oculto~.user-config-page {
-    padding: 0;
-  }
-
-  .user-config-page {
-    grid-area: var(--main-responsive-area);
-    padding: 0
-  }
-  .user-config-grid{
-    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
-  }
-}
-
-/* Estilos y animación sarten */
 
 #icon-container {
   display: flex;
@@ -951,5 +854,121 @@ body .wrap .griddle:after {
 
 #toggleSwitch {
   display: none;
+}
+
+form,
+.close-session {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-content: center;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+
+.save-button {
+  background-color: var(--primary-color);
+  color: var(--text-color-important);
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.save-button:hover {
+  background-color: var(--contrast-color);
+}
+
+.theme-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+}
+
+.theme-switch label {
+  display: flex;
+  align-items: center;
+  /* Separar el texto del checkbox */
+  cursor: pointer;
+}
+
+.theme-switch input {
+  margin-right: 10px;
+}
+
+.theme-options {
+  display: flex;
+  flex-wrap: wrap;
+  /* Aumentar el espacio entre los botones */
+  justify-content: space-around;
+  align-items: center;
+
+  /* Centrar los botones horizontalmente */
+  width: 100%;
+  /* Asegurar que ocupe todo el ancho disponible */
+}
+
+.theme-options button {
+  background: var(--secundary-color);
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s, color 0.3s;
+}
+
+.theme-options button:hover {
+  background: var(--primary-color);
+  color: var(--text-color-important);
+}
+
+.privacy-settings {
+  margin-bottom: 20px;
+}
+
+.blocked-users {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto 20px;
+}
+
+.blocked-users ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.blocked-users li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+.blocked-users button {
+  background: var(--danger-color);
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.blocked-users button:hover {
+  background: darken(var(--danger-color), 10%);
+}
+
+@media (max-width: 600px) {
+  .modal-overlay {
+    grid-area: var(--main-responsive-area);
+  }
 }
 </style>

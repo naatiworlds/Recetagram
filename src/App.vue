@@ -32,23 +32,22 @@ export default {
       this.isMenuVisible = !this.isMenuVisible;
     },
 
+    hideMenuOnUserConfig() {
+      const currentRoute = this.router.currentRoute.value;
+      this.isMenuVisible = currentRoute.name !== 'UserConfig'; // Ocultar el menú si la ruta es UserConfig
+    },
+
     async initializeAuth() {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          // Primero configuramos el token
           this.userStore.setToken(token);
-
-          // Luego intentamos obtener los datos del usuario
           const response = await this.userStore.initializeAuth();
           if (!response) {
-            // Si falla la inicialización pero no es por token expirado
-            // simplemente redirigimos al login sin limpiar el token
             this.router.push('/login');
           }
         } catch (error) {
           console.error('Error inicializando la app:', error);
-          // Solo limpiamos si es error de autenticación
           if (error.response?.status === 401) {
             this.userStore.clearAuth();
             this.router.push('/login');
@@ -59,9 +58,11 @@ export default {
   },
 
   created() {
-    // this.userStore = useUserStore();
     this.router = useRouter();
-    // this.initializeAuth();
+    this.hideMenuOnUserConfig(); // Llamar al método para ocultar el menú en UserConfig
+    this.router.afterEach(() => {
+      this.hideMenuOnUserConfig(); // Actualizar visibilidad del menú después de cada navegación
+    });
   }
 }
 </script>
@@ -100,7 +101,7 @@ export default {
 
   /* grid tamplate */
 
-  --columns-grid: .15fr .02fr 1fr .02fr;
+  --columns-grid: .15fr 0 1fr 0;
   --rows-grid: 0fr 1fr;
 
   /* grid areas */

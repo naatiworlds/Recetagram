@@ -437,7 +437,7 @@ article {
 
 .post-card {
     width: 100%;
-    max-width: calc(33.33% - 20px);
+    max-width: calc(33.33% - 14px);
     height: calc(100vh - 130px);
     margin: 0 auto;
 }
