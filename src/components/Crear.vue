@@ -5,13 +5,13 @@
         <h2>{{ postToEdit ? 'Editar post' : 'Subir un nuevo post' }}</h2>
         <button class="close-button" @click="closeModal">×</button>
       </header>
+
       <main class="form-container">
         <!-- Vista previa de la imagen -->
         <div class="image-preview" v-if="imagePreviewUrl">
           <img :src="imagePreviewUrl" alt="Vista previa de la imagen" />
         </div>
 
-        <!-- Formulario -->
         <form @submit.prevent="handleSubmit" id="form">
           <!-- Paso 1: Seleccionar imagen -->
           <div v-if="currentStep === 1" class="step">
@@ -19,11 +19,13 @@
             <div class="file-upload">
               <label for="file-input" class="upload-button">
                 Seleccionar archivo
-                <input id="file-input" type="file" @change="handleFileChange" style="display: none;"
+                <input id="file-input" type="file" @change="handleFileChange" accept="image/*" style="display: none;"
                   class="wide-input" />
               </label>
               <p v-if="selectedFileName" class="file-name">{{ selectedFileName }}</p>
-              <span v-if="errors.image" class="error">{{ errors.image }}</span>
+              <span v-if="errors.image" class="error">
+                <i class="fa fa-warning"></i> {{ errors.image }}
+              </span>
             </div>
           </div>
 
@@ -33,15 +35,21 @@
             <label>
               Título
               <input type="text" v-model="post.title" placeholder="Título del post" @blur="validateTitle" />
-              <span v-if="errors.title" class="error">{{ errors.title }}</span>
+              <span v-if="errors.title" class="error">
+                <i class="fa fa-warning"></i> {{ errors.title }}
+              </span>
             </label>
+
             <label>
               Descripción
               <textarea v-model="post.description" placeholder="Descripción del post" @blur="validateDescription"
-                :maxlength="maxDescriptionLength">
-              </textarea>
-              <span v-if="errors.content" class="error">{{ errors.content }}</span>
-              <span class="counter">{{ post.description.length }} / {{ maxDescriptionLength }} caracteres</span>
+                :maxlength="maxDescriptionLength" class="small-textarea"></textarea>
+              <span v-if="errors.content" class="error">
+                <i class="fa fa-warning"></i> {{ errors.content }}
+              </span>
+              <span class="counter">
+                {{ post.description.length }} / {{ maxDescriptionLength }} caracteres
+              </span>
             </label>
           </div>
 
@@ -49,76 +57,33 @@
           <div v-if="currentStep === 3" class="step">
             <h3>Paso 3: Ingredientes</h3>
             <div class="ingredients-container">
-              <h3>Ingredientes</h3>
 
-              <!-- Botones de acción para todos los ingredientes -->
-              <div class="global-actions">
-                <button type="button" @click="addIngredient" class="add-button">Añadir ingrediente</button>
-                <button 
-                  type="button" 
-                  @click="removeLastIngredient" 
-                  class="remove-button" 
-                  :disabled="post.ingredients.length <= 1"
-                >
-                  Borrar último ingrediente
-                </button>
-              </div>
-
-              <!-- Lista de ingredientes -->
               <div class="ingredients-list">
-                <div v-for="(ingredient, index) in post.ingredients" :key="index" class="ingredient-input">
-                  <!-- Input para el nombre del ingrediente -->
-                  <div class="input-with-error">
-                    <input 
-                      class="input-ingredient" 
-                      type="text" 
-                      v-model="ingredient.name" 
-                      placeholder="Nombre del ingrediente" 
-                      @blur="validateIngredientName(index)" 
-                    />
-                    <span v-if="errors[`ingredient_name_${index}`]" class="error">{{ errors[`ingredient_name_${index}`] }}</span>
-                  </div>
-
-                  <!-- Inputs para la cantidad y la unidad -->
-                  <div class="input-group">
-                    <div class="input-with-error quantity">
-                      <input 
-                        class="input-ingredient" 
-                        type="number" 
-                        v-model.number="ingredient.quantity" 
-                        placeholder="Cantidad (Ej: 500)" 
-                        @blur="validateIngredientQuantity(index)" 
-                      />
-                      <select 
-                        v-model="ingredient.unit" 
-                        @blur="validateIngredientUnit(index)" 
-                        class="unit-select"
-                      >
-                        <option value="" disabled>Selecciona unidad</option>
-                        <option value="gr">gr</option>
-                        <option value="kg">kg</option>
-                        <option value="L">L</option>
-                        <option value="cdas">cdas</option>
-                      </select>
-                    </div>
-
-                    <!-- Validaciones -->
-                    <div class="input-with-error">
-                      <span v-if="errors[`ingredient_quantity_${index}`]" class="error">{{ errors[`ingredient_quantity_${index}`] }}</span>
-                      <span v-if="errors[`ingredient_unit_${index}`]" class="error">{{ errors[`ingredient_unit_${index}`] }}</span>
-                    </div>
-                  </div>
-                </div>
+                <IngredientInput v-for="(ing, index) in post.ingredients" :key="index" :ingredient="ing" :errors="{
+                  name: errors[`ingredient_name_${index}`],
+                  quantity: errors[`ingredient_quantity_${index}`],
+                  unit: errors[`ingredient_unit_${index}`]
+                }" :canDelete="post.ingredients.length > 1" @update:ingredient="val => updateIngredient(index, val)"
+                  @validate-name="validateIngredientName(index)" @validate-quantity="validateIngredientQuantity(index)"
+                  @validate-unit="validateIngredientUnit(index)" @remove="removeIngredient(index)" />
               </div>
-              <span v-if="errors.ingredients" class="error">{{ errors.ingredients }}</span>
+
+              <span v-if="errors.ingredients" class="error">
+                <i class="fa fa-warning"></i> {{ errors.ingredients }}
+              </span>
             </div>
           </div>
 
           <!-- Botones de navegación -->
           <div class="navigation-buttons">
-            <button type="button" v-if="currentStep > 1" @click="prevStep" class="prev-button">Anterior</button>
-            <button type="button" v-if="currentStep < 3" @click="nextStep" class="next-button">Siguiente</button>
+            <button type="button" v-if="currentStep > 1" @click="prevStep" class="prev-button">
+              ⏪ Anterior
+            </button>
+            <button type="button" v-if="currentStep < 3" @click="nextStep" class="next-button">
+              Siguiente
+            </button>
           </div>
+
           <button type="submit" v-if="currentStep === 3" class="submit-button" :disabled="loading || !validateForm()">
             {{ postToEdit ? 'Guardar cambios' : 'Subir post' }}
           </button>
@@ -130,10 +95,14 @@
 
 <script>
 import { useNotificationStore } from '../stores/notification';
-import { apiService } from '../services/api'
+import { apiService } from '../services/api';
+import IngredientInput from '../components/IngredientInput.vue';
 
 export default {
   name: 'Crear',
+  components: {
+    IngredientInput
+  },
   props: {
     postToEdit: {
       type: Object,
@@ -143,20 +112,20 @@ export default {
   data() {
     return {
       notificationStore: useNotificationStore(),
-      currentStep: 1, // Paso inicial
+      currentStep: 1,
       post: {
         title: '',
         description: '',
         image: null,
         is_private: false,
-        ingredients: [{ name: '', quantity: '', unit: '' }] // Agregar el campo unit
+        ingredients: [{ name: '', quantity: '', unit: '' }]
       },
-      imagePreviewUrl: '', // URL de la vista previa de la imagen
+      imagePreviewUrl: '',
       loading: false,
       errors: {},
-      message: '',
       selectedFileName: '',
-      maxDescriptionLength: 300
+      maxDescriptionLength: 300,
+      isIngredientListValid: false // Nueva propiedad para rastrear la validez de la lista de ingredientes
     };
   },
   watch: {
@@ -164,91 +133,89 @@ export default {
       immediate: true,
       handler(newPost) {
         if (newPost) {
-
-          // Inicializar título, descripción y privacidad
+          // Título, descripción y privacidad
           this.post.title = newPost.title || '';
           this.post.description = newPost.description || '';
           this.post.is_private = newPost.is_private || false;
 
-          // Inicializar ingredientes
+          // Ingredientes (parsed)
           this.post.ingredients = this.parseIngredients(newPost.ingredients);
 
-          // Inicializar la imagen
+          // Imagen
           if (newPost.imagen) {
-            this.imagePreviewUrl = newPost.imagen; // URL de la imagen existente
-            this.post.image = newPost.imagen; // Usar la URL como valor inicial
+            this.imagePreviewUrl = newPost.imagen;
+            this.post.image = newPost.imagen;
           } else {
-            this.imagePreviewUrl = ''; // Si no hay imagen, limpiar la vista previa
+            this.imagePreviewUrl = '';
             this.post.image = null;
           }
         }
       }
     },
-    // Watchers para validaciones en tiempo real
-    "post.title"(newVal) {
+    'post.title'() {
       this.validateTitle();
     },
-    "post.description"(newVal) {
+    'post.description'() {
       this.validateDescription();
     },
-    "post.ingredients": {
-      deep: true, // Observa cambios en los objetos dentro del array
+    'post.ingredients': {
+      deep: true,
       handler() {
         this.validateIngredients();
       }
     }
   },
   methods: {
-    handleFileUpload(event) {
-      const file = event.target.files[0]
-      if (file) this.post.image = file
-    },
-
     handleFileChange(event) {
       const file = event.target.files[0];
       if (file) {
+        const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+          this.errors.image = 'Solo se permiten JPEG, PNG, GIF o WEBP.';
+          this.selectedFileName = '';
+          this.post.image = null;
+          this.imagePreviewUrl = '';
+          return;
+        }
         this.selectedFileName = file.name;
-        this.post.image = file; // Almacenar el archivo seleccionado
-        this.errors.image = ''; // Limpiar errores de imagen
-
-        // Crear una URL para la vista previa de la imagen
+        this.post.image = file;
+        this.errors.image = '';
         this.imagePreviewUrl = URL.createObjectURL(file);
       } else {
         this.selectedFileName = '';
         this.post.image = null;
-        this.imagePreviewUrl = ''; // Limpiar la vista previa si no hay archivo
+        this.imagePreviewUrl = '';
       }
     },
 
     addIngredient() {
-      const lastIngredient = this.post.ingredients[this.post.ingredients.length - 1];
+      const lastIdx = this.post.ingredients.length - 1;
+      const lastIngr = this.post.ingredients[lastIdx];
 
-      // Validar que el último ingrediente esté completo antes de añadir uno nuevo
-      if (!lastIngredient.name || !lastIngredient.name.trim()) {
-        this.errors[`ingredient_name_${this.post.ingredients.length - 1}`] = 'El nombre del ingrediente es requerido.';
+      // Validar último ingrediente
+      if (!lastIngr.name || !lastIngr.name.trim()) {
+        this.errors[`ingredient_name_${lastIdx}`] = 'El nombre es requerido.';
+        return;
+      }
+      if (lastIngr.quantity === '' || lastIngr.quantity == null) {
+        this.errors[`ingredient_quantity_${lastIdx}`] = 'La cantidad es requerida.';
+        return;
+      }
+      if (!lastIngr.unit || !lastIngr.unit.trim()) {
+        this.errors[`ingredient_unit_${lastIdx}`] = 'La unidad es requerida.';
         return;
       }
 
-      if (lastIngredient.quantity == null || lastIngredient.quantity === '') {
-        this.errors[`ingredient_quantity_${this.post.ingredients.length - 1}`] = 'La cantidad del ingrediente es requerida.';
-        return;
-      }
-
-      if (!lastIngredient.unit || !lastIngredient.unit.trim()) {
-        this.errors[`ingredient_unit_${this.post.ingredients.length - 1}`] = 'La unidad del ingrediente es requerida.';
-        return;
-      }
-
-      // Limpiar errores y agregar un nuevo ingrediente
-      this.errors[`ingredient_name_${this.post.ingredients.length - 1}`] = '';
-      this.errors[`ingredient_quantity_${this.post.ingredients.length - 1}`] = '';
-      this.errors[`ingredient_unit_${this.post.ingredients.length - 1}`] = '';
+      // Limpiar errores y agregar uno nuevo
+      this.errors[`ingredient_name_${lastIdx}`] = '';
+      this.errors[`ingredient_quantity_${lastIdx}`] = '';
+      this.errors[`ingredient_unit_${lastIdx}`] = '';
       this.post.ingredients.push({ name: '', quantity: '', unit: '' });
     },
 
     removeIngredient(index) {
       if (this.post.ingredients.length > 1) {
-        this.post.ingredients.splice(index, 1)
+        this.post.ingredients.splice(index, 1);
       }
     },
 
@@ -258,21 +225,23 @@ export default {
       }
     },
 
-    parseIngredients(rawIngredients) {
-      if (!rawIngredients) return [{ name: '', quantity: '', unit: '' }];
+    updateIngredient(index, updated) {
+      this.post.ingredients.splice(index, 1, updated);
+    },
 
+    parseIngredients(raw) {
+      if (!raw) return [{ name: '', quantity: '', unit: '' }];
       try {
-        const parsed = JSON.parse(rawIngredients); // Intentar parsear la cadena JSON
-        return parsed.map(ingredient => {
-          const [quantity, unit] = ingredient.quantity.split(' '); // Separar cantidad y unidad
+        const parsed = JSON.parse(raw);
+        return parsed.map((ing) => {
+          const [qty, unit, ...rest] = ing.quantity.split(' ');
           return {
-            name: ingredient.name,
-            quantity: quantity || '', // Asignar cantidad
-            unit: unit || '' // Asignar unidad
+            name: ing.name,
+            quantity: qty || '',
+            unit: unit || ''
           };
         });
-      } catch (error) {
-        console.error('Error al parsear los ingredientes:', error);
+      } catch {
         return [{ name: '', quantity: '', unit: '' }];
       }
     },
@@ -281,7 +250,7 @@ export default {
       if (!this.post.title || !this.post.title.trim()) {
         this.errors.title = 'El título es requerido.';
       } else if (this.post.title.trim().length < 3) {
-        this.errors.title = 'El título debe tener al menos 3 caracteres.';
+        this.errors.title = 'Debe tener al menos 3 caracteres.';
       } else {
         this.errors.title = '';
       }
@@ -291,7 +260,7 @@ export default {
       if (!this.post.description || !this.post.description.trim()) {
         this.errors.content = 'La descripción es requerida.';
       } else if (this.post.description.trim().length < 10) {
-        this.errors.content = 'La descripción debe tener al menos 10 caracteres.';
+        this.errors.content = 'Debe tener al menos 10 caracteres.';
       } else {
         this.errors.content = '';
       }
@@ -299,125 +268,124 @@ export default {
 
     validateIngredients() {
       this.errors.ingredients = '';
-
-      this.post.ingredients.forEach((ingredient, index) => {
-        if (!ingredient.name || !ingredient.name.trim()) {
-          this.errors[`ingredient_name_${index}`] = 'El nombre del ingrediente es requerido.';
+      this.post.ingredients.forEach((ing, i) => {
+        if (!ing.name || !ing.name.trim()) {
+          this.errors[`ingredient_name_${i}`] = 'El nombre es requerido.';
         } else {
-          this.errors[`ingredient_name_${index}`] = '';
+          this.errors[`ingredient_name_${i}`] = '';
         }
-
-        if (ingredient.quantity == null || ingredient.quantity === '') {
-          this.errors[`ingredient_quantity_${index}`] = 'La cantidad del ingrediente es requerida.';
-        } else if (ingredient.quantity <= 0) {
-          this.errors[`ingredient_quantity_${index}`] = 'La cantidad debe ser mayor a 0.';
+        if (ing.quantity === '' || ing.quantity == null) {
+          this.errors[`ingredient_quantity_${i}`] = 'La cantidad es requerida.';
+        } else if (ing.quantity <= 0) {
+          this.errors[`ingredient_quantity_${i}`] = 'Debe ser mayor a 0.';
         } else {
-          this.errors[`ingredient_quantity_${index}`] = '';
+          this.errors[`ingredient_quantity_${i}`] = '';
         }
-
-        if (!ingredient.unit || !ingredient.unit.trim()) {
-          this.errors[`ingredient_unit_${index}`] = 'La unidad del ingrediente es requerida.';
+        if (!ing.unit || !ing.unit.trim()) {
+          this.errors[`ingredient_unit_${i}`] = 'La unidad es requerida.';
         } else {
-          this.errors[`ingredient_unit_${index}`] = '';
+          this.errors[`ingredient_unit_${i}`] = '';
         }
       });
     },
 
     validateIngredientName(index) {
-      const ingredient = this.post.ingredients[index];
-      if (!ingredient.name || !ingredient.name.trim()) {
-        this.errors[`ingredient_name_${index}`] = 'El nombre del ingrediente es requerido.';
+      const ing = this.post.ingredients[index];
+      if (!ing.name || !ing.name.trim()) {
+        this.errors[`ingredient_name_${index}`] = 'El nombre es requerido.';
       } else {
         this.errors[`ingredient_name_${index}`] = '';
       }
     },
 
     validateIngredientQuantity(index) {
-      const ingredient = this.post.ingredients[index];
-
-      if (ingredient.quantity == null || ingredient.quantity === '') {
-        this.errors[`ingredient_quantity_${index}`] = 'La cantidad del ingrediente es requerida.';
-      } else if (ingredient.quantity <= 0) {
-        this.errors[`ingredient_quantity_${index}`] = 'La cantidad debe ser mayor a 0.';
+      const ing = this.post.ingredients[index];
+      if (ing.quantity === '' || ing.quantity == null) {
+        this.errors[`ingredient_quantity_${index}`] =
+          'La cantidad es requerida.';
+      } else if (ing.quantity <= 0) {
+        this.errors[`ingredient_quantity_${index}`] =
+          'La cantidad debe ser mayor a 0.';
       } else {
         this.errors[`ingredient_quantity_${index}`] = '';
       }
     },
 
     validateIngredientUnit(index) {
-      const ingredient = this.post.ingredients[index];
-      if (!ingredient.unit || !ingredient.unit.trim()) {
-        this.errors[`ingredient_unit_${index}`] = 'La unidad del ingrediente es requerida.';
+      const ing = this.post.ingredients[index];
+      if (!ing.unit || !ing.unit.trim()) {
+        this.errors[`ingredient_unit_${index}`] = 'La unidad es requerida.';
       } else {
         this.errors[`ingredient_unit_${index}`] = '';
       }
     },
 
-    // Además, puedes añadir validaciones en tiempo real para los ingredientes si lo deseas.
+    handleIngredientValidation(isValid) {
+      this.isIngredientListValid = isValid;
+    },
+
     validateForm() {
       this.validateTitle();
       this.validateDescription();
-      this.post.ingredients.forEach((_, index) => {
-        this.validateIngredientName(index);
-        this.validateIngredientQuantity(index);
-        this.validateIngredientUnit(index);
-      });
-
-      // Verificar si hay errores
-      return !Object.values(this.errors).some(error => error);
+      return (
+        !Object.values(this.errors).some((e) => e) &&
+        this.isIngredientListValid // Validar que la lista de ingredientes no esté vacía
+      );
     },
 
     async handleSubmit() {
-      const isValid = this.validateForm();
-      if (!isValid) {
-        this.notificationStore.show('Por favor, completa todos los campos requeridos antes de enviar.', 'error');
+      if (!this.validateForm()) {
+        this.notificationStore.show(
+          "Por favor, completa todos los campos antes de enviar.",
+          "error"
+        );
         return;
       }
-    
+
       this.loading = true;
-    
-      const ingredients = this.post.ingredients.map(ingredient => ({
-        name: ingredient.name,
-        quantity: `${ingredient.quantity} ${ingredient.unit}`.trim()
+      const ingredientsPayload = this.post.ingredients.map((ing) => ({
+        name: ing.name,
+        quantity: `${ing.quantity} ${ing.unit}`.trim()
       }));
-    
+
       const formData = new FormData();
       formData.append('title', this.post.title);
       formData.append('description', this.post.description);
       formData.append('is_private', this.post.is_private);
-      formData.append('ingredients', JSON.stringify(ingredients));
-    
+      formData.append('ingredients', JSON.stringify(ingredientsPayload));
       if (this.post.image) {
         formData.append('imagen', this.post.image);
       }
-    
+
       try {
         const response = this.postToEdit
           ? await apiService.updatePost(this.postToEdit.id, formData)
           : await apiService.createPost(formData);
-    
+
         if (response.data.status === 'success') {
-          const msg = this.postToEdit ? 'Post actualizado correctamente' : 'Post creado correctamente';
+          const msg = this.postToEdit
+            ? 'Post actualizado correctamente'
+            : 'Post creado correctamente';
           this.notificationStore.show(msg, 'success');
-          this.$emit(this.postToEdit ? 'post-updated' : 'post-created', response.data.data);
+          this.$emit(
+            this.postToEdit ? 'post-updated' : 'post-created',
+            response.data.data
+          );
           this.closeModal();
         }
-      } catch (error) {
-        console.error('Error al procesar el post:', error);
-        this.notificationStore.show('Ocurrió un error al procesar el formulario.', 'error');
+      } catch (err) {
+        console.error('Error al procesar el post:', err);
+        this.notificationStore.show(
+          'Ocurrió un error al procesar el formulario.',
+          'error'
+        );
       } finally {
         this.loading = false;
       }
     },
-    
 
     closeModal() {
-      this.$emit('close')
-    },
-
-    updateDescriptionCount() {
-      // Aquí puedes incluir lógica adicional si fuera necesario
-      // El contador se actualiza automáticamente gracias al v-model y a post.description.length
+      this.$emit('close');
     },
 
     nextStep() {
@@ -425,7 +393,10 @@ export default {
         this.errors.image = 'Debes seleccionar una imagen.';
         return;
       }
-      if (this.currentStep === 2 && (!this.post.title || !this.post.description)) {
+      if (
+        this.currentStep === 2 &&
+        (!this.post.title || !this.post.description)
+      ) {
         this.validateTitle();
         this.validateDescription();
         return;
@@ -437,10 +408,8 @@ export default {
       this.currentStep--;
     }
   }
-}
+};
 </script>
-
-
 
 <style scoped>
 .modal-overlay {
@@ -460,13 +429,13 @@ section {
   grid-area: var(--main-area);
   background-color: var(--secundary-color);
   border-radius: 10px;
-  width: 90%;
-  height: auto;
-  min-height: 600px;
+  width: 100%;
   margin: auto;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
+  max-width: 700px;
+  min-height: 600px;
 }
 
 section header {
@@ -500,25 +469,8 @@ section main {
   flex: 1;
   display: flex;
   flex-direction: row;
-}
+  height: auto;
 
-.separador {
-  display: flex;
-  flex-direction: row;
-  margin-bottom: 30px;
-  align-items: center;
-}
-
-.separador .linea {
-  flex: 1;
-  height: 1px;
-  background-color: var(--text-color-important);
-  opacity: 0.3;
-}
-
-.separador .circulo {
-  padding: 0 20px;
-  font-size: 24px;
 }
 
 form {
@@ -528,22 +480,13 @@ form {
   margin: 0 auto;
   align-items: stretch;
   justify-content: center;
-  align-content: center;
   flex-wrap: wrap;
-}
-
-label {
-  width: 100%;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
 }
 
 .image-preview {
   width: 30%;
   height: auto;
 }
-
 
 img {
   max-width: 100%;
@@ -563,14 +506,10 @@ textarea {
   background-color: white;
 }
 
-
-
 textarea {
   min-height: 60px;
   resize: none;
 }
-
-
 
 .error {
   display: block;
@@ -600,26 +539,8 @@ textarea {
   font-size: 14px;
 }
 
-.title-image-container {
-  display: flex;
-  justify-content: center;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-content: center;
-  align-items: center;
-}
-
-.wide-input {
-  width: 50%;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  background: none;
-}
-
 .small-textarea {
   min-height: 80px;
-  /* Ajusta la altura según sea necesario */
 }
 
 .ingredients-container {
@@ -627,9 +548,8 @@ textarea {
 }
 
 .ingredients-list {
-  /* Ajusta la altura según el tamaño real de cada input (en este ejemplo se calcula 3 filas de 60px) */
-  max-height: 170px;
-  overflow-y: auto;
+  max-height: 300px;
+  overflow-y: hidden;
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -663,34 +583,47 @@ textarea {
   width: 100%;
 }
 
-
-
-.accions-ingredients {
+.global-actions {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  align-content: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
   gap: 1em;
 }
 
-/* .add-button,
+.add-button,
 .remove-button {
   background-color: var(--primary-color);
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  width: 20px;
-  height: 20px;
-  font-size: 20px;
-  text-align: center;
-  margin-right: 1em;
+  padding: 10px 20px;
+  font-size: 14px;
+}
+
+.remove-button {
+  background-color: var(--contrast-color);
+}
+
+.add-button:hover,
+.remove-button:hover {
+  opacity: 0.9;
+}
+
+.remove-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.unit-select {
+  padding: 10px;
+  border: 1px solid var(--sombra-color);
+  border-radius: 6px;
+  background-color: white;
+  color: black;
+  font-size: 14px;
   width: 100%;
-} */
-
-
+}
 
 .submit-button {
   width: 100%;
@@ -705,7 +638,6 @@ textarea {
   transition: background-color 0.2s;
   margin: 0 auto;
 }
-
 
 .submit-button:hover {
   opacity: 0.9;
@@ -751,7 +683,7 @@ textarea {
 .navigation-buttons {
   display: flex;
   justify-content: space-between;
-  margin-top: 20px;
+  margin: 20px;
 }
 
 .prev-button,
@@ -766,75 +698,19 @@ textarea {
 }
 
 .prev-button:hover,
-.next-button:hover {
+.next-button:hover,
+.submit-button:hover {
   background-color: var(--primary-color-dark);
 }
 
 .step {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   margin-bottom: 20px;
 }
 
-.prev-button,
-.next-button {
-  background-color: var(--primary-color);
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.prev-button:hover,
-.next-button:hover,
-.submit-button:hover {
-  background-color: var(--primary-color-dark);
-}
-
-.unit-select {
-  padding: 10px;
-  border: 1px solid var(--sombra-color);
-  border-radius: 6px;
-  background-color: white;
-  color: black;
-  font-size: 14px;
-  width: 100%;
-}
-
-.global-actions {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  gap: 1em;
-}
-
-.add-button,
-.remove-button {
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  padding: 10px 20px;
-  font-size: 14px;
-}
-
-.remove-button {
-  background-color: var(--contrast-color);
-}
-
-.add-button:hover,
-.remove-button:hover {
-  opacity: 0.9;
-}
-
-.remove-button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
+/* Media queries para responsivo */
 @media (max-width: 768px) {
   section {
     width: 90%;
@@ -849,11 +725,9 @@ textarea {
   form {
     width: 90%;
   }
-
 }
 
 @media (max-width: 600px) {
-
   .input-ingredient {
     width: 100%;
   }
@@ -870,11 +744,11 @@ textarea {
 
   input,
   textarea,
-  button[type="submit"] {
+  button[type='submit'] {
     padding: 12px;
   }
 
-  button[type="submit"] {
+  button[type='submit'] {
     margin: 1em;
   }
 

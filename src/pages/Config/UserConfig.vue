@@ -107,7 +107,6 @@ export default {
 .user-config-page {
   grid-area: var(--main-area);
   display: grid;
-  height: 100vh;
   background-color: var(--background-color);
   padding: 0 2em;
 }
