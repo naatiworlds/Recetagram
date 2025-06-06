@@ -7,163 +7,30 @@
       </header>
       <!-- Navegación vertical -->
       <nav class="user-config-nav">
-        <button v-for="tab in tabs" :key="tab.name" :class="{ active: activeTab === tab.name }"
+        <router-link 
+          v-for="tab in tabs" 
+          :key="tab.name" 
+          :to="tab.nav" 
+          class="nav-button" 
+          :class="{ active: activeTab === tab.name }"
           @click="activeTab = tab.name">
           <i :class="tab.icon"></i> {{ tab.label }}
-        </button>
+        </router-link>
       </nav>
 
       <!-- Contenido de configuración -->
       <main class="user-config-content">
-        <div class="tab-content">
-          <!-- Edición de Usuario -->
-          <div v-if="activeTab === 'user'" class="user-edit">
-            <h3>Editar Usuario</h3>
-            <form @submit.prevent="updateUser">
-              <div class="title-description">
-                <h4>Cambiar nombre</h4>
-                <p>Esta acción cambiará el nombre que los usuarios verán al buscarte</p>
-              </div>
-              <li v-if="isAuthenticated">
-                <a href="#" @click.prevent="handleLogout" class="nav-normal">
-                  <i class="fa-solid fa-edit"></i> Editar usuario
-                </a>
-              </li>
-            </form>
-            <div class="close-session">
-              <div class="title-description">
-                <h4>Cerrar sesión</h4>
-                <p>Esta acción cerrará tu sesión hasta que vuelva a iniciarla</p>
-              </div>
-              <li v-if="isAuthenticated">
-                <a href="#" @click.prevent="handleLogout" class="nav-normal">
-                  <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
-                </a>
-              </li>
-            </div>
-          </div>
-
-          <!-- Preferencias del Sistema -->
-          <div v-if="activeTab === 'preferences'" class="system-preferences">
-            <h3>Preferencias del Sistema</h3>
-            <div class="theme-switch">
-              <div class="title-description">
-                <h4>Modo de Tema Claro/Oscuro</h4>
-                <p>Esta acción cambiará la apariencia de la aplicación a modo dia o noche</p>
-              </div>
-              <div id="icon-container">
-                <div class='wrap'>
-                  <input name="light-dark" type="checkbox" @change="toggleTheme" :checked="isDarkMode" />
-                  <div class='griddle'></div>
-                  <div class='cake'></div>
-                  <div class='syrup'></div>
-                  <div class='butter'></div>
-                  <div class='butter two'></div>
-                </div>
-                <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-                  <defs>
-                    <filter id="goo">
-                      <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
-                      <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9"
-                        result="goo" />
-                      <feComposite in="SourceGraphic" in2="goo" operator="atop" />
-                    </filter>
-                  </defs>
-                </svg>
-                <svg class="svg" viewBox="0 0 400 400">
-                  <defs>
-                    <filter id="duotone-filter-post-one">
-                      <feColorMatrix type="matrix"
-                        values="0.14453125 0 0 0 0.33203125 0.71875 0 0 0 0.27734375 -0.34765625 0 0 0 0.73046875 0 0 0 1 0">
-                      </feColorMatrix>
-                    </filter>
-                  </defs>
-                </svg>
-
-              </div>
-            </div>
-            <div class="theme-options">
-              <div class="title-description">
-                <h4>Modo de Tema Claro/Oscuro</h4>
-                <p>Esta acción cambiará la apariencia de la aplicación a modo dia o noche</p>
-              </div>
-              <div class="colors">
-                <li id="theme">
-                  <details>
-                    <summary><i class="fa-solid fa-palette"></i> theme</summary>
-                    <label id="switch-aqua">
-                      Aqua
-                      <input type="radio" name="tema" value="aqua" @change="setTheme">
-                    </label>
-                    <label id="switch-pink">
-                      Pink
-                      <input type="radio" name="tema" value="pink" @change="setTheme">
-                    </label>
-                    <label id="switch-default">
-                      Default
-                      <input type="radio" name="tema" value="default" checked @change="setTheme">
-                    </label>
-                  </details>
-                </li>
-              </div>
-            </div>
-          </div>
-
-          <!-- Seguridad y Privacidad -->
-          <div v-if="activeTab === 'security'" class="security-privacy">
-            <h3>Seguridad y Privacidad</h3>
-            <div class="privacy-settings">
-              <div class="title-description">
-                <h4>Privacidad del perfil público/privado</h4>
-                <p>Esta acción cambiará la privacidad de tu perfil modificando quien puede ver tus posts</p>
-              </div>
-              <label>
-                <input type="checkbox" v-model="user.isPrivate" @change="togglePrivacy">
-                Perfil Privado
-              </label>
-            </div>
-            <div class="blocked-users">
-              <div class="title-description">
-                <h4>Usuarios Bloqueados</h4>
-                <p>Lista de usuarios que has bloqueado</p>
-              </div>
-
-              <ul>
-                <li v-for="user in blockedUsers" :key="user.id">
-                  {{ user.name }}
-                  <button @click="unblockUser(user.id)">Desbloquear</button>
-                </li>
-              </ul>
-            </div>
-            <div class="change-password">
-              <div class="title-description">
-                <h4>Cambiar Contraseña</h4>
-                <p>Esta acción cambiará la contraseña de tu cuenta [Ten mucho cuidado]</p>
-              </div>
-              <form @submit.prevent="changePassword">
-                <label>
-                  Contraseña Actual:
-                  <input type="password" v-model="password.current" />
-                </label>
-                <label>
-                  Nueva Contraseña:
-                  <input type="password" v-model="password.new" />
-                </label>
-                <button type="submit" class="save-button">Cambiar Contraseña</button>
-              </form>
-            </div>
-          </div>
-        </div>
+        <router-view></router-view>
       </main>
     </div>
   </div>
 </template>
 
 <script>
-import setupTheme, { applyTheme } from "../utils/changeLightDark.js";
-import { changeTheme } from '../utils/changeTheme.js';
-import { useUserStore } from '../stores/user.js';
-import { useNotificationStore } from '../stores/notification.js';
+import setupTheme, { applyTheme } from "../../utils/changeLightDark.js";
+import { changeTheme } from '../../utils/changeTheme.js';
+import { useUserStore } from '../../stores/user.js';
+import { useNotificationStore } from '../../stores/notification.js';
 import { useRouter } from 'vue-router';
 
 export default {
@@ -174,9 +41,9 @@ export default {
       isMenuVisible: false,
       activeTab: 'user', // Tab activa
       tabs: [
-        { name: 'user', label: 'Cuenta', icon: 'fa-lg fa-solid fa-user' },
-        { name: 'preferences', label: 'Preferencias del Sistema', icon: 'fa-lg fa-solid fa-sliders' },
-        { name: 'security', label: 'Seguridad y Privacidad', icon: 'fa-lg fa-solid fa-lock' }
+        { name: 'user', label: 'Cuenta', icon: 'fa-lg fa-solid fa-user', nav: "/settings/account" },
+        { name: 'preferences', label: 'Preferencias del Sistema', icon: 'fa-lg fa-solid fa-sliders', nav: "/settings/preferences" },
+        { name: 'security', label: 'Seguridad y Privacidad', icon: 'fa-lg fa-solid fa-lock', nav: "/settings/security" }
       ],
       user: {
         name: '',
@@ -284,7 +151,7 @@ export default {
   border-right: 1px solid var(--border-color);
 }
 
-.user-config-nav button {
+.user-config-nav .nav-button {
   padding: 10px 15px;
   border: none;
   background-color: var(--primary-color);
@@ -294,7 +161,7 @@ export default {
   text-align: left;
 }
 
-.user-config-nav button.active {
+.user-config-nav .nav-button.active {
   background-color: var(--contrast-color);
   color: var(--text-color);
 }
@@ -417,9 +284,25 @@ form {
     grid-area: var(--main-responsive-area);
     padding: 0
   }
-  .user-config-grid{
+
+  .user-config-grid {
     grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
   }
+}
+
+@media (max-width: 480px) {
+
+  .user-config-page {
+    grid-area: var(--main-responsive-area);
+    padding: 0
+  }
+
+  .user-config-grid {
+    display: block;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  }
+
+  .user-config-nav {}
 }
 
 /* Estilos y animación sarten */

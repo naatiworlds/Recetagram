@@ -32,10 +32,10 @@ export default {
       this.isMenuVisible = !this.isMenuVisible;
     },
 
-    hideMenuOnUserConfig() {
-      const currentRoute = this.router.currentRoute.value;
-      this.isMenuVisible = currentRoute.name !== 'UserConfig'; // Ocultar el menú si la ruta es UserConfig
-    },
+    // hideMenuOnUserConfig() {
+    //   const currentRoute = this.router.currentRoute.value;
+    //   this.isMenuVisible = currentRoute.name !== 'UserConfig'; // Ocultar el menú si la ruta es UserConfig
+    // },
 
     async initializeAuth() {
       const token = localStorage.getItem('token');
@@ -59,10 +59,10 @@ export default {
 
   created() {
     this.router = useRouter();
-    this.hideMenuOnUserConfig(); // Llamar al método para ocultar el menú en UserConfig
-    this.router.afterEach(() => {
-      this.hideMenuOnUserConfig(); // Actualizar visibilidad del menú después de cada navegación
-    });
+    // this.hideMenuOnUserConfig(); // Llamar al método para ocultar el menú en UserConfig
+    // this.router.afterEach(() => {
+    //   this.hideMenuOnUserConfig(); // Actualizar visibilidad del menú después de cada navegación
+    // });
   }
 }
 </script>

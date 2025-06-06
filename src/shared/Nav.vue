@@ -100,7 +100,7 @@
 
 <script>
 import Crear from '../components/Crear.vue';
-import UserConfig from '../pages/UserConfig.vue';
+import UserConfig from '../pages/Config/UserConfig.vue';
 import { useUserStore } from '../stores/user';
 import { useNotificationStore } from '../stores/notification';
 import { useRouter } from 'vue-router';

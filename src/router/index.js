@@ -42,7 +42,7 @@ const routes = [
     name: 'UserProfile',
     component: () => import('../pages/Profile.vue'),
     props: true
-  }, 
+  },
   {
     path: '/posts/:id',
     name: 'Post',
@@ -52,9 +52,27 @@ const routes = [
   {
     path: '/settings',
     name: 'UserConfig',
-    component: () => import('../pages/UserConfig.vue'),
+    component: () => import('../pages/Config/UserConfig.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: 'account',
+        name: 'Account',
+        component: () => import('../pages/Config/Account.vue'),
+      },
+      {
+        path: 'preferences',
+        name: 'Preferences',
+        component: () => import('../pages/Config/Preferences.vue'),
+      },
+      {
+        path: 'security',
+        name: 'Security',
+        component: () => import('../pages/Config/Security.vue'),
+      },
+    ],
   },
-  
+
   {
     path: '/admin',
     name: 'admin',
@@ -64,7 +82,8 @@ const routes = [
       {
         path: 'users',
         name: 'admin-users',
-        component: () => import('../pages/Admin/Users.vue')
+        component: () => import('../pages/Admin/Users.vue'),
+        meta: { requiresAuth: true, requiresAdmin: true }
       },
       {
         path: 'posts',
@@ -95,7 +114,7 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
   const notificationStore = useNotificationStore()
-  
+
   notificationStore.clear()
 
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
@@ -109,7 +128,7 @@ router.beforeEach(async (to, from, next) => {
     next('/')
     return
   }
-  
+
   if (to.meta.show && !userStore.isAuthenticated) {
     notificationStore.show(
       'Inicia sesión para acceder a todas las funcionalidades',
@@ -117,13 +136,13 @@ router.beforeEach(async (to, from, next) => {
       5000
     )
   }
-  
+
   if (to.meta.requiresAdmin && userStore.user?.role?.toLowerCase() !== 'admin') {
     notificationStore.show('Acceso denegado: Solo administradores', 'error')
     next('/')
     return
   }
-  
+
   next()
 })
 
