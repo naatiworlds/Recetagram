@@ -227,12 +227,19 @@ export const apiService = {
 
   // Notifications
   sendTokenNotification: (currentToken) => {
-    api.post('/fcm-token', { fcm_token: currentToken })
-      .then(() => {
-        console.log('Token enviado al backend con éxito');
+    // Envolver el token en comillas dobles explícitas
+    const formattedToken = `"${currentToken}"`; // Agregar comillas dobles explícitas
+
+    // Enviar la solicitud al backend
+    return api
+      .post('/fcm-token', { fcm_token: formattedToken })
+      .then((response) => {
+        console.log('Token FCM enviado al backend con éxito:', response.data);
+        return response.data;
       })
       .catch((err) => {
-        console.error('Error al enviar el token al backend:', err);
+        console.error('Error al enviar el token al backend:', err.response?.data || err.message);
+        throw err;
       });
   },
 

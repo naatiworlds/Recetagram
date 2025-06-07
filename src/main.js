@@ -64,11 +64,20 @@ if ('serviceWorker' in navigator) {
       // Solicitar permiso para notificaciones y obtener el token FCM
       getToken(messaging, { vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY })
         .then((currentToken) => {
-          if (currentToken) {
-            console.log('Token FCM:', currentToken);
-            apiService.sendTokenNotification(currentToken);
+          if (currentToken && typeof currentToken === 'string') {
+            console.log('Token FCM obtenido:', currentToken);
+
+            // Enviar el token al backend utilizando la función de api.js
+            apiService
+              .sendTokenNotification(currentToken)
+              .then(() => {
+                console.log('Token FCM enviado al backend con éxito.');
+              })
+              .catch((err) => {
+                console.error('Error al enviar el token al backend:', err);
+              });
           } else {
-            console.log('No se obtuvo token, solicita permiso.');
+            console.log('No se obtuvo un token válido. Solicita permiso.');
           }
         })
         .catch((err) => {
