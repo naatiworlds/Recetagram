@@ -79,7 +79,9 @@ export const apiService = {
   },
 
   logout: () => {
+    api.post('/fcm-token', { fcm_token: null });
     return api.post("/logout");
+
   },
 
   getMe: () => {
@@ -102,7 +104,7 @@ export const apiService = {
     const endpoint = params.public ? "/posts/public" : "/posts/following";
   },
   getAllPosts: () => api.get("/posts"),
-  
+
   async getPost(postId) {
     return api.get(`/posts/${postId}`);
   },
@@ -224,10 +226,23 @@ export const apiService = {
   rejectFollow: (followId) => api.post(`/follows/${followId}/reject`),
 
   // Notifications
+  sendTokenNotification: (currentToken) => {
+    api.post('/fcm-token', { fcm_token: currentToken })
+      .then(() => {
+        console.log('Token enviado al backend con éxito');
+      })
+      .catch((err) => {
+        console.error('Error al enviar el token al backend:', err);
+      });
+  },
+
   getNotifications: () => api.get("/notifications"),
   markNotificationAsRead: (notificationId) =>
     api.patch(`/notifications/${notificationId}/read`),
   markAllNotificationsAsRead: () => api.patch("/notifications/markAllRead"),
+
+
+
   // Additional helpers
   acceptFollowRequest: (fromUserId) => {
     return api.post(`/follows/${fromUserId}/accept`);
