@@ -275,7 +275,7 @@ main {
         margin: 0;
     }
     .scrollable-list {
-        max-height: 100px;
+        max-height: 0px;
         /* Aumentar la altura máxima en pantallas pequeñas */
     }
 

@@ -65,7 +65,8 @@
                   unit: errors[`ingredient_unit_${index}`]
                 }" :canDelete="post.ingredients.length > 1" @update:ingredient="val => updateIngredient(index, val)"
                   @validate-name="validateIngredientName(index)" @validate-quantity="validateIngredientQuantity(index)"
-                  @validate-unit="validateIngredientUnit(index)" @remove="removeIngredient(index)" />
+                  @validate-unit="validateIngredientUnit(index)" @remove="removeIngredient(index)"
+                  @validate-ingredients="handleIngredientValidation" @update-ingredients="updateIngredientList" />
               </div>
 
               <span v-if="errors.ingredients" class="error">
@@ -707,11 +708,7 @@ textarea {
   flex-direction: column;
   align-items: stretch;
 }
-.step h3 {
-  font-size: 20px;
-  margin-bottom: 15px;
-  color: var(--text-color-important);
-}
+
 
 /* Media queries para responsivo */
 @media (max-width: 768px) {
@@ -744,7 +741,8 @@ textarea {
   .image-preview {
     width: 20%;
   }
-  img{
+
+  img {
     margin: 0;
   }
 }

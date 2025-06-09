@@ -225,16 +225,7 @@ export const apiService = {
   acceptFollow: (followId) => api.post(`/follows/${followId}/accept`),
   rejectFollow: (followId) => api.post(`/follows/${followId}/reject`),
 
-  // Notifications
-  sendTokenNotification: (currentToken) => {
-    api.post('/fcm-token', { fcm_token: currentToken })
-      .then(() => {
-        console.log('Token enviado al backend con éxito');
-      })
-      .catch((err) => {
-        console.error('Error al enviar el token al backend:', err);
-      });
-  },
+
 
   getNotifications: () => api.get("/notifications"),
   markNotificationAsRead: (notificationId) =>
