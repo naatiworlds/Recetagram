@@ -301,7 +301,6 @@ export const apiService = {
 
   // Obtener posts de usuarios seguidos (feed)
   getFollowingPosts: () => api.get("/posts/following"),
-
   /**
    * Enviar acciones agrupadas al endpoint /batch
    * @param {Object} batchData - Objeto con las acciones agrupadas (likes, comments, notifications, follows)

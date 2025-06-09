@@ -21,10 +21,19 @@
                         <ProfilePrivacy v-if="isOwnProfile" :user-id="user.id" :is-public="user.is_public"
                             :loading="loading" :is-own-profile="isOwnProfile" @update="handlePrivacyUpdate" />
 
-                        <ProfileActions :is-own-profile="isOwnProfile" :is-admin="userStore.user?.role === 'admin'"
-                            :key="`action-${isFollowing}`" :is-following="isFollowing" :loading="loading"
-                            :user-id="user?.id" @follow="handleFollow" @unfollow="handleUnfollow"
-                            @admin="goToAdminPanel" @delete="showDeleteModal = true" />
+                        <ProfileActions
+                            :is-own-profile="isOwnProfile"
+                            :is-admin="userStore.user?.role === 'admin'"
+                            :key="`action-${isFollowing}`"
+                            :is-following="isFollowing"
+                            :is-pending-follow="isPendingFollow" 
+                            :loading="loading"
+                            :user-id="user?.id"
+                            @follow="handleFollow"
+                            @unfollow="handleUnfollow"
+                            @admin="goToAdminPanel"
+                            @delete="showDeleteModal = true"
+                        />
                     </div>
                 </div>
 
@@ -85,116 +94,115 @@ import Crear from '../components/Crear.vue'
 
 
 export default {
-    name: 'Profile',
+  name: 'Profile',
 
-    components: {
-        ProfileHeader,
-        ProfileStats,
-        ProfileActions,
-        ProfilePrivacy,
-        Posts,
-        DeleteConfirmationModal,
-        Crear
+  components: {
+    ProfileHeader,
+    ProfileStats,
+    ProfileActions,
+    ProfilePrivacy,
+    Posts,
+    DeleteConfirmationModal,
+    Crear
+  },
+
+  data() {
+    return {
+      user: null,
+      loading: false,
+      error: null,
+      showDeleteModal: false,
+      isEditing: false,
+      isFollowing: false,
+      isPendingFollow: false, // Estado reactivo para solicitudes pendientes
+      followersCount: 0,
+      followingCount: 0,
+      showPostModal: false,
+      postToEdit: null,
+    };
+  },
+
+  computed: {
+    ...mapStores(useUserStore, useNotificationStore),
+
+    userId() {
+      return this.$route.params.id || this.userStore.user?.id;
     },
 
-    data() {
-        return {
-            user: null,
-            loading: false,
-            error: null,
-            showDeleteModal: false,
-            isEditing: false,
-            isFollowing: false,
-            isPendingFollow: false,
-            followersCount: 0,
-            followingCount: 0,
-            showPostModal: false,
-            postToEdit: null,
+    isOwnProfile() {
+      return this.user && this.userStore.user && (this.userStore.user.id === this.user.id);
+    },
+
+    isAdmin() {
+      return this.userStore.user?.role === 'admin';
+    },
+
+    canViewPosts() {
+      if (this.isOwnProfile) return true;
+      return this.user?.is_public || this.isFollowing;
+    }
+  },
+
+  methods: {
+    waitForUser() {
+      return new Promise(resolve => {
+        const interval = setInterval(() => {
+          if (this.userStore.user) {
+            clearInterval(interval);
+            resolve();
+          }
+        }, 100);
+      });
+    },
+
+    getInitials(name) {
+      if (!name) return ''
+      return name.split(' ').map(word => word[0].toUpperCase()).join('')
+    },
+
+    formatDate(date) {
+      return new Date(date).toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+    },
+
+    getProfileImage(image) {
+      return image ? `${STORAGE_URL}/${image}` : null
+    },
+
+    handleEdit() {
+      this.$emit('edit-post', post)
+    },
+    startEditing() {
+      this.isEditing = true;
+    },
+    async handleUpdateName(newName) {
+      try {
+        this.loading = true
+        const response = await apiService.updateUser(this.userId, {
+          name: newName,
+          is_private: this.user.is_private
+        })
+        if (response.data?.data) {
+          this.user = response.data.data
+          this.isEditing = false
+          this.notificationStore.show('Nombre actualizado correctamente', 'success')
         }
+      } catch (error) {
+        this.notificationStore.show('Error al actualizar el nombre', 'error')
+      } finally {
+        this.loading = false
+      }
     },
 
-    computed: {
-        ...mapStores(useUserStore, useNotificationStore),
-
-        userId() {
-            return this.$route.params.id || this.userStore.user?.id
-        },
-
-        isOwnProfile() {
-            return this.user && this.userStore.user && (this.userStore.user.id === this.user.id);
-        },
-
-        isAdmin() {
-            return this.userStore.user?.role === 'admin'
-        },
-
-        canViewPosts() {
-  if (this.isOwnProfile) return true;
-  return this.user?.is_public || this.isFollowing;
-}
-
+    handleCancel() {
+      this.isEditing = false
+      this.loadUserProfile()
     },
 
-    methods: {
-        waitForUser() {
-            return new Promise(resolve => {
-                const interval = setInterval(() => {
-                    if (this.userStore.user) {
-                        clearInterval(interval);
-                        resolve();
-                    }
-                }, 100);
-            });
-        },
-
-        getInitials(name) {
-            if (!name) return ''
-            return name.split(' ').map(word => word[0].toUpperCase()).join('')
-        },
-
-        formatDate(date) {
-            return new Date(date).toLocaleDateString('es-ES', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            })
-        },
-
-        getProfileImage(image) {
-            return image ? `${STORAGE_URL}/${image}` : null
-        },
-
-        handleEdit() {
-            this.$emit('edit-post', post)
-        },
-        startEditing() {
-            this.isEditing = true;
-        },
-        async handleUpdateName(newName) {
-            try {
-                this.loading = true
-                const response = await apiService.updateUser(this.userId, {
-                    name: newName,
-                    is_private: this.user.is_private
-                })
-                if (response.data?.data) {
-                    this.user = response.data.data
-                    this.isEditing = false
-                    this.notificationStore.show('Nombre actualizado correctamente', 'success')
-                }
-            } catch (error) {
-                this.notificationStore.show('Error al actualizar el nombre', 'error')
-            } finally {
-                this.loading = false
-            }
-        },
-
-        handleCancel() {
-            this.isEditing = false
-            this.loadUserProfile()
-        },
-
-        async handlePrivacyUpdate(newState) {
+    async handlePrivacyUpdate(newState) {
     if (!this.user || this.loading) return;
     try {
         this.loading = true;
@@ -216,120 +224,122 @@ export default {
     }
 },
 
-        goToAdminPanel() {
-            this.$router.push('/admin')
-        },
-
-        confirmDelete() {
-            this.showDeleteModal = true
-        },
-
-        async handleDelete() {
-            try {
-                await apiService.deleteUser(this.userStore.user.id)
-                await this.userStore.logout()
-                this.$router.push('/login')
-                this.notificationStore.show('Cuenta eliminada con éxito', 'success')
-            } catch (error) {
-                this.notificationStore.show('Error al eliminar la cuenta: ' + error.message, 'error')
-            }
-            this.showDeleteModal = false
-        },
-
-        async handleFollow(userId) {
-            try {
-                this.loading = true;
-                const response = await apiService.followUser(userId);  // Lógica para seguir
-                if (response?.data?.data.status === 'accepted') {
-                    this.isFollowing = true  // Actualizar el estado de 'isFollowing'
-                    const followInfo = await apiService.getFollowData(this.userId);
-                    if (followInfo?.data) {
-                        this.followersCount = followInfo.data?.data.followers_count;
-                        this.followingCount = followInfo.data?.data.following_count;
-                    }
-                }
-            } catch (error) {
-            } finally {
-                this.loading = false;
-            }
-        },
-        async handleUnfollow(userId) {
-            try {
-                this.loading = true;
-                const response = await apiService.unfollowUser(userId);
-                if (response?.data?.status === "success") {
-                    this.isFollowing = false;  // Actualizar el estado de 'isFollowing'
-                    const followInfo = await apiService.getFollowData(this.userId);
-                    if (followInfo?.data) {
-                        this.followersCount = followInfo.data?.data.followers_count;
-                        this.followingCount = followInfo.data?.data.following_count;
-                    }
-                }
-            } catch (error) {
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        async loadUserProfile() {
-            this.loading = true
-            this.error = null
-
-            // Si no viene ID en la ruta, usamos el userStore.currentUser.id
-            const routeId = this.$route.params.id
-            const targetId = routeId || this.userStore.user?.id
-
-            try {
-                // Cargar datos
-                const response = await apiService.getUser(targetId)
-                
-                this.user = response.data.data
-
-                // Llamada para obtener si estamos siguiendo al usuario
-                const followInfo = await apiService.getFollowData(this.userId);
-                if (followInfo?.data) {
-                    this.followersCount = followInfo.data?.data.followers_count;
-                    this.followingCount = followInfo.data?.data.following_count;
-                }
-                const checkFollow = await apiService.getFollowStatus(this.userId)
-                if (checkFollow.data.data.status === "accepted") {
-                    this.isFollowing = true
-                }
-            } catch (err) {
-                this.error = err?.message || 'Error al cargar el perfil'
-                this.notificationStore.show('Error al cargar el perfil', 'error')
-            } finally {
-                this.loading = false
-            }
-        },
-        handleEditPost(post) {
-            // Al recibir el post desde el evento, abrir el modal
-            this.postToEdit = post;
-            this.showPostModal = true;
-        },
-
-        handleModalClose() {
-            // Cerrar el modal
-            this.showPostModal = false;
-            this.postToEdit = null;
-        },
-
+    goToAdminPanel() {
+      this.$router.push('/admin')
     },
 
-    async mounted() {
-        await this.loadUserProfile();
+    confirmDelete() {
+      this.showDeleteModal = true
     },
 
-    watch: {
-        
-        '$route.params.id': {
-            immediate: true,
-            handler() {
-                this.loadUserProfile()
-            }
+    async handleDelete() {
+      try {
+        await apiService.deleteUser(this.userStore.user.id)
+        await this.userStore.logout()
+        this.$router.push('/login')
+        this.notificationStore.show('Cuenta eliminada con éxito', 'success')
+      } catch (error) {
+        this.notificationStore.show('Error al eliminar la cuenta: ' + error.message, 'error')
+      }
+      this.showDeleteModal = false
+    },
+
+    async handleFollow(userId) {
+      try {
+        this.loading = true;
+        const response = await apiService.followUser(userId);
+        if (response?.data?.data.status === "pending") {
+          this.isPendingFollow = true; // Actualizar estado de pendiente
+        } else if (response?.data?.data.status === "accepted") {
+          this.isFollowing = true;
+          this.isPendingFollow = false;
         }
+      } catch (error) {
+        this.notificationStore.show("Error al seguir al usuario", "error");
+      } finally {
+        this.loading = false;
+      }
     },
-}
+    async handleUnfollow(userId) {
+      try {
+        this.loading = true;
+        const response = await apiService.unfollowUser(userId);
+        if (response?.data?.status === "success") {
+          this.isFollowing = false;
+          this.isPendingFollow = false; // Resetear estado de pendiente
+        }
+      } catch (error) {
+        this.notificationStore.show("Error al dejar de seguir al usuario", "error");
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async loadUserProfile() {
+      this.loading = true;
+      this.error = null;
+
+      const routeId = this.$route.params.id;
+      const targetId = routeId || this.userStore.user?.id;
+
+      try {
+        const response = await apiService.getUser(targetId);
+        this.user = response.data.data;
+
+        const followInfo = await apiService.getFollowData(this.userId);
+        if (followInfo?.data) {
+          this.followersCount = followInfo.data?.data.followers_count;
+          this.followingCount = followInfo.data?.data.following_count;
+        }
+
+        const checkFollow = await apiService.getFollowStatus(this.userId);
+        if (checkFollow.data.data.status === "accepted") {
+          this.isFollowing = true;
+          this.isPendingFollow = false;
+        } else if (checkFollow.data.data.status === "pending") {
+          this.isPendingFollow = true; // Actualizar estado de pendiente
+        } else {
+          this.isFollowing = false;
+          this.isPendingFollow = false;
+        }
+      } catch (err) {
+        this.error = err?.message || "Error al cargar el perfil";
+        this.notificationStore.show("Error al cargar el perfil", "error");
+      } finally {
+        this.loading = false;
+      }
+    },
+    handleEditPost(post) {
+        // Al recibir el post desde el evento, abrir el modal
+        this.postToEdit = post;
+        this.showPostModal = true;
+    },
+
+    handleModalClose() {
+        // Cerrar el modal
+        this.showPostModal = false;
+        this.postToEdit = null;
+    },
+
+  },
+
+  watch: {
+    '$route.params.id': {
+      immediate: true,
+      handler() {
+        this.loadUserProfile();
+      }
+    },
+
+    isPendingFollow(newValue) {
+      console.log(`Estado de pendiente actualizado: ${newValue}`);
+    }
+  },
+
+  async mounted() {
+    await this.loadUserProfile();
+  }
+};
 </script>
 
 <style scoped>
@@ -503,6 +513,10 @@ main {
     cursor: pointer;
     transition: all 0.2s ease;
     border: none;
+}
+
+.private-profile-message{
+    padding: var(--espaciado);
 }
 
 .edit-button {

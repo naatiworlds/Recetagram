@@ -96,6 +96,7 @@ import { useNotificationStore } from '../stores/notification'
 import { useUserNotificationStore } from '../stores/interactionNotifications'
 import { STORAGE_URL } from '../utils/globalConstants'
 import router from '@/router'
+import { addToBuffer } from '../services/bufferService';
 
 export default {
   name: 'PostCard',
@@ -214,28 +215,30 @@ export default {
         this.notificationStore.show('Debes iniciar sesión para dar like', 'warning');
         return;
       }
-      apiService.toggleLike(this.post.id)
-        .then(response => {
-          const wasLiked = this.isLiked;
-          this.isLiked = response.data.data.liked;
-          this.$emit('post-updated', {
-            ...this.post,
-            likes_count: response.data.data.likes_count
-          });
-          this.notificationStore.show(
-            this.isLiked ? 'Like agregado correctamente' : 'Like eliminado correctamente',
-            'success'
-          );
-          if (!wasLiked && this.isLiked) {
-            this.userNotifications.fetchNotifications();
-          }
-        })
-        .catch(error => {
-          this.notificationStore.show(
-            error.response?.data?.message || 'Error al procesar el like',
-            'error'
-          );
-        });
+
+      // Simular el cambio de estado del like en la interfaz de usuario
+      const wasLiked = this.isLiked;
+      this.isLiked = !this.isLiked;
+      this.$emit('post-updated', {
+        ...this.post,
+        likes_count: this.isLiked
+          ? this.post.likes_count + 1
+          : this.post.likes_count - 1
+      });
+
+      
+
+      // Agregar el like al buffer
+      addToBuffer('likes', { post_id: this.post.id });
+
+      // Simular la respuesta del backend para mantener el comportamiento actual
+      setTimeout(() => {
+        // Actualizar el estado del like con la simulación de éxito
+        this.notificationStore.show(
+          this.isLiked ? 'Like agregado correctamente' : 'Like eliminado correctamente',
+          'success'
+        );
+      }, 500); // Simulación de tiempo de respuesta del backend
     },
 
     handleComments() {
