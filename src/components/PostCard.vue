@@ -139,9 +139,10 @@ export default {
     },
     isLikedByCurrentUser() {
       // Asegúrate de que existe el usuario y que el post tenga liked_by incluído
+
       return this.userStore.user &&
-             this.post.liked_by &&
-             this.post.liked_by.some(like => like.id === this.userStore.user.id);
+        this.post.liked_by &&
+        this.post.liked_by.some(like => like.id === this.userStore.user.id);
     },
     likesCount() {
       return this.post?.likes_count || 0;
@@ -192,8 +193,6 @@ export default {
     }
   },
 
-  
-
   methods: {
     getImageUrl(image) {
       if (!image) return null;
@@ -216,17 +215,18 @@ export default {
         return;
       }
 
-      // Simular el cambio de estado del like en la interfaz de usuario
-      const wasLiked = this.isLiked;
-      this.isLiked = !this.isLiked;
-      this.$emit('post-updated', {
-        ...this.post,
-        likes_count: this.isLiked
-          ? this.post.likes_count + 1
-          : this.post.likes_count - 1
-      });
+      const userId = this.userStore.user.id;
+      const likedIndex = this.post.liked_by.findIndex(like => like.id === userId);
 
-      
+      if (likedIndex !== -1) {
+        // Quitar like
+        this.post.liked_by.splice(likedIndex, 1);
+        this.post.likes_count--;
+      } else {
+        // Dar like
+        this.post.liked_by.push({ id: userId });
+        this.post.likes_count++;
+      }
 
       // Agregar el like al buffer
       addToBuffer('likes', { post_id: this.post.id });
@@ -234,8 +234,9 @@ export default {
       // Simular la respuesta del backend para mantener el comportamiento actual
       setTimeout(() => {
         // Actualizar el estado del like con la simulación de éxito
+        // El corazón cambiará de color porque isLikedByCurrentUser ahora sí reacciona
         this.notificationStore.show(
-          this.isLiked ? 'Like agregado correctamente' : 'Like eliminado correctamente',
+          likedIndex === -1 ? 'Like agregado correctamente' : 'Like eliminado correctamente',
           'success'
         );
       }, 500); // Simulación de tiempo de respuesta del backend
@@ -602,7 +603,7 @@ export default {
 
 /* Media queries para ajustar la imagen en pantallas más pequeñas */
 @media (max-width: 768px) {
-  
+
 
   .post-title {
     font-size: 1.3em;
