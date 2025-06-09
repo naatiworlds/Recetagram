@@ -226,7 +226,6 @@ export const apiService = {
   rejectFollow: (followId) => api.post(`/follows/${followId}/reject`),
 
 
-
   getNotifications: () => api.get("/notifications"),
   markNotificationAsRead: (notificationId) =>
     api.patch(`/notifications/${notificationId}/read`),

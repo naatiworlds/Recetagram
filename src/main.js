@@ -51,5 +51,4 @@ app.config.errorHandler = (error, vm, info) => {
   notificationStore.show('Ha ocurrido un error inesperado', 'error');
 };
 
-
 export default app;
