@@ -2,10 +2,11 @@ import axios from "axios";
 import setupInterceptors from "./apiInterceptors";
 import { useNotificationStore } from "@/stores/notification";
 import { useUserStore } from "@/stores/user";
-// import { useNotificationStore } from "../stores/notification";
-// import { useUserStore } from "../stores/user";
+import throttle from 'lodash/throttle';
 
-// Configura Axios con las opciones básicas
+// =====================================
+// Configuración de Axios
+// =====================================
 const api = axios.create({
   baseURL: "https://recetagram-api.onrender.com/api/v1",
   headers: {
@@ -13,25 +14,13 @@ const api = axios.create({
     Accept: "application/json",
   },
 });
-
-// Interceptor para manejar errores
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error(
-      "Error en la petición:",
-      error.response?.data || error.message
-    );
-    return Promise.reject(error);
-  }
-);
-
 setupInterceptors(api);
 
-// Interceptor de respuesta
-axios.interceptors.response.use(
+// =====================================
+// Interceptores personalizados
+// =====================================
+api.interceptors.response.use(
   (response) => {
-    // Si se recibe una notificación de tipo token_expiration, mostramos la advertencia
     if (response.data?.data?.type === "token_expiration") {
       const notificationStore = useNotificationStore();
       notificationStore.handleTokenExpiration(response.data.data.message);
@@ -41,8 +30,6 @@ axios.interceptors.response.use(
   (error) => {
     const notificationStore = useNotificationStore();
     const userStore = useUserStore();
-
-    // Si el token ha expirado, se dispara esta lógica
     if (error.response?.data?.code === "token_expired") {
       userStore.logout();
       notificationStore.show(
@@ -50,144 +37,124 @@ axios.interceptors.response.use(
         "error"
       );
     }
-
     return Promise.reject(error);
   }
 );
 
+
+// =====================================
+// Lógica para limitar peticiones y reintentos
+// =====================================
+const MAX_RETRIES = 5;
+const RETRY_DELAY_BASE = 6000;
+
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function requestWithLimit(apiCall, retries = 0) {
+  try {
+    return await apiCall();
+  } catch (error) {
+    const status = error.response?.status;
+    const message = error.response?.data?.message || "";
+
+    if (
+      (status === 429 || (status === 500 && message.includes("Too Many Attempts"))) &&
+      retries < MAX_RETRIES
+    ) {
+      const delay = RETRY_DELAY_BASE * 2 ** retries;
+      console.warn(`[API] Too Many Attempts, retrying en ${delay}ms (intento ${retries + 1})`);
+      await wait(delay);
+      return requestWithLimit(apiCall, retries + 1);
+    }
+
+    throw error;
+  }
+}
+
+// =====================================
+// Exportación del servicio API
+// =====================================
 export const apiService = {
-  // Método para establecer el token
+  // ----------- Autenticación & Token -----------
   setAuthToken: (token) => {
     if (token) {
-      localStorage.setItem('token', token)
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      localStorage.setItem("token", token);
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     } else {
-      localStorage.removeItem('token')
-      delete api.defaults.headers.common['Authorization']
+      localStorage.removeItem("token");
+      delete api.defaults.headers.common["Authorization"];
     }
   },
 
-
-  // Luego, en el método login lo usamos:
-  login: async (credentials) => {
-    // Luego realizamos la petición de login
-    return api.post('/login', credentials);
-  },
-
-  register: (userData) => {
-    return api.post("/register", userData);
-  },
-
+  login: (credentials) => api.post("/login", credentials),
+  register: (userData) => api.post("/register", userData),
   logout: () => {
-    api.post('/fcm-token', { fcm_token: null });
+    api.post("/fcm-token", { fcm_token: null });
     return api.post("/logout");
-
   },
+  getMe: () => requestWithLimit(() => api.get("/me")),
 
-  getMe: () => {
-    return api.get("/me");
-  },
-
-  // Users
-  getUsers: () => api.get("/users"),
-  getUser: (userId) => api.get(`/users/${userId}`),
-  updateUser: (userId, userData) => {
-    return api.put(`/users/${userId}`, userData);
-  },
+  // ----------- Usuarios -----------
+  getUsers: () => requestWithLimit(() => api.get("/users")),
+  getUser: (userId) => requestWithLimit(() => api.get(`/users/${userId}`)),
+  updateUser: (userId, userData) => api.put(`/users/${userId}`, userData),
   deleteUser: (userId) => api.delete(`/users/${userId}`),
-  getUserPosts: (userId) => api.get(`/users/${userId}/posts`),
+  getUserPosts: (userId) => requestWithLimit(() => api.get(`/users/${userId}/posts`)),
 
-  // Posts
-  getPublicPosts: () => api.get("/posts/public"),
+  // Versión alternativa para obtener perfil
+  getUserProfile: (userId) => requestWithLimit(() => api.get(`/users/${userId}`)),
 
-  getPosts(params = {}) {
-    const endpoint = params.public ? "/posts/public" : "/posts/following";
-  },
-  getAllPosts: () => api.get("/posts"),
+  // ----------- Posts -----------
+  getPublicPosts: () => requestWithLimit(() => api.get("/posts/public")),
+  getAllPosts: () => requestWithLimit(() => api.get("/posts")),
+  getPost: (postId) => requestWithLimit(() => api.get(`/posts/${postId}`)),
+  createPost: (formData) =>
+    api.post("/posts", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+  updatePost: (postId, formData) =>
+    api.put(`/posts/${postId}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+  deletePost: (postId) => api.delete(`/posts/${postId}`),
+  getFollowingPosts: () => requestWithLimit(() => api.get("/posts/following")),
 
-  async getPost(postId) {
-    return api.get(`/posts/${postId}`);
-  },
-
-  createPost: (formData) => {
-    return api.post("/posts", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-  },
-
-  updatePost: (postId, formData) => {
-    return api.put(`/posts/${postId}`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-  },
-
-  async deletePost(postId) {
-    return api.delete(`/posts/${postId}`);
-  },
-
-  // Comments
+  // ----------- Comments -----------
   getComments: async (postId) => {
-    if (!postId) {
-      throw new Error("Se requiere un postId para obtener los comentarios.");
-    }
-    try {
-      console.log(`[API] Solicitando comentarios para el post ${postId}`);
-      const response = await api.get(`/posts/${postId}/comments`);
-      // Asumimos que la respuesta ya envía la data en el formato deseado
-      return {
-        data: {
-          status: "success",
-          message: "Comentarios obtenidos con éxito",
-          data: response.data.data || []
-        }
-      };
-    } catch (error) {
-      console.error("[API] Error al obtener comentarios del post:", error);
-      throw error;
-    }
+    if (!postId) throw new Error("Se requiere un postId para obtener los comentarios.");
+    const response = await requestWithLimit(() => api.get(`/posts/${postId}/comments`));
+    return {
+      data: {
+        status: "success",
+        message: "Comentarios obtenidos con éxito",
+        data: response.data.data || [],
+      },
+    };
   },
-  getAdminComments: async (postId) => {
-    try {
-      console.log("[API] Solicitando todos los comentarios");
 
-      // Primero obtenemos todos los posts
-      const postsResponse = await api.get("/posts");
+  getAdminComments: async () => {
+    try {
+      const postsResponse = await requestWithLimit(() => api.get("/posts"));
       const posts = postsResponse.data.data;
 
-      // Luego obtenemos los comentarios de cada post
       const commentsPromises = posts.map((post) =>
-        api
-          .get(`/posts/${post.id}/comments`)
+        requestWithLimit(() => api.get(`/posts/${post.id}/comments`))
           .then((response) => {
-            // Añadimos información del post a cada comentario
             const comments = response.data.data || [];
             return comments.map((comment) => ({
               ...comment,
-              post: {
-                id: post.id,
-                title: post.title,
-              },
+              post: { id: post.id, title: post.title },
             }));
           })
           .catch((error) => {
-            console.error(
-              `[API] Error al obtener comentarios del post ${post.id}:`,
-              error
-            );
-            return []; // Devolvemos array vacío si hay error
+            console.error(`[API] Error al obtener comentarios del post ${post.id}:`, error);
+            return [];
           })
       );
 
-      // Esperamos a que se resuelvan todas las promesas
       const commentsArrays = await Promise.all(commentsPromises);
-
-      // Aplanamos el array de arrays de comentarios
       const allComments = commentsArrays.flat();
-
       return {
         data: {
           status: "success",
@@ -200,8 +167,9 @@ export const apiService = {
       throw error;
     }
   },
+
   getComment: (postId, commentId) =>
-    api.get(`/posts/${postId}/comments/${commentId}`),
+    requestWithLimit(() => api.get(`/posts/${postId}/comments/${commentId}`)),
   createComment: (postId, comment) =>
     api.post(`/posts/${postId}/comments`, { content: comment }),
   updateComment: (postId, commentId, content) =>
@@ -209,80 +177,16 @@ export const apiService = {
   deleteComment: (postId, commentId) =>
     api.delete(`/posts/${postId}/comments/${commentId}`),
 
-  // Likes
+  // ----------- Likes -----------
   toggleLike: (postId) => api.post(`/posts/${postId}/like`),
 
-  // Follows
-  getFollowers: (userId) => api.get(`/users/${userId}/followers`),
-  getFollowing: (userId) => api.get(`/users/${userId}/following`),
-  getPendingFollows: () => api.get("/follows/pending"),
-  async followUser(userId) {
-    return api.post(`/users/${userId}/follow`);
-  },
-  async unfollowUser(userId) {
-    return api.delete(`/users/${userId}/unfollow`);
-  },
-  acceptFollow: (followId) => api.post(`/follows/${followId}/accept`),
-  rejectFollow: (followId) => api.post(`/follows/${followId}/reject`),
-
-  // Notifications
-  sendTokenNotification: (currentToken) => {
-    // Envolver el token en comillas dobles explícitas
-    const formattedToken = `"${currentToken}"`; // Agregar comillas dobles explícitas
-
-    // Enviar la solicitud al backend
-    return api
-      .post('/fcm-token', { fcm_token: formattedToken })
-      .then((response) => {
-        console.log('Token FCM enviado al backend con éxito:', response.data);
-        return response.data;
-      })
-      .catch((err) => {
-        console.error('Error al enviar el token al backend:', err.response?.data || err.message);
-        throw err;
-      });
-  },
-
-  getNotifications: () => api.get("/notifications"),
-  markNotificationAsRead: (notificationId) =>
-    api.patch(`/notifications/${notificationId}/read`),
-  markAllNotificationsAsRead: () => api.patch("/notifications/markAllRead"),
-
-
-
-  // Additional helpers
-  acceptFollowRequest: (fromUserId) => {
-    return api.post(`/follows/${fromUserId}/accept`);
-  },
-  rejectFollowRequest: (fromUserId) => {
-    return api.post(`/follows/${fromUserId}/reject`);
-  },
-  sharePost: (postId) => api.post(`/posts/${postId}/share`),
-
-  // Obtener perfil de usuario
-  getUserProfile: (userId) => {
-    return api.get(`/users/${userId}`);
-  },
-
-  // Obtener solicitudes pendientes
-  getPendingFollows: () => api.get("/follows/pending"),
-
-  // Aceptar solicitud de seguimiento
-  acceptFollow: (followId) => api.post(`/follows/${followId}/accept`),
-
-  // Rechazar solicitud de seguimiento
-  rejectFollow: (followId) => api.post(`/follows/${followId}/reject`),
-
-  // Verificar estado de seguimiento
-  checkFollowStatus: async (userId) => {
-    const response = await axios.get(`/api/v1/follows/check/${userId}`);
-    return response.data.data.status;
-  },
-
-  async getFollowData(userId) {
+  // ----------- Follows -----------
+  getFollowers: (userId) => requestWithLimit(() => api.get(`/users/${userId}/followers`)),
+  getFollowing: (userId) => requestWithLimit(() => api.get(`/users/${userId}/following`)),
+  getFollowData: async (userId) => {
     const [followers, following] = await Promise.all([
-      api.get(`/users/${userId}/followers`),
-      api.get(`/users/${userId}/following`),
+      requestWithLimit(() => api.get(`/users/${userId}/followers`)),
+      requestWithLimit(() => api.get(`/users/${userId}/following`)),
     ]);
     return {
       data: {
@@ -294,28 +198,46 @@ export const apiService = {
       },
     };
   },
+  getFollowStatus: (userId) =>
+    requestWithLimit(() => api.get(`/follows/check/${userId}`)),
+  followUser: (userId) => api.post(`/users/${userId}/follow`),
+  unfollowUser: (userId) => api.delete(`/users/${userId}/unfollow`),
+  acceptFollow: (followId) => api.post(`/follows/${followId}/accept`),
+  rejectFollow: (followId) => api.post(`/follows/${followId}/reject`),
 
-  async getFollowStatus(userId) {
-    return api.get(`/follows/check/${userId}`);
+  // ----------- Notifications -----------
+  sendTokenNotification: (currentToken) => {
+    const formattedToken = `"${currentToken}"`;
+    return api
+      .post("/fcm-token", { fcm_token: formattedToken })
+      .then((response) => {
+        console.log("Token FCM enviado al backend con éxito:", response.data);
+        return response.data;
+      })
+      .catch((err) => {
+        console.error("Error al enviar el token al backend:", err.response?.data || err.message);
+        throw err;
+      });
   },
+  getNotifications: () => requestWithLimit(() => api.get("/notifications")),
+  markNotificationAsRead: (notificationId) =>
+    api.patch(`/notifications/${notificationId}/read`),
+  markAllNotificationsAsRead: () => api.patch("/notifications/markAllRead"),
 
-  // Obtener posts de usuarios seguidos (feed)
-  getFollowingPosts: () => api.get("/posts/following"),
-  /**
-   * Enviar acciones agrupadas al endpoint /batch
-   * @param {Object} batchData - Objeto con las acciones agrupadas (likes, comments, notifications, follows)
-   * @returns {Promise} - Respuesta del servidor
-   */
-  async sendBatchRequests(batchData) {
+  // ----------- Batch Requests -----------
+  sendBatchRequests: async (batchData) => {
     try {
-      const response = await api.post('/batch', batchData);
-      console.log('[API] Peticiones en lote enviadas con éxito:', response.data);
+      const response = await api.post("/batch", batchData);
+      console.log("[API] Peticiones en lote enviadas con éxito:", response.data);
       return response.data;
     } catch (error) {
-      console.error('[API] Error al enviar peticiones en lote:', error);
+      console.error("[API] Error al enviar peticiones en lote:", error);
       throw error;
     }
   },
+
+  // ----------- Additional Helpers -----------
+  sharePost: (postId) => api.post(`/posts/${postId}/share`),
 };
 
 export default apiService;

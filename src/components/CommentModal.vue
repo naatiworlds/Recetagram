@@ -54,12 +54,25 @@
       </div>
     </div>
   </div>
+
+  <DeleteConfirmationModal
+    v-if="showDeleteModal"
+    :title="'Eliminar comentario'"
+    :message="'¿Estás seguro que deseas eliminar este comentario?'"
+    :subtext="'Esta acción no se puede deshacer.'"
+    :confirmText="'Eliminar comentario'"
+    @confirm="deleteCommentConfirmed"
+    @cancel="showDeleteModal = false"
+  />
 </template>
 
 <script>
 import { useUserStore } from '../stores/user'
 import { useNotificationStore } from '../stores/notification'
 import { apiService } from '../services/api'
+import { addToBuffer } from '../services/bufferService';
+import DeleteConfirmationModal from './DeleteConfirmationModal.vue'
+
 
 export default {
   name: 'CommentModal',
@@ -86,8 +99,14 @@ export default {
       editingCommentId: null,
       editedContent: '',
       userStore: useUserStore(),
-      notificationStore: useNotificationStore()
+      notificationStore: useNotificationStore(),
+      commentToDelete: null,
+      showDeleteModal: false
     }
+  },
+
+  components: {
+    DeleteConfirmationModal,
   },
 
   watch: {
@@ -123,20 +142,32 @@ export default {
 
     async submitComment() {
       if (!this.userStore.isAuthenticated) {
-        this.notificationStore.show('Debes iniciar sesión para comentar', 'warning')
-        return
+        this.notificationStore.show('Debes iniciar sesión para comentar', 'warning');
+        return;
       }
 
-      try {
-        await apiService.createComment(this.postId, this.newComment)
-        await this.fetchComments()
-        this.newComment = ''
-        this.notificationStore.show('Comentario publicado con éxito', 'success')
-        this.$emit('post-updated', { id: this.postId, comments_count: this.comments.length })
+      // 1. Añade el comentario al buffer reactivo
+      this.userStore.addCommentToBuffer(this.postId, this.newComment);
+      addToBuffer('comments', {
+        post_id: this.postId,
+        content: this.newComment,
+      });
+      // 2. Opcional: añade el comentario a la lista local para reactividad inmediata
+      this.comments.push({
+        id: `temp-${Date.now()}`,
+        content: this.newComment,
+        user: this.userStore.currentUser,
+        created_at: new Date().toISOString()
+      });
+
+      // 3. Limpia el input y notifica
+      this.newComment = '';
+      this.notificationStore.show('Comentario agregado localmente', 'success');
+      this.$emit('post-updated', { id: this.postId, comments_count: this.comments.length })
         this.$emit('comment-added', this.comments.length)
-      } catch (err) {
-        this.notificationStore.show('Error al publicar el comentario', 'error')
-      }
+
+      // 4. (Opcional) Persiste el buffer en localStorage si lo necesitas
+      // persistBuffer(this.userStore.buffer);
     },
 
     handleClose() {
@@ -184,24 +215,29 @@ export default {
       }
     },
 
-    async confirmDelete(comment) {
-      if (confirm('¿Estás seguro de que quieres eliminar este comentario?')) {
-        try {
-          await apiService.deleteComment(this.postId, comment.id)
-          await this.fetchComments()
-          this.notificationStore.show('Comentario eliminado con éxito', 'success')
-          this.$emit('post-updated', { id: this.postId, comments_count: this.comments.length })
-          this.$emit('comment-deleted', this.comments.length)
-        } catch (err) {
-          this.notificationStore.show('Error al eliminar el comentario', 'error')
-        }
+    confirmDelete(comment) {
+      this.commentToDelete = comment;
+      this.showDeleteModal = true;
+    },
+
+    async deleteCommentConfirmed() {
+      if (!this.commentToDelete) return;
+      try {
+        await apiService.deleteComment(this.postId, this.commentToDelete.id);
+        await this.fetchComments();
+        this.notificationStore.show('Comentario eliminado con éxito', 'success');
+        this.$emit('post-updated', { id: this.postId, comments_count: this.comments.length });
+        this.$emit('comment-deleted', this.comments.length);
+      } catch (err) {
+        this.notificationStore.show('Error al eliminar el comentario', 'error');
+      } finally {
+        this.showDeleteModal = false;
+        this.commentToDelete = null;
       }
-    }
+    },
   }
 }
 </script>
-
-
 
 <style scoped>
 .modal-overlay {

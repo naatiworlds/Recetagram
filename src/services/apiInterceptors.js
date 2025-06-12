@@ -1,28 +1,24 @@
-import axios from 'axios'
+import { useNotificationStore } from "@/stores/notification";
+
 
 const setupInterceptors = (api) => {
   // Interceptor para añadir el token a todas las peticiones
-  api.interceptors.request.use(
-    config => {
-      const token = localStorage.getItem('token')
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`
-      }
-      return config
-    },
-    error => {
-      return Promise.reject(error)
-    }
-  )
-
   api.interceptors.response.use(
-    response => {
-      return response
-    },
-    error => {
-      return Promise.reject(error)
+    (response) => response,
+    (error) => {
+      const notificationStore = useNotificationStore();
+
+      if (error.response?.status === 500) {
+        // Mostrar mensaje amigable al usuario
+        notificationStore.show(
+          "El servidor está recibiendo demasiadas peticiones. Por favor, espere unos momentos.",
+          "error"
+        );
+      }
+
+      return Promise.reject(error);
     }
-  )
+  );
 }
 
 export default setupInterceptors 

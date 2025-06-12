@@ -50,12 +50,12 @@
     <div class="actions">
       <button @click="handleLike">
         <i class="fas fa-heart" :class="isLikedByCurrentUser ? 'green-heart' : 'white-heart'"></i>
-        {{ likesCount }}
+        {{ post.likes_count }}
       </button>
 
       <button class="comment-button" @click="handleComments">
         <i class="fas fa-comment"></i>
-        {{ commentsCount }}
+        {{ post.comments_count }}
       </button>
 
       <button class="share-button" @click="handleShare">
@@ -138,18 +138,12 @@ export default {
       return useNotificationStore()
     },
     isLikedByCurrentUser() {
-      // Asegúrate de que existe el usuario y que el post tenga liked_by incluído
+      const userId = this.userStore.user?.id
+      const likedInBackend = this.post.liked_by?.some(l => l.id === userId)
+      const hasPendingLike = this.userStore.buffer.some(a => a.type === 'like' && a.post_id === this.post.id && a.user_id === userId)
+      const hasPendingUnlike = this.userStore.buffer.some(a => a.type === 'unlike' && a.post_id === this.post.id && a.user_id === userId)
 
-      return this.userStore.user &&
-        this.post.liked_by &&
-        this.post.liked_by.some(like => like.id === this.userStore.user.id);
-    },
-    likesCount() {
-      return this.post?.likes_count || 0;
-    },
-    commentsCount() {
-      const count = this.post?.comments_count || 0;
-      return count;
+      return (likedInBackend || hasPendingLike) && !hasPendingUnlike
     },
     postUrl() {
       return `/posts/${this.post.id}`
@@ -210,36 +204,12 @@ export default {
     },
 
     handleLike() {
-      if (!this.userStore.isAuthenticated) {
-        this.notificationStore.show('Debes iniciar sesión para dar like', 'warning');
-        return;
-      }
+      this.userStore.toggleLike(this.post, this.notificationStore)
+      addToBuffer('likes', { post_id: this.post.id }, this.notificationStore, {
+        uniqueKey: ['post_id'],
+        removeIfExists: true
+      });
 
-      const userId = this.userStore.user.id;
-      const likedIndex = this.post.liked_by.findIndex(like => like.id === userId);
-
-      if (likedIndex !== -1) {
-        // Quitar like
-        this.post.liked_by.splice(likedIndex, 1);
-        this.post.likes_count--;
-      } else {
-        // Dar like
-        this.post.liked_by.push({ id: userId });
-        this.post.likes_count++;
-      }
-
-      // Agregar el like al buffer
-      addToBuffer('likes', { post_id: this.post.id });
-
-      // Simular la respuesta del backend para mantener el comportamiento actual
-      setTimeout(() => {
-        // Actualizar el estado del like con la simulación de éxito
-        // El corazón cambiará de color porque isLikedByCurrentUser ahora sí reacciona
-        this.notificationStore.show(
-          likedIndex === -1 ? 'Like agregado correctamente' : 'Like eliminado correctamente',
-          'success'
-        );
-      }, 500); // Simulación de tiempo de respuesta del backend
     },
 
     handleComments() {
