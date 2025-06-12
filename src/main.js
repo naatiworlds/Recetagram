@@ -51,4 +51,9 @@ app.config.errorHandler = (error, vm, info) => {
   notificationStore.show('Ha ocurrido un error inesperado', 'error');
 };
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 5-procesamiento-de-datos-por-lotes
 export default app;

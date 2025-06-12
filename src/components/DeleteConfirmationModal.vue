@@ -2,7 +2,7 @@
   <div class="modal-overlay" @click.self="$emit('cancel')">
     <div class="modal-content">
       <header class="modal-header">
-        <h3>Eliminar Cuenta</h3>
+        <h3>{{ title }}</h3>
         <button class="close-button" @click="$emit('cancel')">
           <i class="fas fa-times"></i>
         </button>
@@ -10,24 +10,18 @@
 
       <div class="modal-body">
         <i class="fas fa-exclamation-triangle warning-icon"></i>
-        <p class="warning-text">¿Estás seguro que deseas eliminar tu cuenta?</p>
-        <p class="warning-subtext">Esta acción no se puede deshacer y perderás todos tus datos.</p>
+        <p class="warning-text">{{ message }}</p>
+        <p class="warning-subtext" v-if="subtext">{{ subtext }}</p>
       </div>
 
       <footer class="modal-footer">
-        <button 
-          class="cancel-button" 
-          @click="$emit('cancel')"
-        >
+        <button class="cancel-button" @click="$emit('cancel')">
           <i class="fas fa-times"></i>
           Cancelar
         </button>
-        <button 
-          class="confirm-button" 
-          @click="$emit('confirm')"
-        >
+        <button class="confirm-button" @click="$emit('confirm')">
           <i class="fas fa-trash-alt"></i>
-          Eliminar Cuenta
+          {{ confirmText }}
         </button>
       </footer>
     </div>
@@ -37,8 +31,25 @@
 <script>
 export default {
   name: 'DeleteConfirmationModal',
-  
-  emits: ['confirm', 'cancel']
+  emits: ['confirm', 'cancel'],
+  props: {
+    title: {
+      type: String,
+      default: 'Eliminar'
+    },
+    message: {
+      type: String,
+      default: '¿Estás seguro que deseas eliminar esto?'
+    },
+    subtext: {
+      type: String,
+      default: ''
+    },
+    confirmText: {
+      type: String,
+      default: 'Eliminar'
+    }
+  }
 }
 </script>
 
@@ -178,4 +189,4 @@ export default {
     justify-content: center;
   }
 }
-</style> 
+</style>

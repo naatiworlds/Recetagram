@@ -50,12 +50,12 @@
     <div class="actions">
       <button @click="handleLike">
         <i class="fas fa-heart" :class="isLikedByCurrentUser ? 'green-heart' : 'white-heart'"></i>
-        {{ likesCount }}
+        {{ post.likes_count }}
       </button>
 
       <button class="comment-button" @click="handleComments">
         <i class="fas fa-comment"></i>
-        {{ commentsCount }}
+        {{ post.comments_count }}
       </button>
 
       <button class="share-button" @click="handleShare">
@@ -96,6 +96,7 @@ import { useNotificationStore } from '../stores/notification'
 import { useUserNotificationStore } from '../stores/interactionNotifications'
 import { STORAGE_URL } from '../utils/globalConstants'
 import router from '@/router'
+import { addToBuffer } from '../services/bufferService';
 
 export default {
   name: 'PostCard',
@@ -137,17 +138,12 @@ export default {
       return useNotificationStore()
     },
     isLikedByCurrentUser() {
-      // Asegúrate de que existe el usuario y que el post tenga liked_by incluído
-      return this.userStore.user &&
-             this.post.liked_by &&
-             this.post.liked_by.some(like => like.id === this.userStore.user.id);
-    },
-    likesCount() {
-      return this.post?.likes_count || 0;
-    },
-    commentsCount() {
-      const count = this.post?.comments_count || 0;
-      return count;
+      const userId = this.userStore.user?.id
+      const likedInBackend = this.post.liked_by?.some(l => l.id === userId)
+      const hasPendingLike = this.userStore.buffer.some(a => a.type === 'like' && a.post_id === this.post.id && a.user_id === userId)
+      const hasPendingUnlike = this.userStore.buffer.some(a => a.type === 'unlike' && a.post_id === this.post.id && a.user_id === userId)
+
+      return (likedInBackend || hasPendingLike) && !hasPendingUnlike
     },
     postUrl() {
       return `/posts/${this.post.id}`
@@ -191,8 +187,6 @@ export default {
     }
   },
 
-  
-
   methods: {
     getImageUrl(image) {
       if (!image) return null;
@@ -210,32 +204,12 @@ export default {
     },
 
     handleLike() {
-      if (!this.userStore.isAuthenticated) {
-        this.notificationStore.show('Debes iniciar sesión para dar like', 'warning');
-        return;
-      }
-      apiService.toggleLike(this.post.id)
-        .then(response => {
-          const wasLiked = this.isLiked;
-          this.isLiked = response.data.data.liked;
-          this.$emit('post-updated', {
-            ...this.post,
-            likes_count: response.data.data.likes_count
-          });
-          this.notificationStore.show(
-            this.isLiked ? 'Like agregado correctamente' : 'Like eliminado correctamente',
-            'success'
-          );
-          if (!wasLiked && this.isLiked) {
-            this.userNotifications.fetchNotifications();
-          }
-        })
-        .catch(error => {
-          this.notificationStore.show(
-            error.response?.data?.message || 'Error al procesar el like',
-            'error'
-          );
-        });
+      this.userStore.toggleLike(this.post, this.notificationStore)
+      addToBuffer('likes', { post_id: this.post.id }, this.notificationStore, {
+        uniqueKey: ['post_id'],
+        removeIfExists: true
+      });
+
     },
 
     handleComments() {
@@ -599,7 +573,7 @@ export default {
 
 /* Media queries para ajustar la imagen en pantallas más pequeñas */
 @media (max-width: 768px) {
-  
+
 
   .post-title {
     font-size: 1.3em;

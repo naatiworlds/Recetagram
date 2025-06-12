@@ -221,8 +221,6 @@ export default {
                 if (response?.data?.status === 'success') {
                     this.posts = response.data.data;
                     // Debug: Revisa los valores de likes_count y comments_count:
-                    this.posts.forEach(post => {
-                    });
                 }
             } catch (err) {
                 this.error = err.message || 'Error al cargar los posts';
@@ -372,6 +370,7 @@ export default {
     scrollbar-width: none;
     /* Ajustado para considerar el header y los filtros */
 }
+
 
 #main-scroll-container {
     position: relative;
