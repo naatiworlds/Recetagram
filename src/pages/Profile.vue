@@ -192,15 +192,12 @@ export default {
     // },
     async handleUnfollow(userId) {
       try {
-        this.loading = true;
         const response = await apiService.unfollowUser(userId);
         if (response?.data?.status === "success") {
           this.loadUserProfile();
         }
       } catch (error) {
-      } finally {
-        this.loading = false;
-      }
+      } 
     },
 
     startEditing() {
