@@ -16,8 +16,7 @@
             @update-name="handleUpdateName" @cancel-edit="handleCancel" @start-editing="startEditing" />
           <ProfileStats :followers-count="profileData.followersCount" :following-count="profileData.followingCount" />
           <div class="user-info">
-            <ProfilePrivacy v-if="isOwnProfile" :user-id="profileData.user.id" :is-public="profileData.user.is_public"
-              :loading="loading" :is-own-profile="isOwnProfile" @update="handlePrivacyUpdate" />
+
             <ProfileActions :is-own-profile="isOwnProfile" :is-admin="userStore.user?.role === 'admin'"
               :key="`action-${profileData.isFollowing}`" :is-following="profileData.isFollowing"
               :is-pending-follow="profileData.isPendingFollow" :loading="loading" :user-id="profileData.user.id"
@@ -25,24 +24,10 @@
           </div>
         </div>
 
-        <div v-if="isOwnProfile" class="profile-actions">
-          <template v-if="isEditing">
-            <!-- Aquí el formulario de edición -->
-          </template>
-          <template v-else>
-            <button class="edit-button" @click="startEditing">
-              <i class="fas fa-edit"></i> Editar
-            </button>
-            <button class="delete-button" @click="confirmDelete">
-              <i class="fas fa-trash-alt"></i> Eliminar
-            </button>
-          </template>
-        </div>
+
       </main>
 
-      <DeleteConfirmationModal v-if="showDeleteModal" title="Eliminar Cuenta"
-        message="¿Estás seguro que deseas eliminar esta cuenta?" subtext="Esta acción no se puede deshacer."
-        confirmText="Eliminar cuenta" @confirm="handleDelete" @cancel="showDeleteModal = false" />
+
     </section>
 
     <!-- Sección de posts -->
@@ -69,11 +54,9 @@ import { useUserStore } from '../stores/user'
 import { useNotificationStore } from '../stores/notification'
 import { apiService } from '../services/api'
 import Posts from '../components/Posts.vue'
-import DeleteConfirmationModal from '../components/DeleteConfirmationModal.vue'
 import ProfileHeader from '../components/ProfileHeader.vue'
 import ProfileStats from '../components/ProfileStats.vue'
 import ProfileActions from '../components/ProfileActions.vue'
-import ProfilePrivacy from '../components/ProfilePrivacy.vue'
 import Crear from '../components/Crear.vue'
 import { addToBuffer, flushBufferAndReloadProfile } from '@/services/bufferService'
 
@@ -84,9 +67,7 @@ export default {
     ProfileHeader,
     ProfileStats,
     ProfileActions,
-    ProfilePrivacy,
     Posts,
-    DeleteConfirmationModal,
     Crear
   },
 
@@ -146,7 +127,7 @@ export default {
 
   methods: {
     async loadUserProfile() {
-      if( this.loading) return; // Evitamos múltiples cargas simultáneas
+      if (this.loading) return; // Evitamos múltiples cargas simultáneas
       this.loading = true;
       this.error = null;
       const routeId = this.$route.params.id;
@@ -197,31 +178,11 @@ export default {
           this.loadUserProfile();
         }
       } catch (error) {
-      } 
+      }
     },
 
     startEditing() {
       this.isEditing = true;
-    },
-
-    async handleUpdateName(newName) {
-      try {
-        this.loading = true;
-        const response = await apiService.updateUser(this.userId, {
-          name: newName,
-          is_private: this.profileData.user?.is_private
-        });
-        if (response.data?.data) {
-          // Actualizamos profileData.user para reflejar el nuevo nombre.
-          this.profileData.user = response.data.data;
-          this.isEditing = false;
-          this.notificationStore.show('Nombre actualizado correctamente', 'success');
-        }
-      } catch (error) {
-        this.notificationStore.show('Error al actualizar el nombre', 'error');
-      } finally {
-        this.loading = false;
-      }
     },
 
     handleCancel() {
@@ -229,44 +190,8 @@ export default {
       this.loadUserProfile();
     },
 
-    async handlePrivacyUpdate(newState) {
-      if (!this.profileData.user || this.loading) return;
-      try {
-        this.loading = true;
-        const updatedUser = await apiService.updateUser(this.profileData.user.id, {
-          is_public: newState
-        });
-        if (updatedUser.data) {
-          // Actualizamos el valor en profileData.user.
-          this.profileData.user.is_public = newState;
-          const statusMsg = newState ? 'Tu perfil ahora es público' : 'Tu perfil ahora es privado';
-          this.notificationStore.show(statusMsg, 'success');
-        }
-      } catch (error) {
-        this.notificationStore.show('Error al actualizar la privacidad', 'error');
-      } finally {
-        this.loading = false;
-      }
-    },
-
     goToAdminPanel() {
       this.$router.push('/admin');
-    },
-
-    confirmDelete() {
-      this.showDeleteModal = true;
-    },
-
-    async handleDelete() {
-      try {
-        await apiService.deleteUser(this.userStore.user.id);
-        await this.userStore.logout();
-        this.$router.push('/login');
-        this.notificationStore.show('Cuenta eliminada con éxito', 'success');
-      } catch (error) {
-        this.notificationStore.show('Error al eliminar la cuenta: ' + error.message, 'error');
-      }
-      this.showDeleteModal = false;
     },
 
     handleEditPost(post) {
@@ -289,8 +214,8 @@ export default {
       }
     }
   },
-  
-  
+
+
 };
 </script>
 

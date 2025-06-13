@@ -56,7 +56,7 @@
                 </li>
 
                 <li v-if="isAuthenticated" class="nav-normal">
-                    <a href="/settings" class="nav-normal">
+                    <a href="/settings/account" class="nav-normal">
                         <i class="fa-solid fa-cog"></i> Configuración
                     </a>
                 </li>
