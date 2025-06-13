@@ -59,14 +59,9 @@
             <div class="ingredients-container">
 
               <div class="ingredients-list">
-                <IngredientInput v-for="(ing, index) in post.ingredients" :key="index" :ingredient="ing" :errors="{
-                  name: errors[`ingredient_name_${index}`],
-                  quantity: errors[`ingredient_quantity_${index}`],
-                  unit: errors[`ingredient_unit_${index}`]
-                }" :canDelete="post.ingredients.length > 1" @update:ingredient="val => updateIngredient(index, val)"
-                  @validate-name="validateIngredientName(index)" @validate-quantity="validateIngredientQuantity(index)"
-                  @validate-unit="validateIngredientUnit(index)" @remove="removeIngredient(index)"
-                  @validate-ingredients="handleIngredientValidation" @update-ingredients="updateIngredientList" />
+                <IngredientInput v-model:ingredients="post.ingredients"
+                  @validate-ingredients="handleIngredientValidation" />
+
               </div>
 
               <span v-if="errors.ingredients" class="error">
@@ -106,7 +101,7 @@ export default {
   },
   props: {
     postToEdit: {
-      type: Object,
+      type: Array,
       default: null
     }
   },
@@ -119,7 +114,7 @@ export default {
         description: '',
         image: null,
         is_private: false,
-        ingredients: [{ name: '', quantity: '', unit: '' }]
+        ingredients: []
       },
       imagePreviewUrl: '',
       loading: false,
@@ -228,22 +223,19 @@ export default {
     },
 
     parseIngredients(raw) {
-      if (!raw) return [{ name: '', quantity: '', unit: '' }];
+      if (!raw || !Array.isArray(raw)) return [{ name: '', quantity: '', unit: '' }];
 
-      try {
-        const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      return raw.map((ing) => {
+        const quantity = ing.quantity ?? '';
+        const parts = quantity.split(' ');
+        const [value, ...unitParts] = parts;
 
-        return parsed.map((ing) => {
-          const [quantityValue, ...unitParts] = (ing.quantity || '').split(' ');
-          return {
-            name: ing.name || '',
-            quantity: quantityValue || '',
-            unit: unitParts.join(' ') || ''
-          };
-        });
-      } catch {
-        return [{ name: '', quantity: '', unit: '' }];
-      }
+        return {
+          name: ing.name || '',
+          quantity: value || '',
+          unit: unitParts.join(' ') || ''
+        };
+      });
     },
 
     validateTitle() {
@@ -352,11 +344,14 @@ export default {
 
       console.log('Ingredientes a enviar:', ingredientsPayload);
 
+
+
       const formData = new FormData();
       formData.append('title', this.post.title);
       formData.append('description', this.post.description);
       formData.append('is_private', this.post.is_private);
       formData.append('ingredients', JSON.stringify(ingredientsPayload));
+
 
       // Solo adjuntar imagen si es un archivo nuevo (File), no URL
       if (this.post.image && this.post.image instanceof File) {

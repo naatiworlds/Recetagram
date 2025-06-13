@@ -23,7 +23,7 @@
 
     <h2 class="post-title">{{ post.title }}</h2>
     <p class="post-description">{{ displayedDescription }}</p>
-    <div v-if="post.description && post.description.length > 150" class="see-more" @click="toggleDescription">
+    <div v-if="post.description && post.description.length > 100" class="see-more" @click="toggleDescription">
       <span>
         {{ showFullDescription ? 'Ver menos' : 'Ver más' }}
         <i class="fas" :class="showFullDescription ? 'fa-arrow-up' : 'fa-arrow-down'"></i>

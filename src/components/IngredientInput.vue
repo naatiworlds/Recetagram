@@ -1,131 +1,124 @@
 <template>
     <section>
-        <main>
-            <!-- Inputs para agregar ingredientes -->
-            <div class="inputs-container">
-                <div class="input-line">
-                    <label>Nombre:</label>
-                    <input type="text" :value="newIngredient.name" @input="updateField('name', $event.target.value)"
-                        placeholder="Ej: Harina" />
-                </div>
-
-                <div class="input-row">
-                    <div class="input-group small">
-                        <label>Cantidad:</label>
-                        <input type="number" min="0" :value="newIngredient.quantity"
-                            @input="updateField('quantity', $event.target.value)" placeholder="Ej: 2" />
-                    </div>
-
-                    <div class="input-group small">
-                        <label>Unidad:</label>
-                        <select :value="newIngredient.unit" @change="updateField('unit', $event.target.value)"
-                            class="unit-select">
-                            <option disabled value="">Selecciona</option>
-                            <option value="taza">taza</option>
-                            <option value="cucharadita">cucharadita</option>
-                            <option value="gramos">gramos</option>
-                            <option value="mililitros">mililitros</option>
-                        </select>
-                    </div>
-                    <button type="button" class="add-button" @click="addIngredient">+</button>
-                </div>
+      <main>
+        <!-- Inputs para agregar ingredientes -->
+        <div class="inputs-container">
+          <div class="input-line">
+            <label>Nombre:</label>
+            <input type="text" v-model="newIngredient.name" placeholder="Ej: Harina" />
+          </div>
+  
+          <div class="input-row">
+            <div class="input-group small">
+              <label>Cantidad:</label>
+              <input type="number" min="0" v-model="newIngredient.quantity" placeholder="Ej: 2" />
             </div>
-
-            <!-- Lista de ingredientes con scroll -->
-            <div class="ingredients-list">
-                <h4>📝 Ingredientes añadidos:</h4>
-                <div class="scrollable-list">
-                    <ul>
-                        <li v-for="(ing, index) in ingredients" :key="index">
-                            • {{ ing.quantity }} {{ ing.unit }} de {{ ing.name }}
-                            <div class="actions">
-                                <button class="edit-button" @click="editIngredient(index)">✏️</button>
-                                <button class="remove-button" @click="removeIngredient(index)">🗑️</button>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
+  
+            <div class="input-group small">
+              <label>Unidad:</label>
+              <select v-model="newIngredient.unit" class="unit-select">
+                <option disabled value="">Selecciona</option>
+                <option value="taza">taza</option>
+                <option value="cucharadita">cucharadita</option>
+                <option value="gramos">gramos</option>
+                <option value="mililitros">mililitros</option>
+              </select>
             </div>
-        </main>
+            <button type="button" class="add-button" @click="addIngredient">+</button>
+          </div>
+        </div>
+  
+        <!-- Lista de ingredientes con scroll -->
+        <div class="ingredients-list">
+          <h4>📝 Ingredientes añadidos:</h4>
+          <div class="scrollable-list">
+            <ul>
+              <li v-for="(ing, index) in localIngredients" :key="index">
+                • {{ ing.quantity }} {{ ing.unit }} de {{ ing.name }}
+                <div class="actions">
+                  <button class="edit-button" @click="editIngredient(index)">✏️</button>
+                  <button class="remove-button" @click="removeIngredient(index)">🗑️</button>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </main>
     </section>
-</template>
-
-<script>
-export default {
+  </template>
+  
+  <script>
+  export default {
     name: "IngredientInput",
     props: {
-        ingredient: {
-            type: Object,
-            required: true,
-        }
+      ingredients: {
+        type: Array,
+        required: true
+      }
     },
     data() {
-        return {
-            newIngredient: { ...this.ingredient },
-            ingredients: [],
-            editingIndex: null, // Índice del ingrediente que se está editando
-        };
-    },
-    methods: {
-        addIngredient() {
-            if (this.editingIndex !== null) {
-                // Guardar cambios en el ingrediente editado
-                this.ingredients[this.editingIndex] = { ...this.newIngredient };
-                this.editingIndex = null; // Salir del modo de edición
-            } else {
-                // Agregar un nuevo ingrediente
-                if (
-                    this.newIngredient.name &&
-                    this.newIngredient.quantity &&
-                    this.newIngredient.unit
-                ) {
-                    this.ingredients.push({ ...this.newIngredient });
-                }
-            }
-            // Limpiar los inputs
-            this.newIngredient = { name: "", quantity: "", unit: "" };
-            this.validateIngredients(); // Validar la lista después de agregar
-        },
-        editIngredient(index) {
-            // Cargar los datos del ingrediente en los inputs
-            const ingredient = this.ingredients[index];
-            this.newIngredient = { ...ingredient };
-            this.editingIndex = index; // Establecer el índice del ingrediente que se está editando
-        },
-        removeIngredient(index) {
-            this.ingredients.splice(index, 1);
-            // Si se está editando el ingrediente eliminado, salir del modo de edición
-            if (this.editingIndex === index) {
-                this.editingIndex = null;
-                this.newIngredient = { name: "", quantity: "", unit: "" };
-            }
-            this.validateIngredients(); // Validar la lista después de eliminar
-        },
-        validateIngredients() {
-            // Emitir un evento al componente padre indicando si la lista está vacía
-            const isValid = this.ingredients.length > 0;
-            this.$emit("validate-ingredients", isValid);
-        },
-        updateField(field, value) {
-            this.newIngredient[field] = value;
-            this.$emit("update:ingredient", { ...this.newIngredient });
-        },
-    },
-    mounted() {
-        // Validar la lista al cargar el componente
-        this.validateIngredients();
+      return {
+        localIngredients: [],
+        newIngredient: { name: "", quantity: "", unit: "" },
+        editingIndex: null
+      };
     },
     watch: {
-        ingredient: {
-            handler(newVal) {
-                this.newIngredient = { ...newVal };
-            },
-            deep: true,
-            immediate: true
+      ingredients: {
+        immediate: true,
+        deep: true,
+        handler(newVal) {
+          this.localIngredients = [...newVal];
+          this.validateIngredients();
         }
+      }
     },
-};
-</script>
+    methods: {
+      addIngredient() {
+        const trimmed = this.newIngredient.name?.trim();
+        if (!trimmed || !this.newIngredient.quantity || !this.newIngredient.unit) return;
+  
+        const newIng = {
+          name: trimmed,
+          quantity: this.newIngredient.quantity,
+          unit: this.newIngredient.unit
+        };
+  
+        if (this.editingIndex !== null) {
+          this.localIngredients.splice(this.editingIndex, 1, newIng);
+          this.editingIndex = null;
+        } else {
+          this.localIngredients.push(newIng);
+        }
+  
+        this.newIngredient = { name: "", quantity: "", unit: "" };
+        this.emitUpdate();
+      },
+      removeIngredient(index) {
+        this.localIngredients.splice(index, 1);
+        if (this.editingIndex === index) {
+          this.editingIndex = null;
+          this.newIngredient = { name: "", quantity: "", unit: "" };
+        }
+        this.emitUpdate();
+      },
+      editIngredient(index) {
+        const ingredient = this.localIngredients[index];
+        this.newIngredient = { ...ingredient };
+        this.editingIndex = index;
+      },
+      emitUpdate() {
+        this.$emit("update:ingredients", [...this.localIngredients]);
+        this.validateIngredients();
+      },
+      validateIngredients() {
+        const isValid = this.localIngredients.length > 0;
+        this.$emit("validate-ingredients", isValid);
+      }
+    }
+  };
+  </script>
+  
 
 <style scoped>
 section {
@@ -217,7 +210,7 @@ main {
 }
 
 .scrollable-list {
-    max-height: 150px;
+    max-height: 100px;
     /* Altura máxima de la lista */
     overflow-y: auto;
     /* Habilitar scroll vertical */
