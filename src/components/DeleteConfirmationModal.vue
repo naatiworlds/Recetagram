@@ -69,11 +69,16 @@ export default {
 
 .modal-content {
   background-color: var(--primary-color);
-  border-radius: 8px;
-  width: 90%;
-  max-width: 500px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  animation: modal-appear 0.3s ease-out;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 2px 8px #0003;
+    animation: modal-appear-6734985e .3s ease-out;
+    z-index: 1000;
 }
 
 .modal-header {
