@@ -97,7 +97,9 @@ export default {
         isOwnProfile: {
             type: Boolean,
             default: false
-        }
+        },
+        search: String,
+        isExplorar: Boolean
     },
 
     data() {
@@ -126,50 +128,31 @@ export default {
         filteredPosts() {
             let posts = this.posts;
 
-            // Aplicar el filtro por término de búsqueda
             if (this.filters.searchTerm) {
-                posts = posts.filter(post =>
-                    post.title.toLowerCase().includes(this.filters.searchTerm.toLowerCase()) ||
-                    post.description.toLowerCase().includes(this.filters.searchTerm.toLowerCase())
-                );
-            }
-
-            // Filtrar por autor
-            if (this.filters.authorFilter) {
-                posts = posts.filter(post =>
-                    post.user?.name.toLowerCase().includes(this.filters.authorFilter.toLowerCase())
-                );
-            }
-
-            // Filtrar por ingredientes (uno o varios separados por comas)
-            if (this.filters.ingredientFilter) {
-                const searchIngredients = this.filters.ingredientFilter
-                    .split(',')
-                    .map(s => s.trim().toLowerCase())
-                    .filter(s => s); // elimina términos vacíos
+                const searchTerm = this.filters.searchTerm.toLowerCase();
 
                 posts = posts.filter(post => {
+                    // Preparar ingredientes (parsear si es string)
                     let ingredientsArray = [];
                     try {
-                        // Si ingredients es un string JSON, se parsea. Si ya es un array se usa tal cual.
                         ingredientsArray = typeof post.ingredients === 'string'
                             ? JSON.parse(post.ingredients)
                             : post.ingredients;
-                    } catch (error) {
-                        return false;
+                        if (!Array.isArray(ingredientsArray)) ingredientsArray = [];
+                    } catch (e) {
+                        ingredientsArray = [];
                     }
-                    // Se requiere que TODOS los términos de búsqueda estén presentes en al menos un ingrediente.
-                    return searchIngredients.some(searchTerm =>
+
+                    // Buscar en: título, descripción, autor y nombre de ingredientes
+                    return (
+                        post.title?.toLowerCase().includes(searchTerm) ||
+                        post.description?.toLowerCase().includes(searchTerm) ||
+                        post.user?.name?.toLowerCase().includes(searchTerm) ||
                         ingredientsArray.some(ingredient =>
-                            ingredient.name.toLowerCase().includes(searchTerm)
+                            ingredient.name?.toLowerCase().includes(searchTerm)
                         )
                     );
                 });
-            }
-
-            // Filtrar por fecha
-            if (this.filters.dateFilter) {
-                posts = posts.filter(post => this.isWithinDateRange(post.created_at, this.filters.dateFilter));
             }
 
             return posts;
@@ -577,10 +560,11 @@ article {
         min-width: calc(50% - 10px);
         /* Mostrar dos publicaciones por fila */
     }
-    
 
-    
+
+
 }
+
 @media (max-width: 900px) {
 
     article {
@@ -588,7 +572,7 @@ article {
         /* Mostrar dos publicaciones por fila */
     }
 
-    
+
 }
 
 @media (max-width: 768px) {

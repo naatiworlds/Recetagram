@@ -4,12 +4,6 @@
       <label for="searchTerm">Buscar Término: </label>
       <input v-model="filters.searchTerm" id="searchTerm" placeholder="Ej: para toda la familia" />
 
-      <label for="authorFilter">Filtrar por autor: </label>
-      <input v-model="filters.authorFilter" id="authorFilter" placeholder="Ej: Admin" />
-
-      <label for="ingredientFilter">Filtrar por ingrediente: </label>
-      <input v-model="filters.ingredientFilter" id="ingredientFilter" placeholder="Ej: frijol, canela" />
-
       <button @click="resetFilters">Resetear filtros</button>
     </div>
     <div class="posts-wrapper">
@@ -35,8 +29,6 @@ export default {
     getDefaultFilters() {
       return {
         searchTerm: '',
-        authorFilter: '',
-        ingredientFilter: ''
       };
     },
     resetFilters() {
