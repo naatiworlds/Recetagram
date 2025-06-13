@@ -3,17 +3,22 @@
         <!-- Edición de Usuario -->
         <div class="user-edit">
             <h3>Editar Usuario</h3>
-            <form @submit.prevent="updateUser">
-                <div class="title-description">
-                    <h4>Cambiar nombre</h4>
-                    <p>Esta acción cambiará el nombre que los usuarios verán al buscarte</p>
-                </div>
-                <li v-if="isAuthenticated">
-                    <a href="#"  class="nav-normal">
-                        <i class="fa-solid fa-edit"></i> Editar usuario
-                    </a>
-                </li>
-            </form>
+            <div class="title-description">
+                <h4>Cambiar nombre</h4>
+                <p>Esta acción cambiará el nombre que los usuarios verán al buscarte</p>
+            </div>
+            <li v-if="isAuthenticated">
+                <a href="#" class="nav-normal" @click.prevent="showNameModal = true">
+                    <i class="fa-solid fa-edit"></i> Editar usuario
+                </a>
+            </li>
+            <!-- Modal para cambiar nombre -->
+
+            <ChangeNameModal v-if="showNameModal" v-model="user.name" @confirm="updateUser"
+                @cancel="showNameModal = false" />
+
+            <!-- Cierre de sesión -->
+
             <div class="close-session">
                 <div class="title-description">
                     <h4>Cerrar sesión</h4>
@@ -30,43 +35,31 @@
 </template>
 
 <script>
-import setupTheme, { applyTheme } from "../../utils/changeLightDark.js";
-import { changeTheme } from '../../utils/changeTheme.js';
 import { useUserStore } from '../../stores/user.js';
 import { useNotificationStore } from '../../stores/notification.js';
 import { useRouter } from 'vue-router';
+import { apiService } from '@/services/api';
+import ChangeNameModal from '@/components/ChangeNameModal.vue';
+
 export default {
     name: 'Account',
+    components: { ChangeNameModal },
     data() {
         return {
-            isMenuVisible: false,
-            activeTab: 'user', // Tab activa
-            tabs: [
-                { name: 'user', label: 'Cuenta', icon: 'fa-lg fa-solid fa-user', nav: "/settings/account" },
-                { name: 'preferences', label: 'Preferencias del Sistema', icon: 'fa-lg fa-solid fa-sliders', nav: "/settings/preferences" },
-                { name: 'security', label: 'Seguridad y Privacidad', icon: 'fa-lg fa-solid fa-lock', nav: "/settings/security" }
-            ],
             user: {
-                name: '',
-                isPrivate: false
+                name: ''
             },
-            isDarkMode: false, // Estado inicial del tema
-            themes: ['Aqua', 'Pink', 'Default'],
-            blockedUsers: [],
-            password: {
-                current: '',
-                new: ''
-            },
+            showNameModal: false,
             userStore: null,
             notificationStore: null,
             router: null
         };
-
     },
     created() {
         this.userStore = useUserStore();
         this.notificationStore = useNotificationStore();
         this.router = useRouter();
+        this.user.name = this.userStore.user?.name || '';
     },
     computed: {
         isAuthenticated() {
@@ -74,34 +67,27 @@ export default {
         }
     },
     methods: {
-
-        closeModal() {
-            this.$emit('close');
-        },
-        toggleTheme(event) {
-            const selectedTheme = event.target.checked ? 'dark' : 'light';
-            this.isDarkMode = event.target.checked;
-            applyTheme(selectedTheme);
-            console.log(`Tema cambiado a: ${selectedTheme}`);
-        },
-        setTheme(event) {
-            const selectedTheme = event.target.value;
-            changeTheme(selectedTheme);
+        async updateUser() {
+            try {
+                const response = await apiService.updateUser(this.userStore.user.id, {
+                    name: this.user.name
+                });
+                if (response.data?.data) {
+                    this.userStore.setUser(response.data.data);
+                    this.notificationStore.show('Nombre actualizado correctamente', 'success');
+                    this.showNameModal = false;
+                }
+            } catch (error) {
+                this.notificationStore.show('Error al actualizar el nombre', 'error');
+            }
         },
         handleLogout() {
             this.userStore.logout();
             this.notificationStore.show('Has cerrado sesión correctamente', 'success', 3000);
             this.router.push('/login');
-            this.closeModal();
-        },
-    },
-    mounted() {
-        // Sincronizar el estado inicial con el tema actual
-        const savedTheme = localStorage.getItem('selectedTheme') || 'light';
-        this.isDarkMode = savedTheme === 'dark';
-        applyTheme(savedTheme);
+        }
     }
-}
+};
 </script>
 
 <style scoped>
@@ -197,21 +183,50 @@ export default {
 .tab-content>div {
     width: 100%;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     flex-wrap: wrap;
     align-content: center;
     align-items: center;
-    justify-content: space-around;
+    justify-content: space-between;
     gap: 4em;
 }
 
-form {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1em;
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 300px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+}
+
+.btn.cancel {
+    background: #6c757d;
 }
 
 .close-session {
