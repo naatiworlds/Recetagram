@@ -107,7 +107,7 @@ export default {
                     email: this.email,
                     password: this.password
                 })
-                this.$router.push('/home')
+                this.$router.push('/login')
                 notificationStore.show('Registro exitoso', 'success')
             } catch (error) {
                 notificationStore.show(
