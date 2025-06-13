@@ -134,18 +134,15 @@ export default {
       immediate: true,
       handler(newPost) {
         if (newPost) {
-          // Título, descripción y privacidad
           this.post.title = newPost.title || '';
           this.post.description = newPost.description || '';
           this.post.is_private = newPost.is_private || false;
 
-          // Ingredientes (parsed)
           this.post.ingredients = this.parseIngredients(newPost.ingredients);
 
-          // Imagen
           if (newPost.imagen) {
-            this.imagePreviewUrl = newPost.imagen;
-            this.post.image = newPost.imagen;
+            this.imagePreviewUrl = newPost.imagen; // muestra la URL
+            this.post.image = null; // no pongas el URL aquí
           } else {
             this.imagePreviewUrl = '';
             this.post.image = null;
@@ -232,14 +229,16 @@ export default {
 
     parseIngredients(raw) {
       if (!raw) return [{ name: '', quantity: '', unit: '' }];
+
       try {
-        const parsed = JSON.parse(raw);
+        const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+
         return parsed.map((ing) => {
-          const [qty, unit, ...rest] = ing.quantity.split(' ');
+          const [quantityValue, ...unitParts] = (ing.quantity || '').split(' ');
           return {
-            name: ing.name,
-            quantity: qty || '',
-            unit: unit || ''
+            name: ing.name || '',
+            quantity: quantityValue || '',
+            unit: unitParts.join(' ') || ''
           };
         });
       } catch {
@@ -335,6 +334,7 @@ export default {
     },
 
     async handleSubmit() {
+      if (this.loading) return;
       if (!this.validateForm()) {
         this.notificationStore.show(
           "Por favor, completa todos los campos antes de enviar.",
@@ -344,56 +344,92 @@ export default {
       }
 
       this.loading = true;
+
       const ingredientsPayload = this.post.ingredients.map((ing) => ({
         name: ing.name,
         quantity: `${ing.quantity} ${ing.unit}`.trim()
       }));
+
+      console.log('Ingredientes a enviar:', ingredientsPayload);
 
       const formData = new FormData();
       formData.append('title', this.post.title);
       formData.append('description', this.post.description);
       formData.append('is_private', this.post.is_private);
       formData.append('ingredients', JSON.stringify(ingredientsPayload));
-      if (this.post.image) {
+
+      // Solo adjuntar imagen si es un archivo nuevo (File), no URL
+      if (this.post.image && this.post.image instanceof File) {
         formData.append('imagen', this.post.image);
       }
 
+      // Añadimos el método override si estamos editando
+      if (this.postToEdit) {
+        formData.append('_method', 'PUT');
+      }
+
       try {
+        console.log(this.postToEdit);
         const response = this.postToEdit
           ? await apiService.updatePost(this.postToEdit.id, formData)
           : await apiService.createPost(formData);
 
         if (response.data.status === 'success') {
-          const msg = this.postToEdit
-            ? 'Post actualizado correctamente'
-            : 'Post creado correctamente';
-          this.notificationStore.show(msg, 'success');
+          const updatedPost = response.data.data;
+
+          // Actualizamos localmente el post con la respuesta del backend
+          this.post.title = updatedPost.title || '';
+          this.post.description = updatedPost.description || '';
+          this.post.is_private = updatedPost.is_private || false;
+          this.post.ingredients = this.parseIngredients(updatedPost.ingredients);
+          this.post.image = null; // No hay archivo nuevo seleccionado
+          this.imagePreviewUrl = updatedPost.imagen || '';
+
+          // Emitimos el evento para notificar al padre
           this.$emit(
             this.postToEdit ? 'post-updated' : 'post-created',
-            response.data.data
+            updatedPost
           );
           this.closeModal();
         }
+
       } catch (err) {
-        console.error('Error al procesar el post:', err);
-        this.notificationStore.show(
-          'Ocurrió un error al procesar el formulario.',
-          'error'
-        );
+        if (err.response && err.response.data) {
+          console.error('Error backend:', err.response.data);
+          this.notificationStore.show(
+            'Error: ' + JSON.stringify(err.response.data),
+            'error'
+          );
+        } else {
+          console.error('Error al procesar el post:', err);
+          this.notificationStore.show(
+            'Ocurrió un error al procesar el formulario.',
+            'error'
+          );
+        }
       } finally {
         this.loading = false;
       }
     },
+
 
     closeModal() {
       this.$emit('close');
     },
 
     nextStep() {
-      if (this.currentStep === 1 && !this.post.image) {
-        this.errors.image = 'Debes seleccionar una imagen.';
-        return;
+      if (this.currentStep === 1) {
+        const hasImageFile = this.post.image instanceof File;
+        const hasImageUrl = this.imagePreviewUrl && this.imagePreviewUrl.trim() !== '';
+
+        if (!hasImageFile && !hasImageUrl) {
+          this.errors.image = 'Debes seleccionar una imagen.';
+          return;
+        } else {
+          this.errors.image = '';
+        }
       }
+
       if (
         this.currentStep === 2 &&
         (!this.post.title || !this.post.description)
@@ -402,8 +438,11 @@ export default {
         this.validateDescription();
         return;
       }
+
       this.currentStep++;
-    },
+    }
+    ,
+
 
     prevStep() {
       this.currentStep--;
@@ -636,7 +675,7 @@ textarea {
   background: var(--contrast-color);
   color: var(--text-color);
   transition: background-color 0.2s;
-  margin: 0 auto;
+  margin: 1em auto;
 }
 
 .submit-button:hover {

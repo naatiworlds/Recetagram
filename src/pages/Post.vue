@@ -19,6 +19,7 @@ import CommentModal from '../components/CommentModal.vue'
 import PostCard from '../components/PostCard.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNotificationStore } from '../stores/notification'
+import { usePostsStore } from '../stores/posts'
 
 export default {
   name: 'PostView',
@@ -37,6 +38,7 @@ export default {
       selectedPostId: null, // <-- agregada
       route: useRoute(),
       router: useRouter(),
+      postsStore: usePostsStore(),
       notificationStore: useNotificationStore()
     }
   },

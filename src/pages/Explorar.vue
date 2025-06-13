@@ -38,7 +38,6 @@ export default {
 }
 </script>
 
-
 <style scoped>
 .explorar-container {
   grid-area: var(--main-area);

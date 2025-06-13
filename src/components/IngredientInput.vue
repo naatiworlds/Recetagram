@@ -5,25 +5,29 @@
             <div class="inputs-container">
                 <div class="input-line">
                     <label>Nombre:</label>
-                    <input v-model="newIngredient.name" type="text" placeholder="Ej: Harina" />
+                    <input type="text" :value="newIngredient.name" @input="updateField('name', $event.target.value)"
+                        placeholder="Ej: Harina" />
                 </div>
 
                 <div class="input-row">
                     <div class="input-group small">
                         <label>Cantidad:</label>
-                        <input v-model="newIngredient.amount" type="number" min="0" placeholder="Ej: 2" />
+                        <input type="number" min="0" :value="newIngredient.quantity"
+                            @input="updateField('quantity', $event.target.value)" placeholder="Ej: 2" />
                     </div>
+
                     <div class="input-group small">
                         <label>Unidad:</label>
-                        <select v-model="newIngredient.unit" class="unit-select">
+                        <select :value="newIngredient.unit" @change="updateField('unit', $event.target.value)"
+                            class="unit-select">
                             <option disabled value="">Selecciona</option>
-                            <option>taza</option>
-                            <option>cucharadita</option>
-                            <option>gramos</option>
-                            <option>mililitros</option>
+                            <option value="taza">taza</option>
+                            <option value="cucharadita">cucharadita</option>
+                            <option value="gramos">gramos</option>
+                            <option value="mililitros">mililitros</option>
                         </select>
                     </div>
-                    <button class="add-button" @click="addIngredient">+</button>
+                    <button type="button" class="add-button" @click="addIngredient">+</button>
                 </div>
             </div>
 
@@ -33,7 +37,7 @@
                 <div class="scrollable-list">
                     <ul>
                         <li v-for="(ing, index) in ingredients" :key="index">
-                            • {{ ing.amount }} {{ ing.unit }} de {{ ing.name }}
+                            • {{ ing.quantity }} {{ ing.unit }} de {{ ing.name }}
                             <div class="actions">
                                 <button class="edit-button" @click="editIngredient(index)">✏️</button>
                                 <button class="remove-button" @click="removeIngredient(index)">🗑️</button>
@@ -49,13 +53,15 @@
 <script>
 export default {
     name: "IngredientInput",
+    props: {
+        ingredient: {
+            type: Object,
+            required: true,
+        }
+    },
     data() {
         return {
-            newIngredient: {
-                name: "",
-                amount: "",
-                unit: "",
-            },
+            newIngredient: { ...this.ingredient },
             ingredients: [],
             editingIndex: null, // Índice del ingrediente que se está editando
         };
@@ -70,14 +76,14 @@ export default {
                 // Agregar un nuevo ingrediente
                 if (
                     this.newIngredient.name &&
-                    this.newIngredient.amount &&
+                    this.newIngredient.quantity &&
                     this.newIngredient.unit
                 ) {
                     this.ingredients.push({ ...this.newIngredient });
                 }
             }
             // Limpiar los inputs
-            this.newIngredient = { name: "", amount: "", unit: "" };
+            this.newIngredient = { name: "", quantity: "", unit: "" };
             this.validateIngredients(); // Validar la lista después de agregar
         },
         editIngredient(index) {
@@ -91,7 +97,7 @@ export default {
             // Si se está editando el ingrediente eliminado, salir del modo de edición
             if (this.editingIndex === index) {
                 this.editingIndex = null;
-                this.newIngredient = { name: "", amount: "", unit: "" };
+                this.newIngredient = { name: "", quantity: "", unit: "" };
             }
             this.validateIngredients(); // Validar la lista después de eliminar
         },
@@ -100,10 +106,23 @@ export default {
             const isValid = this.ingredients.length > 0;
             this.$emit("validate-ingredients", isValid);
         },
+        updateField(field, value) {
+            this.newIngredient[field] = value;
+            this.$emit("update:ingredient", { ...this.newIngredient });
+        },
     },
     mounted() {
         // Validar la lista al cargar el componente
         this.validateIngredients();
+    },
+    watch: {
+        ingredient: {
+            handler(newVal) {
+                this.newIngredient = { ...newVal };
+            },
+            deep: true,
+            immediate: true
+        }
     },
 };
 </script>
@@ -266,14 +285,16 @@ main {
 }
 
 @media (max-width: 600px) {
-    section{
+    section {
         width: 100%;
         padding: 0;
     }
+
     main {
         padding: 0;
         margin: 0;
     }
+
     .scrollable-list {
         max-height: 0px;
         /* Aumentar la altura máxima en pantallas pequeñas */
