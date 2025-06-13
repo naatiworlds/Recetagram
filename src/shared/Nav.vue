@@ -61,7 +61,7 @@
                     </a>
                 </li>
                 <li v-if="isAuthenticated" class="nav-icon">
-                    <a href="/settings" class="nav-icon">
+                    <a href="/settings/account" class="nav-icon">
                         <i class="fa-solid fa-cog"></i>
                     </a>
                 </li>
