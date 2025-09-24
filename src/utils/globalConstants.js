@@ -1,6 +1,6 @@
 // API Configuration
-export const API_BASE_URL = 'https://recetagrm-api.onrender.com/api/v1';  // Ajusta según tu API
-export const STORAGE_URL = 'https://recetagrm-api.onrender.com/storage';  // URL base para archivos estáticos
+export const API_BASE_URL = 'https://51.178.85.46:8443/api/v1';  // Ajusta según tu API
+export const STORAGE_URL = 'https://51.178.85.46:8443/storage';  // URL base para archivos estáticos
 
 // Animation Configuration
 export const ANIMATION = {
