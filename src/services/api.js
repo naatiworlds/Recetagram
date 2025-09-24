@@ -8,7 +8,7 @@ import throttle from 'lodash/throttle';
 // Configuración de Axios
 // =====================================
 const api = axios.create({
-  baseURL: "http://51.178.85.46:8000/api/v1",
+  baseURL: "https://51.178.85.46:8443/api/v1",
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
