@@ -8,7 +8,7 @@ import throttle from 'lodash/throttle';
 // Configuración de Axios
 // =====================================
 const api = axios.create({
-  baseURL: "https://recetagram-api.onrender.com/api/v1",
+  baseURL: "http://51.178.85.46:8000/api/v1",
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
