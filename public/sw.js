@@ -1,47 +1,63 @@
 // Nombre del caché
-const CACHE_NAME = "tpv-cache-v1";
+const CACHE_NAME = "recetagram-cache-v1";
 
 // Archivos a cachear
 const urlsToCache = [
   "/",
   "/index.html",
-  "/src/main.jsx",
-  "/css/index.css",
-  "/images/logo.png",
-  // Agrega más rutas si lo necesitas
+  "/manifest.json",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+  "/install.js"
 ];
 
 // Instalación del Service Worker y cacheo de recursos
 self.addEventListener("install", (event) => {
+  console.log("Service Worker instalándose...");
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log("Archivos cacheados");
+      console.log("Cache abierto");
       return cache.addAll(urlsToCache);
+    }).catch((error) => {
+      console.error("Error al cachear archivos:", error);
+      // Continuar aunque falle el cache
+      return Promise.resolve();
     })
   );
+  // Forzar activación inmediata
+  self.skipWaiting();
 });
 
 // Activación y limpieza de cachés antiguos
 self.addEventListener("activate", (event) => {
+  console.log("Service Worker activándose...");
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cache) => {
           if (cache !== CACHE_NAME) {
-            console.log("Cache antiguo eliminado:", cache);
+            console.log("Eliminando cache antiguo:", cache);
             return caches.delete(cache);
           }
         })
       );
     })
   );
+  // Tomar control inmediato
+  self.clients.claim();
 });
 
 // Intercepción de solicitudes (modo offline básico)
 self.addEventListener("fetch", (event) => {
   event.respondWith(
     caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
+      // Devolver desde cache si está disponible, sino hacer fetch
+      return response || fetch(event.request).catch(() => {
+        // Si falla el fetch, devolver página offline si es una navegación
+        if (event.request.mode === 'navigate') {
+          return caches.match('/index.html');
+        }
+      });
     })
   );
 });
