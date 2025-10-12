@@ -1,16 +1,13 @@
 <template>
-    <div class="tab-content">
-        <!-- Seguridad y Privacidad -->
-        <div class="security-privacy">
-            <h3>Seguridad y Privacidad</h3>
-
-            <!-- Privacidad del perfil -->
-            <div class="privacy-settings" v-if="isAuthenticated">
-                <div class="title-description">
-                    <h4>Privacidad del perfil público/privado</h4>
-                    <p>Esta acción cambiará la privacidad de tu perfil modificando quién puede ver tus posts</p>
-                </div>
-
+    <div class="account-container">
+        <!-- Card principal de Seguridad y Privacidad -->
+        <div class="main-card security-card">
+            <h3 class="card-title">Seguridad y Privacidad</h3>
+            
+            <!-- Sub-card para Privacidad del perfil -->
+            <div class="sub-card privacy-card" v-if="isAuthenticated">
+                <h4 class="sub-card-title">Privacidad del perfil público/privado</h4>
+                <p class="sub-card-description">Esta acción cambiará la privacidad de tu perfil modificando quién puede ver tus posts</p>
                 <div class="toggle-switch">
                     <div class="switch-container">
                         <input type="checkbox" :id="'privacy-toggle-' + userId" :checked="checkedValue"
@@ -25,38 +22,36 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Cambio de Contraseña -->
-            <div class="change-password" v-if="isAuthenticated">
-                <div class="title-description">
-                    <h4>Cambiar Contraseña</h4>
-                    <p>Esta acción cambiará la contraseña de tu cuenta [Ten mucho cuidado]</p>
-                </div>
-
-                <li>
-                    <a href="#" class="nav-normal" @click.prevent="goToChangePassword">
-                        <i class="fa-solid fa-up-right-from-square"></i> Cambiar contraseña
-                    </a>
-                </li>
-                <ModalCambioContraseña v-if="showPasswordModal" @close="showPasswordModal = false" />
-
+        <!-- Card separado para Cambio de Contraseña -->
+        <div class="main-card password-card" v-if="isAuthenticated">
+            
+            <!-- Sub-card para el cambio de contraseña -->
+            <div class="sub-card password-sub-card">
+                <h4 class="sub-card-title">Cambiar Contraseña</h4>
+                <p class="sub-card-description">Esta acción cambiará la contraseña de tu cuenta <span class="warning-text">[Ten mucho cuidado]</span></p>
+                <button class="action-button password-button" @click.prevent="goToChangePassword">
+                    <i class="fa-solid fa-key"></i> Cambiar contraseña
+                </button>
             </div>
-            <div class="change-password" v-if="isAuthenticated">
-                <div class="title-description">
-                    <h4>Borrar Cuenta</h4>
-                    <p>Esta acción borrará tu cuenta y por ende todas tus publicaciones [Ten mucho cuidado]</p>
-                </div>
+            <ModalCambioContraseña v-if="showPasswordModal" @close="showPasswordModal = false" />
+        </div>
 
-                <li>
-                    <a href="#" class="nav-normal" @click="confirmDelete">
-                        <i class="fa-solid fa-up-right-from-square"></i> Borrar cuenta
-                    </a>
-                </li>
-                <DeleteConfirmationModal v-if="showDeleteModal" title="Eliminar Cuenta"
-                    message="¿Estás seguro que deseas eliminar esta cuenta?" subtext="Esta acción no se puede deshacer."
-                    confirmText="Eliminar cuenta" @confirm="handleDelete" @cancel="showDeleteModal = false" />
-
+        <!-- Card separado para Borrar Cuenta -->
+        <div class="main-card delete-card" v-if="isAuthenticated">
+            
+            <!-- Sub-card para borrar cuenta -->
+            <div class="sub-card delete-sub-card">
+                <h4 class="sub-card-title">Borrar Cuenta</h4>
+                <p class="sub-card-description">Esta acción borrará tu cuenta y por ende todas tus publicaciones <span class="warning-text">[Ten mucho cuidado]</span></p>
+                <button class="action-button delete-button" @click="confirmDelete">
+                    <i class="fa-solid fa-trash"></i> Borrar cuenta
+                </button>
             </div>
+            <DeleteConfirmationModal v-if="showDeleteModal" title="Eliminar Cuenta"
+                message="¿Estás seguro que deseas eliminar esta cuenta?" subtext="Esta acción no se puede deshacer."
+                confirmText="Eliminar cuenta" @confirm="handleDelete" @cancel="showDeleteModal = false" />
         </div>
     </div>
 </template>
@@ -173,51 +168,225 @@ export default {
 
 
 <style scoped>
-.tab-content {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    padding-bottom: 60px; /* Espacio adicional en la parte inferior */
-    min-height: calc(100vh - var(--header-height) - 200px); /* Altura mínima considerando header y navegación */
+
+/* ======== Colores usando variables globales de la app ======== */
+
+/* ======== Contenedor principal ======== */
+.account-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: var(--complementary-color);
+  padding: var(--espaciado);
+  padding-bottom: 2rem;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  box-sizing: border-box;
+  gap: 1.5rem;
+  border: 2px solid var(--primary-color);
+  border-radius: 12px;
 }
 
-.tab-content h3 {
-    background-color: var(--sombra-color);
-    color: var(--text-color-important);
+/* ===== Scrollbar personalizado ===== */
+.account-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.account-container::-webkit-scrollbar-track {
+  background: #f5f5f5;
+  border-radius: 10px;
+}
+
+.account-container::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 10px;
+}
+
+.account-container::-webkit-scrollbar-thumb:hover {
+  background: #bbb;
+}
+
+/* Scrollbar para Firefox */
+.account-container {
+  scrollbar-width: thin;
+  scrollbar-color: #ddd #f5f5f5;
+}
+
+/* ======== Cards principales ======== */
+.main-card {
+  background: var(--complementary-color);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 600px;
+  padding: 1.5rem;
+}
+
+.security-card {
+  background: var(--complementary-color);
+}
+
+.password-card {
+  background: var(--complementary-color);
+}
+
+.delete-card {
+  background: var(--complementary-color);
+}
+
+/* ======== Títulos de cards ======== */
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-color-important);
+  margin: 0 0 1rem 0;
+  text-align: left;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.card-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: var(--text-color-important);
+}
+
+/* ======== Sub-cards ======== */
+.sub-card {
+  background: var(--secundary-color);
+  border-radius: 8px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 4px var(--sombra-color);
+  border: 1px solid var(--color-line);
+}
+
+.privacy-card {
+  background: var(--secundary-color);
+}
+
+.password-sub-card {
+  background: var(--secundary-color);
+}
+
+.delete-sub-card {
+  background: var(--secundary-color);
+}
+
+/* ======== Títulos de sub-cards ======== */
+.sub-card-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-color-important);
+  margin: 0 0 0.5rem 0;
+}
+
+/* ======== Descripciones ======== */
+.sub-card-description {
+  font-size: 0.95rem;
+  color: var(--text-color-important);
+  margin: 0 0 1rem 0;
+  line-height: 1.4;
+}
+
+/* ======== Estilos para inputs dentro de sub-cards ======== */
+.sub-card input[type="checkbox"],
+.sub-card input[type="radio"] {
+  margin: var(--espaciado-sm);
+  padding: var(--espaciado-xs);
+}
+
+.sub-card label {
+  padding: var(--espaciado-sm);
+  margin: var(--espaciado-xs);
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.sub-card label:hover {
+  background-color: var(--sombra-color);
+}
+
+.sub-card details {
+  padding: var(--espaciado-sm);
+  margin: var(--espaciado-xs);
+  border-radius: 6px;
+  background-color: var(--primary-color);
+}
+
+.sub-card summary {
+  padding: var(--espaciado-sm);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.sub-card summary:hover {
+  background-color: var(--sombra-color);
+}
+
+.sub-card ul {
+  padding: var(--espaciado-sm);
+  margin: var(--espaciado-xs) 0;
+}
+
+.sub-card li {
+  padding: var(--espaciado-xs);
+  margin: var(--espaciado-xs) 0;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.sub-card li:hover {
+  background-color: var(--sombra-color);
+}
+
+/* ======== Botones de acción ======== */
+.action-button {
     width: 100%;
-    text-align: center;
-    padding: 1em 1em;
-}
-
-.title-description {
-    width: 50%;
-}
-
-.tab-content>div {
-    width: 100%;
+  border: none;
+  border-radius: 8px;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
     display: flex;
-    flex-direction: column;
-    flex-wrap: wrap;
-    align-content: center;
     align-items: center;
-    justify-content: space-around;
-    gap: 4em;
+    justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  text-align: center;
 }
 
-.tab-content .privacy-settings {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1em;
+.password-button {
+  background: #3498db;
+  color: white;
 }
 
+.password-button:hover {
+  background: #2980b9;
+  transform: translateY(-1px);
+}
+
+.delete-button {
+  background: #e74c3c;
+  color: white;
+}
+
+.delete-button:hover {
+  background: #c0392b;
+  transform: translateY(-1px);
+}
+
+/* ======== Toggle Switch ======== */
 .toggle-switch {
     position: relative;
     display: inline-flex;
     align-items: center;
     flex-direction: column;
+    width: 100%;
 }
 
 .switch-container {
@@ -225,12 +394,15 @@ export default {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    width: 100%;
+    justify-content: center;
 }
 
 .toggle-label {
     cursor: pointer;
     user-select: none;
     color: var(--text-color);
+    font-weight: 600;
 }
 
 input[type="checkbox"] {
@@ -270,17 +442,13 @@ input[type="checkbox"]:disabled {
 }
 
 .privacy-tip {
-    margin-top: 5px;
+    margin-top: 10px;
     font-size: 0.85em;
     color: #666;
     display: flex;
     align-items: center;
     gap: 5px;
-}
-
-.switch-container:hover .privacy-tip {
-    opacity: 1;
-    visibility: visible;
+    justify-content: center;
 }
 
 .privacy-tip i {
@@ -288,74 +456,51 @@ input[type="checkbox"]:disabled {
     color: var(--text-color-secondary);
 }
 
-
-
-.tab-content .blocked-users {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
+.warning-text {
+    color: #e74c3c;
+    font-weight: 600;
 }
 
-.tab-content .change-password {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-}
-
+/* ======== Responsive ======== */
 @media (max-width: 768px) {
-    .profile-privacy {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.5rem;
-    }
+  .account-container {
+    padding: var(--padding-mobile);
+    gap: 1rem;
+    overflow-y: auto;
+  }
 
-    .toggle-switch {
-        justify-content: center;
-    }
+  .main-card {
+    padding: var(--padding-mobile);
+  }
 
-    .privacy-tip {
-        display: none;
-    }
-}
-
-@media (max-width: 600px) {
-
-    .oculto~.user-config-page {
-        padding: 0;
-    }
-
-    .user-config-page {
-        grid-area: var(--main-responsive-area);
-        padding: 0
-    }
-
-    .user-config-grid {
-        grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
-    }
-
-    .tab-content {
-        padding-bottom: 50px; /* Mantener espacio inferior en móviles */
-    }
+  .sub-card {
+    padding: var(--padding-mobile);
+  }
 }
 
 @media (max-width: 480px) {
+  .account-container {
+    padding: 0.75rem;
+    gap: 0.75rem;
+    overflow-y: auto;
+  }
 
-    .user-config-page {
-        grid-area: var(--main-responsive-area);
-        padding: 0
-    }
+  .main-card {
+    padding: 0.875rem;
+  }
 
-    .user-config-grid {
-        display: block;
-        grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
-    }
+  .sub-card {
+    padding: 0.875rem;
+  }
 
+  .action-button {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
 
+  /* Scrollbar más pequeño en móviles */
+  .account-container::-webkit-scrollbar {
+    width: 6px;
+  }
 }
 </style>

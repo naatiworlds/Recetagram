@@ -191,6 +191,8 @@ export default {
 @media (max-width: 600px) {
     #main404 {
         grid-area: var(--main-responsive-area);
+        padding-bottom: var(--mobile-nav-height);
+        box-sizing: border-box;
     }
 }
 </style>

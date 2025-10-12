@@ -318,7 +318,7 @@ nav details label {
         bottom: 0;
         left: 0;
         width: 100%;
-        height: 40px;
+        height: var(--mobile-nav-height);
         /* Altura fija para la barra de navegación */
         z-index: 1000;
     }

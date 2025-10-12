@@ -1,28 +1,27 @@
 <template>
   <div class="user-config-page">
-    <div class="user-config-grid">
-      <!-- Header -->
-      <header>
-        <h1>Configuración</h1>
-      </header>
-      <!-- Navegación vertical -->
-      <nav class="user-config-nav">
-        <router-link 
-          v-for="tab in tabs" 
-          :key="tab.name" 
-          :to="tab.nav" 
-          class="nav-button" 
-          :class="{ active: activeTab === tab.name }"
-          @click="activeTab = tab.name">
-          <i :class="tab.icon"></i> {{ tab.label }}
-        </router-link>
-      </nav>
+    <!-- Header -->
+    <header>
+      <h1>Configuración</h1>
+    </header>
+    
+    <!-- Navegación vertical -->
+    <nav class="user-config-nav">
+      <router-link 
+        v-for="tab in tabs" 
+        :key="tab.name" 
+        :to="tab.nav" 
+        class="nav-button" 
+        :class="{ active: activeTab === tab.name }"
+        @click="activeTab = tab.name">
+        <i :class="tab.icon"></i> {{ tab.label }}
+      </router-link>
+    </nav>
 
-      <!-- Contenido de configuración -->
-      <main class="user-config-content">
-        <router-view></router-view>
-      </main>
-    </div>
+    <!-- Contenido de configuración -->
+    <main class="user-config-content">
+      <router-view></router-view>
+    </main>
   </div>
 </template>
 
@@ -106,9 +105,14 @@ export default {
 <style scoped>
 .user-config-page {
   grid-area: var(--main-area);
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - var(--header-height));
   background-color: var(--background-color);
-  padding: 0 2em;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
 }
 
 .oculto~.user-config-page {
@@ -120,34 +124,26 @@ export default {
   padding: 0 5em;
 }
 
-.user-config-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
-  grid-template-rows: 60px repeat(4, 1fr);
-  /* gap: 8px; */
-  height: 100%;
-}
-
-.user-config-grid header {
-  border-top: 1px solid black;
-  grid-column: span 5 / span 5;
+.user-config-page header {
   background-color: var(--primary-color);
   color: var(--text-color-important);
   height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .user-config-nav {
-  grid-row: span 4 / span 4;
-  grid-row-start: 2;
   background-color: var(--secundary-color);
   padding: var(--espaciado);
   display: flex;
   flex-direction: column;
   gap: 15px;
   border-right: 1px solid var(--border-color);
+  width: 100%;
 }
 
 .user-config-nav .nav-button {
@@ -166,14 +162,46 @@ export default {
 }
 
 .user-config-content {
-  width: 100%;
-  grid-column: span 4 / span 4;
-  grid-row: span 4 / span 4;
-  grid-row-start: 2;
+  flex: 1;
   padding: 20px;
-  padding-bottom: 60px; /* Espacio adicional en la parte inferior */
-  overflow-y: auto;
-  min-height: calc(100vh - var(--header-height) - 120px); /* Altura mínima considerando header */
+  padding-bottom: 40px; /* Espacio adicional en la parte inferior */
+  overflow-x: hidden;
+  width: 100%;
+  margin: 0;
+  box-sizing: border-box;
+  min-height: calc(100vh - var(--header-height) - 120px); /* Altura mínima considerando header y nav */
+}
+
+/* ===== Scrollbar personalizado para router-view ===== */
+.user-config-content::-webkit-scrollbar {
+  width: 10px;
+}
+
+.user-config-content::-webkit-scrollbar-track {
+  background: var(--sombra-color);
+  border-radius: 10px;
+  margin: 5px;
+}
+
+.user-config-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--contrast-color) 0%, var(--primary-color) 100%);
+  border-radius: 10px;
+  border: 2px solid var(--sombra-color);
+}
+
+.user-config-content::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--primary-color) 0%, var(--contrast-color) 100%);
+  transform: scale(1.05);
+}
+
+.user-config-content::-webkit-scrollbar-thumb:active {
+  background: var(--contrast-color);
+}
+
+/* Scrollbar para Firefox */
+.user-config-content {
+  scrollbar-width: thin;
+  scrollbar-color: var(--contrast-color) var(--sombra-color);
 }
 
 .tab-content {
@@ -275,39 +303,30 @@ form {
 }
 
 
-@media (max-width: 600px) {
-
-  .oculto~.user-config-page {
-    padding: 0;
+@media (max-width: 768px) {
+  .user-config-nav {
+    padding: 10px;
   }
-
-  .user-config-page {
-    grid-area: var(--main-responsive-area);
-    padding: 0
-  }
-
+  
   .user-config-content {
+    padding: 10px;
     padding-bottom: 50px; /* Mantener espacio inferior en móviles */
   }
+}
 
-  .user-config-grid {
-    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+@media (max-width: 600px) {
+  .user-config-page {
+    grid-area: var(--main-responsive-area);
+    padding-bottom: var(--mobile-nav-height);
+    box-sizing: border-box;
   }
 }
 
 @media (max-width: 480px) {
-
-  .user-config-page {
-    grid-area: var(--main-responsive-area);
-    padding: 0
+  .user-config-content {
+    padding: 10px;
+    padding-bottom: 50px;
   }
-
-  .user-config-grid {
-    display: block;
-    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
-  }
-
-  .user-config-nav {}
 }
 
 /* Estilos y animación sarten */

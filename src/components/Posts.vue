@@ -613,11 +613,12 @@ article {
 @media (max-width: 600px) {
     #main {
         grid-area: var(--main-responsive-area);
+        padding-bottom: var(--mobile-nav-height);
     }
 
     #scrollLeftButton,
     #scrollRightButton {
-        height: calc(100vh - 130px);
+        height: calc(100vh - var(--header-height) - var(--mobile-nav-height) - 80px);
     }
 
     article {

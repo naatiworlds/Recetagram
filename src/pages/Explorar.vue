@@ -85,6 +85,8 @@ export default {
 @media (max-width: 600px) {
   .explorar-container {
     grid-area: var(--main-responsive-area);
+    padding-bottom: var(--mobile-nav-height);
+    box-sizing: border-box;
   }
 }
 </style>

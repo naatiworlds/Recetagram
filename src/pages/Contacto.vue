@@ -260,6 +260,8 @@ export default {
     .contact-page {
         grid-area: var(--main-responsive-area);
         height: 80%;
+        padding-bottom: var(--mobile-nav-height);
+        box-sizing: border-box;
     }
     .contact-page h1 {
         font-size: 1.5rem;

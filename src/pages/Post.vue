@@ -284,6 +284,8 @@ export default {
 @media (max-width: 600px) {
   .post-container {
     grid-area: var(--main-responsive-area);
+    padding-bottom: var(--mobile-nav-height);
+    box-sizing: border-box;
   }
   .post-card {
    max-width: 320px;

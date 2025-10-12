@@ -146,6 +146,8 @@
 @media (max-width: 600px) {
   .admin-dashboard{
     grid-area: var(--main-responsive-area);
+    padding-bottom: var(--mobile-nav-height);
+    box-sizing: border-box;
   }
 }
 </style> 

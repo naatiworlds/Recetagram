@@ -1,13 +1,13 @@
 <template>
-    <div class="tab-content">
-        <!-- Preferencias del Sistema -->
-        <div class="system-preferences">
-            <h3>Preferencias del Sistema</h3>
-            <div class="theme-switch">
-                <div class="title-description">
-                    <h4>Modo de Tema Claro/Oscuro</h4>
-                    <p>Esta acción cambiará la apariencia de la aplicación a modo dia o noche</p>
-                </div>
+    <div class="account-container">
+        <!-- Card principal de Modo de Tema -->
+        <div class="main-card theme-card">
+            <h3 class="card-title">Modo de Tema</h3>
+            
+            <!-- Sub-card para el switch -->
+            <div class="sub-card theme-switch-card">
+                <h4 class="sub-card-title">Cambiar Claro/Oscuro</h4>
+                <p class="sub-card-description">Esta acción cambiará la apariencia de la aplicación a modo dia o noche</p>
                 <div id="icon-container">
                     <div class='wrap'>
                         <input name="light-dark" type="checkbox" @change="toggleTheme" :checked="isDarkMode" />
@@ -36,32 +36,50 @@
                             </filter>
                         </defs>
                     </svg>
-
                 </div>
             </div>
-            <div class="theme-options">
-                <div class="title-description">
-                    <h4>Modo de Tema Claro/Oscuro</h4>
-                    <p>Esta acción cambiará la apariencia de la aplicación a modo dia o noche</p>
-                </div>
-                <div class="colors">
-                    <li id="theme">
-                        <details>
-                            <summary><i class="fa-solid fa-palette"></i> theme</summary>
-                            <label id="switch-aqua">
-                                Aqua
-                                <input type="radio" name="tema" value="aqua" @change="setTheme">
-                            </label>
-                            <label id="switch-pink">
-                                Pink
-                                <input type="radio" name="tema" value="pink" @change="setTheme">
-                            </label>
-                            <label id="switch-default">
-                                Default
-                                <input type="radio" name="tema" value="default" checked @change="setTheme">
-                            </label>
-                        </details>
-                    </li>
+        </div>
+
+        <!-- Card separado para Opciones de Tema -->
+        <div class="main-card theme-options-card">
+            <h3 class="card-title">Opciones de Tema</h3>
+            
+            <!-- Sub-card para las opciones -->
+            <div class="sub-card theme-options-sub-card">
+                <h4 class="sub-card-title">Seleccionar Tema</h4>
+                <p class="sub-card-description">Selecciona el tema que prefieras para la aplicación</p>
+                
+                <!-- Flexbox container para las cards de temas -->
+                <div class="theme-cards-container">
+                    <!-- Card para tema Aqua -->
+                    <div class="theme-card-option" :class="{ active: selectedTheme === 'aqua' }" @click="selectTheme('aqua')">
+                        <div class="theme-preview aqua-preview">
+                            <div class="theme-color aqua-color"></div>
+                        </div>
+                        <h5 class="theme-name">Aqua</h5>
+                        <p class="theme-description">Tema acuático con tonos azules y verdes</p>
+                        <input type="radio" name="tema" value="aqua" :checked="selectedTheme === 'aqua'" @change="setTheme">
+                    </div>
+
+                    <!-- Card para tema Pink -->
+                    <div class="theme-card-option" :class="{ active: selectedTheme === 'pink' }" @click="selectTheme('pink')">
+                        <div class="theme-preview pink-preview">
+                            <div class="theme-color pink-color"></div>
+                        </div>
+                        <h5 class="theme-name">Pink</h5>
+                        <p class="theme-description">Tema rosa vibrante y moderno</p>
+                        <input type="radio" name="tema" value="pink" :checked="selectedTheme === 'pink'" @change="setTheme">
+                    </div>
+
+                    <!-- Card para tema Default -->
+                    <div class="theme-card-option" :class="{ active: selectedTheme === 'default' }" @click="selectTheme('default')">
+                        <div class="theme-preview default-preview">
+                            <div class="theme-color default-color"></div>
+                        </div>
+                        <h5 class="theme-name">Default</h5>
+                        <p class="theme-description">Tema clásico con colores originales</p>
+                        <input type="radio" name="tema" value="default" :checked="selectedTheme === 'default'" @change="setTheme">
+                    </div>
                 </div>
             </div>
         </div>
@@ -89,6 +107,7 @@ export default {
                 isPrivate: false
             },
             isDarkMode: false, // Estado inicial del tema
+            selectedTheme: 'default', // Tema seleccionado actualmente
             themes: ['Aqua', 'Pink', 'Default'],
             blockedUsers: [],
             password: {
@@ -124,7 +143,12 @@ export default {
         },
         setTheme(event) {
             const selectedTheme = event.target.value;
+            this.selectedTheme = selectedTheme;
             changeTheme(selectedTheme);
+        },
+        selectTheme(theme) {
+            this.selectedTheme = theme;
+            changeTheme(theme);
         },
         handleLogout() {
             this.userStore.logout();
@@ -142,207 +166,354 @@ export default {
 }
 </script>
 <style scoped>
-.user-config-page {
-    grid-area: var(--main-area);
-    display: grid;
-    height: 100vh;
-    background-color: var(--background-color);
-    padding: 0 2em;
+
+/* ======== Colores usando variables globales de la app ======== */
+
+/* ======== Contenedor principal ======== */
+.account-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: var(--complementary-color);
+  padding: var(--espaciado);
+  padding-bottom: 2rem;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  box-sizing: border-box;
+  gap: 1.5rem;
+  border: 2px solid var(--primary-color);
+  border-radius: 12px;
 }
 
-.oculto~.user-config-page {
-    position: absolute;
-    top: 5%;
-    width: 100%;
-    z-index: 1;
-    margin-top: .2em;
-    padding: 0 5em;
+/* ===== Scrollbar personalizado ===== */
+.account-container::-webkit-scrollbar {
+  width: 8px;
 }
 
-.user-config-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
-    grid-template-rows: 60px repeat(4, 1fr);
-    /* gap: 8px; */
-    height: 100%;
+.account-container::-webkit-scrollbar-track {
+  background: #f5f5f5;
+  border-radius: 10px;
 }
 
-.user-config-grid header {
-    border-top: 1px solid black;
-    grid-column: span 5 / span 5;
-    background-color: var(--primary-color);
-    color: var(--text-color-important);
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.account-container::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 10px;
 }
 
-.user-config-nav {
-    grid-row: span 4 / span 4;
-    grid-row-start: 2;
-    background-color: var(--secundary-color);
-    padding: var(--espaciado);
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    border-right: 1px solid var(--border-color);
+.account-container::-webkit-scrollbar-thumb:hover {
+  background: #bbb;
 }
 
-.user-config-nav button {
-    padding: 10px 15px;
-    border: none;
-    background-color: var(--primary-color);
-    color: var(--text-color-important);
-    cursor: pointer;
-    border-radius: 5px;
-    text-align: left;
+/* Scrollbar para Firefox */
+.account-container {
+  scrollbar-width: thin;
+  scrollbar-color: #ddd #f5f5f5;
 }
 
-.user-config-nav button.active {
-    background-color: var(--contrast-color);
-    color: var(--text-color);
+/* ======== Cards principales ======== */
+.main-card {
+  background: var(--complementary-color);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 600px;
+  padding: 1.5rem;
 }
 
-.user-config-content {
-    width: 100%;
-    grid-column: span 4 / span 4;
-    grid-row: span 4 / span 4;
-    grid-row-start: 2;
-    padding: 20px;
-    padding-bottom: 60px; /* Espacio adicional en la parte inferior */
+.theme-card {
+  background: var(--complementary-color);
+}
+
+.theme-options-card {
+  background: var(--complementary-color);
+}
+
+/* ======== Títulos de cards ======== */
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-color-important);
+  margin: 0 0 1rem 0;
+  text-align: left;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.card-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: var(--text-color-important);
+}
+
+/* ======== Sub-cards ======== */
+.sub-card {
+  background: var(--secundary-color);
+  border-radius: 8px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 4px var(--sombra-color);
+  border: 1px solid var(--color-line);
+}
+
+.theme-switch-card {
+  background: var(--secundary-color);
+}
+
+.theme-options-sub-card {
+  background: var(--secundary-color);
+}
+
+/* ======== Títulos de sub-cards ======== */
+.sub-card-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-color-important);
+  margin: 0 0 0.5rem 0;
+}
+
+/* ======== Descripciones ======== */
+.sub-card-description {
+  font-size: 0.95rem;
+  color: var(--text-color-important);
+  margin: 0 0 1rem 0;
+  line-height: 1.4;
+}
+
+/* ======== Estilos para inputs dentro de sub-cards ======== */
+.sub-card input[type="checkbox"],
+.sub-card input[type="radio"] {
+  margin: var(--espaciado-sm);
+  padding: var(--espaciado-xs);
+}
+
+.sub-card label {
+  padding: var(--espaciado-sm);
+  margin: var(--espaciado-xs);
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.sub-card label:hover {
+  background-color: var(--sombra-color);
+}
+
+.sub-card details {
+  padding: var(--espaciado-sm);
+  margin: var(--espaciado-xs);
+  border-radius: 6px;
+  background-color: var(--primary-color);
+}
+
+.sub-card summary {
+  padding: var(--espaciado-sm);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.sub-card summary:hover {
+  background-color: var(--sombra-color);
+}
+
+.sub-card ul {
+  padding: var(--espaciado-sm);
+  margin: var(--espaciado-xs) 0;
+}
+
+.sub-card li {
+  padding: var(--espaciado-xs);
+  margin: var(--espaciado-xs) 0;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.sub-card li:hover {
+  background-color: var(--sombra-color);
+}
+
+/* ======== Responsive ======== */
+@media (max-width: 768px) {
+  .account-container {
+    padding: var(--padding-mobile);
+    gap: 1rem;
     overflow-y: auto;
-    min-height: calc(100vh - var(--header-height) - 120px); /* Altura mínima considerando header */
-}
+  }
 
-.tab-content {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
+  .main-card {
+    padding: var(--padding-mobile);
+  }
 
-.tab-content h3 {
-    background-color: var(--sombra-color);
-    color: var(--text-color-important);
-    width: 100%;
-    text-align: center;
-    padding: 1em 1em;
-}
-
-.title-description {
-    width: 50%;
-}
-
-.tab-content>div {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    flex-wrap: wrap;
-    align-content: center;
-    align-items: center;
-    justify-content: space-around;
-    gap: 4em;
-}
-
-form {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1em;
-    width: 100%;
-}
-
-.close-session {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1em;
-    width: 100%;
-}
-
-.tab-content .system-preferences {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2em;
-    width: 100%;
-}
-
-.save-button {
-    background-color: var(--primary-color);
-    color: var(--text-color-important);
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.save-button:hover {
-    background-color: var(--contrast-color);
-}
-
-.theme-switch {
-    display: flex;
-    align-items: center;
-    /* gap: 2em; */
-    justify-content: space-between;
-    align-content: center;
-    flex-wrap: wrap;
-    width: 100%;
-}
-
-.theme-options {
-    display: flex;
-    flex-direction: row;
-    gap: 10px;
-    align-items: center;
-    flex-wrap: wrap;
-    align-content: center;
-    width: 100%;
-    justify-content: space-between;
-}
-
-.theme-options label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    /* Espacio entre el texto y el input */
-    cursor: pointer;
-}
-
-
-@media (max-width: 600px) {
-
-    .oculto~.user-config-page {
-        padding: 0;
-    }
-
-    .user-config-page {
-        grid-area: var(--main-responsive-area);
-        padding: 0
-    }
-
-    .user-config-grid {
-        grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
-    }
+  .sub-card {
+    padding: var(--padding-mobile);
+  }
 }
 
 @media (max-width: 480px) {
+  .account-container {
+    padding: 0.75rem;
+    gap: 0.75rem;
+    overflow-y: auto;
+  }
 
-    .user-config-page {
-        grid-area: var(--main-responsive-area);
-        padding: 0
-    }
+  .main-card {
+    padding: 0.875rem;
+  }
 
-    .user-config-grid {
-        display: block;
-        grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
-    }
+  .sub-card {
+    padding: 0.875rem;
+  }
 
-    .user-config-nav {}
+  /* Scrollbar más pequeño en móviles */
+  .account-container::-webkit-scrollbar {
+    width: 6px;
+  }
+}
+
+/* ======== Estilos para las cards de temas ======== */
+.theme-cards-container {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.theme-card-option {
+  flex: 1;
+  min-width: 150px;
+  max-width: 200px;
+  background: var(--complementary-color);
+  border: 2px solid var(--primary-color);
+  border-radius: 12px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.theme-card-option:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: var(--contrast-color);
+}
+
+.theme-card-option.active {
+  border-color: var(--contrast-color);
+  background: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.theme-preview {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-color {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  position: relative;
+}
+
+.aqua-color {
+  background: linear-gradient(135deg, #007B7F 0%, #33AFA1 50%, #50E3C2 100%);
+}
+
+.pink-color {
+  background: linear-gradient(135deg, #ff69b4 0%, #ff85c1 50%, #ff1493 100%);
+}
+
+.default-color {
+  background: linear-gradient(135deg, #18C894 0%, #FFC763 50%, #FF4456 100%);
+}
+
+.theme-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color-important);
+  margin: 0 0 0.5rem 0;
+}
+
+.theme-description {
+  font-size: 0.8rem;
+  color: var(--text-color);
+  margin: 0 0 1rem 0;
+  line-height: 1.3;
+}
+
+.theme-card-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Indicador de selección */
+.theme-card-option.active::after {
+  content: '✓';
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: var(--contrast-color);
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+/* Responsive para las cards de temas */
+@media (max-width: 768px) {
+  .theme-cards-container {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .theme-card-option {
+    max-width: 250px;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .theme-cards-container {
+    gap: 0.75rem;
+  }
+  
+  .theme-card-option {
+    padding: 0.75rem;
+  }
+  
+  .theme-preview {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .theme-name {
+    font-size: 0.9rem;
+  }
+  
+  .theme-description {
+    font-size: 0.75rem;
+  }
 }
 
 /* Estilos y animación sarten */
@@ -350,10 +521,15 @@ form {
 #icon-container {
     display: flex;
     justify-content: center;
-    gap: 1em;
+    gap: var(--espaciado);
     align-content: stretch;
     flex-wrap: wrap;
     align-items: center;
+    padding: var(--espaciado);
+    background-color: var(--primary-color);
+    border-radius: 8px;
+    border: 1px solid var(--color-line);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 body svg {

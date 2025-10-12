@@ -288,6 +288,8 @@ section main form button:hover {
 @media (max-width: 600px) {
     section {
         grid-area: var(--main-responsive-area);
+        padding-bottom: var(--mobile-nav-height);
+        box-sizing: border-box;
     }
 
     

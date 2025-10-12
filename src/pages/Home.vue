@@ -31,6 +31,14 @@ export default {
   transform: translate(-50%, -50%);
 }
 
+/* Fix for mobile navigation overlap */
+@media (max-width: 600px) {
+  #main {
+    padding-bottom: var(--mobile-nav-height);
+    box-sizing: border-box;
+  }
+}
+
 #main>button {
   margin: 20px 0;
   position: absolute;
