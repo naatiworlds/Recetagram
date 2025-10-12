@@ -96,10 +96,12 @@
 .admin-content {
   flex: 1;
   padding: 20px;
+  padding-bottom: 40px; /* Espacio adicional en la parte inferior */
   overflow-x: hidden;
   width: 100%;
   margin: 0;
   box-sizing: border-box;
+  min-height: calc(100vh - var(--header-height) - 120px); /* Altura mínima considerando header y tabs */
 }
 
 @media (max-width: 768px) {
@@ -120,6 +122,7 @@
   
   .admin-content {
     padding: 10px;
+    padding-bottom: 50px; /* Mantener espacio inferior en móviles */
   }
 }
 

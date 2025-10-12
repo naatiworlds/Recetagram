@@ -182,7 +182,9 @@ export default {
 .admin-page {
   width: 100%;
   padding: var(--espaciado);
+  padding-bottom: 60px; /* Espacio adicional en la parte inferior */
   overflow-x: hidden;
+  min-height: calc(100vh - var(--header-height) - 200px); /* Altura mínima considerando header y navegación */
 }
 
 .admin-filters {
@@ -357,6 +359,7 @@ export default {
 @media (max-width: 768px) {
   .admin-page {
     padding: 10px;
+    padding-bottom: 50px; /* Mantener espacio inferior en móviles */
   }
 
   .admin-filters {

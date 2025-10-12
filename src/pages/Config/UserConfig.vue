@@ -171,7 +171,9 @@ export default {
   grid-row: span 4 / span 4;
   grid-row-start: 2;
   padding: 20px;
+  padding-bottom: 60px; /* Espacio adicional en la parte inferior */
   overflow-y: auto;
+  min-height: calc(100vh - var(--header-height) - 120px); /* Altura mínima considerando header */
 }
 
 .tab-content {
@@ -282,6 +284,10 @@ form {
   .user-config-page {
     grid-area: var(--main-responsive-area);
     padding: 0
+  }
+
+  .user-config-content {
+    padding-bottom: 50px; /* Mantener espacio inferior en móviles */
   }
 
   .user-config-grid {

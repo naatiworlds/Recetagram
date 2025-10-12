@@ -177,6 +177,8 @@ export default {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    padding-bottom: 60px; /* Espacio adicional en la parte inferior */
+    min-height: calc(100vh - var(--header-height) - 200px); /* Altura mínima considerando header y navegación */
 }
 
 .tab-content h3 {
@@ -335,6 +337,10 @@ input[type="checkbox"]:disabled {
 
     .user-config-grid {
         grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    }
+
+    .tab-content {
+        padding-bottom: 50px; /* Mantener espacio inferior en móviles */
     }
 }
 
