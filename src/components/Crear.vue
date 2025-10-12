@@ -120,7 +120,7 @@ export default {
       loading: false,
       errors: {},
       selectedFileName: '',
-      maxDescriptionLength: 300,
+      maxDescriptionLength: 2000,
       isIngredientListValid: false // Nueva propiedad para rastrear la validez de la lista de ingredientes
     };
   },

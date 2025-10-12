@@ -2,7 +2,7 @@ import apiService from './api';
 
 
 const BUFFER_KEY = 'requestBuffer';
-const MAX_BUFFER_SIZE = 10; // Número máximo de peticiones antes de enviarlas
+const MAX_BUFFER_SIZE = 30; // Número máximo de peticiones antes de enviarlas
 const FLUSH_INTERVAL = 60000; // Tiempo en milisegundos para enviar el buffer automáticamente
 let isFlushing = false;
 
