@@ -1,5 +1,5 @@
-// Nombre del caché
-const CACHE_NAME = "recetagram-cache-v1";
+// Nombre del caché - Cambiar la versión cuando hay actualizaciones
+const CACHE_NAME = "recetagram-cache-v2";
 
 // Archivos a cachear
 const urlsToCache = [
@@ -45,6 +45,13 @@ self.addEventListener("activate", (event) => {
   );
   // Tomar control inmediato
   self.clients.claim();
+});
+
+// Escuchar mensajes del cliente para activar actualizaciones
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 // Intercepción de solicitudes (modo offline básico)

@@ -1,4 +1,5 @@
 <template>
+  <UpdateBanner />
   <Header @toggle-menu="toggleMenu" />
   <Nav :menu-visible="isMenuVisible" />
   <Notification />
@@ -10,6 +11,7 @@
 import Header from "./shared/Header.vue";
 import Nav from "./shared/Nav.vue";
 import Notification from './shared/Notification.vue';
+import UpdateBanner from './components/UpdateBanner.vue';
 // import { useMenu } from './composables/useMenu';
 // import { useUserStore } from './stores/user';
 import { useRouter } from 'vue-router';
@@ -18,7 +20,8 @@ export default {
   components: {
     Header,
     Nav,
-    Notification
+    Notification,
+    UpdateBanner
   },
 
   data() {
@@ -63,6 +66,21 @@ export default {
     // this.router.afterEach(() => {
     //   this.hideMenuOnUserConfig(); // Actualizar visibilidad del menú después de cada navegación
     // });
+    
+    // Inicializar el sistema de actualizaciones
+    this.initUpdateSystem();
+  },
+
+  methods: {
+    // ... existing methods ...
+    
+    initUpdateSystem() {
+      // Importar dinámicamente el store de actualizaciones
+      import('./stores/update.js').then(({ useUpdateStore }) => {
+        const updateStore = useUpdateStore();
+        updateStore.initUpdateChecker();
+      });
+    }
   }
 }
 </script>
