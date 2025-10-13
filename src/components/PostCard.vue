@@ -357,7 +357,7 @@ export default {
           this.showDeleteModal = false
         })
     },
-
+ 
 
     toggleDescription() {
       this.showFullDescription = !this.showFullDescription;
