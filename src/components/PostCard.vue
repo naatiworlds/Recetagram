@@ -22,8 +22,8 @@
     </router-link>
 
     <h2 class="post-title">{{ post.title }}</h2>
-    <p class="post-description">{{ displayedDescription }}</p>
-    <div v-if="post.description && post.description.length > 100" class="see-more" @click="toggleDescription">
+    <div class="post-description" v-html="renderedDisplayedDescription"></div>
+    <div v-if="post.description && post.description.length > 42" class="see-more" @click="toggleDescription">
       <span>
         {{ showFullDescription ? 'Ver menos' : 'Ver más' }}
         <i class="fas" :class="showFullDescription ? 'fa-arrow-up' : 'fa-arrow-down'"></i>
@@ -178,38 +178,110 @@ export default {
         : this.parsedIngredients.slice(0, 3);
     },
     displayedDescription() {
-      const limit = 44; // Limitar a 44 caracteres
+      const limit = 42; // Limitar a 42 caracteres
       if (!this.post.description) return '';
       if (this.showFullDescription || this.post.description.length <= limit) {
         return this.post.description;
       }
       return this.post.description.substring(0, limit) + '...';
+    },
+    renderedDisplayedDescription() {
+      const text = this.displayedDescription || ''
+      return this.parseMarkdownToHtml(text)
     }
   },
 
   methods: {
+    getInitials(name) {
+      if (!name || typeof name !== 'string') return 'U'
+      return name
+        .trim()
+        .split(/\s+/)
+        .map(part => part.charAt(0))
+        .join('')
+        .toUpperCase()
+    },
+    formatDate(date) {
+      if (!date) return ''
+      try {
+        return new Date(date).toLocaleDateString('es-ES', {
+          year: 'numeric', month: 'long', day: 'numeric'
+        })
+      } catch {
+        return String(date)
+      }
+    },
+    parseMarkdownToHtml(str) {
+      // Parser con soporte simple de listas, citas y estilos inline
+      if (str == null) return ''
+      const escape = (s) => String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+      const formatInline = (s) => {
+        return escape(s)
+          .replace(/```([^`\n]+)```/g, '<code class="mono">$1<\/code>')
+          .replace(/`([^`\n]+)`/g, '<code>$1<\/code>')
+          .replace(/\*([^*\n]+)\*/g, '<strong>$1<\/strong>')
+          .replace(/_([^_\n]+)_/g, '<em>$1<\/em>')
+          .replace(/~([^~\n]+)~/g, '<del>$1<\/del>')
+          .replace(/\[(.*?)\]\((https?:\/\/[^\s]+)\)/g, '<a href="$2" target="_blank">$1<\/a>')
+      }
+      // Normalizar líneas para evitar marcadores sueltos como "- " o "1. " que generan viñetas vacías
+      const rawLines = String(str).split('\n')
+      const lines = rawLines.map(l => {
+        const t = l.replace(/\u00A0/g, ' ').trimEnd()
+        if (/^\s*([*-])\s*$/.test(t)) return '' // línea con solo "-" o "*"
+        if (/^\s*\d+\.\s*$/.test(t)) return '' // línea con solo "n."
+        // compactar duplicados "- - texto" -> "- texto"
+        return t.replace(/^\s*-\s*-\s+/, '- ')
+      })
+      const out = []
+      let i = 0
+      while (i < lines.length) {
+        const line = lines[i]
+        // Numeradas (también si vienen precedidas erróneamente por un guión "- 1. texto")
+        if (/^\s*(?:[-*]\s+)?\d+\.\s+\S+/.test(line)) {
+          const items = []
+          while (i < lines.length && /^\s*(?:[-*]\s+)?\d+\.\s+\S+/.test(lines[i])) {
+            const cleaned = lines[i].replace(/^\s*[-*]\s+/, '')
+            const text = cleaned.replace(/^\s*\d+\.\s+/, '')
+            items.push('<li>' + formatInline(text) + '</li>')
+            i++
+          }
+          out.push('<ol>' + items.join('') + '</ol>')
+          continue
+        }
+        // Viñetas
+        if (/^\s*([*-])\s+\S+/.test(line) && !/^\s*([*-])\s+\d+\.\s+\S+/.test(line)) {
+          const items = []
+          while (i < lines.length && /^\s*([*-])\s+\S+/.test(lines[i]) && !/^\s*([*-])\s+\d+\.\s+\S+/.test(lines[i])) {
+            const text = lines[i].replace(/^\s*([*-])\s+/, '')
+            items.push('<li>' + formatInline(text) + '</li>')
+            i++
+          }
+          out.push('<ul>' + items.join('') + '</ul>')
+          continue
+        }
+        // (La regla de numeradas ya se evaluó primero)
+        // Citas
+        if (/^\s*>\s+\S+/.test(line)) {
+          const parts = []
+          while (i < lines.length && /^\s*>\s+\S+/.test(lines[i])) {
+            parts.push(formatInline(lines[i].replace(/^\s*>\s+/, '')))
+            i++
+          }
+          out.push('<blockquote>' + parts.join('<br>') + '</blockquote>')
+          continue
+        }
+        out.push(formatInline(line))
+        i++
+      }
+      return out.join('<br>')
+    },
     getImageUrl(image) {
       if (!image) return null;
       return image.startsWith('http') ? image : `${STORAGE_URL}/${image}`;
-    },
-
-    getInitials(name) {
-      if (!name) return 'U';
-      return name.split(' ').map(n => n[0]).join('').toUpperCase();
-    },
-
-    formatDate(date) {
-      if (!date) return '';
-      return new Date(date).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
-    },
-
-    handleLike() {
-      this.userStore.toggleLike(this.post, this.notificationStore)
-      addToBuffer('likes', { post_id: this.post.id }, this.notificationStore, {
-        uniqueKey: ['post_id'],
-        removeIfExists: true
-      });
-
     },
 
     handleComments() {
@@ -296,7 +368,7 @@ export default {
 /* === Tarjeta de publicación (PostCard) === */
 .post-card {
   flex-shrink: 0;
-  text-align: center;
+  text-align: left;
   background-color: var(--sombra-color);
   border-radius: 10px;
   color: var(--text-color-important);
@@ -397,7 +469,7 @@ export default {
   font-size: 16px;
   color: black;
   margin-top: 10px;
-  max-width: 100%;
+  max-width: 50%;
   word-wrap: break-word;
   white-space: pre-wrap;
   /* Esto hará que se respeten los saltos de línea */

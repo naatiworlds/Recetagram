@@ -218,6 +218,7 @@ nav ul {
     font-size: 20px;
     background-color: var(--primary-color);
     padding: var(--espaciado);
+    list-style: none;
 }
 
 h1 {

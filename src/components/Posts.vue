@@ -39,7 +39,7 @@
                         :is-profile-view="isProfileView" :is-own-profile="isOwnProfile" @edit-post="handleEditPost"
                         @post-deleted="handlePostDelete" @show-comments="handleShowComments"
                         @post-updated="handlePostUpdate" />
-                    <Crear v-if="showPostModal" :post-to-edit="postToEdit" @close="handleModalClose" />
+                    
                 </template>
             </section>
 
@@ -55,6 +55,8 @@
 
 <script>
 import PostCard from './PostCard.vue'
+// Lazy import de Crear para evitar errores si no se necesita inmediatamente
+const CrearComponent = () => import('./Crear.vue')
 import { apiService } from '../services/api'
 import { useNotificationStore } from '../stores/notification'
 import { useUserStore } from '../stores/user'
@@ -113,7 +115,8 @@ export default {
             postToEdit: null,
             notificationStore: null,
             userStore: null,
-            route: null
+            route: null,
+            CrearComponent
 
         }
     },

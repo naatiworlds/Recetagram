@@ -126,6 +126,15 @@ export default {
   },
 
   methods: {
+    handleUpdateName(newName) {
+      // Si el header emite un cambio de nombre, lo reflejamos localmente
+      if (this.profileData.user) {
+        this.profileData.user.name = newName
+      }
+    },
+    confirmDelete() {
+      this.showDeleteModal = true
+    },
     async loadUserProfile() {
       if (this.loading) return; // Evitamos múltiples cargas simultáneas
       this.loading = true;

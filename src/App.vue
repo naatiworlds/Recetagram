@@ -72,8 +72,6 @@ export default {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  text-decoration: none;
-  list-style: none;
   color: var(--text-color);
 }
 

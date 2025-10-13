@@ -2,7 +2,7 @@
   <div class="modal-overlay" @click.self="closeModal">
     <section class="crear-post-container">
       <header>
-        <h2>{{ postToEdit ? 'Editar post' : 'Subir un nuevo post' }}</h2>
+        <h2>{{ postToEdit ? "Editar post" : "Subir un nuevo post" }}</h2>
         <button class="close-button" @click="closeModal">×</button>
       </header>
 
@@ -19,10 +19,12 @@
             <div class="file-upload">
               <label for="file-input" class="upload-button">
                 Seleccionar archivo
-                <input id="file-input" type="file" @change="handleFileChange" accept="image/*" style="display: none;"
+                <input id="file-input" type="file" @change="handleFileChange" accept="image/*" style="display: none"
                   class="wide-input" />
               </label>
-              <p v-if="selectedFileName" class="file-name">{{ selectedFileName }}</p>
+              <p v-if="selectedFileName" class="file-name">
+                {{ selectedFileName }}
+              </p>
               <span v-if="errors.image" class="error">
                 <i class="fa fa-warning"></i> {{ errors.image }}
               </span>
@@ -40,15 +42,21 @@
               </span>
             </label>
 
+            <!-- Campo de descripción con markdown en vivo -->
             <label>
               Descripción
-              <textarea v-model="post.description" placeholder="Descripción del post" @blur="validateDescription"
-                :maxlength="maxDescriptionLength" class="small-textarea"></textarea>
+              <div class="markdown-input">
+                <div ref="editable" contenteditable="true" @input="onMarkdownInput" @keydown="onKeydown"
+                  @focus="onEditorFocus" @blur="validateDescription" :data-placeholder="'Descripción del post...'"
+                  class="editor"></div>
+              </div>
+
               <span v-if="errors.content" class="error">
                 <i class="fa fa-warning"></i> {{ errors.content }}
               </span>
               <span class="counter">
-                {{ post.description.length }} / {{ maxDescriptionLength }} caracteres
+                {{ post.description.length }} /
+                {{ maxDescriptionLength }} caracteres
               </span>
             </label>
           </div>
@@ -57,11 +65,9 @@
           <div v-if="currentStep === 3" class="step">
             <h3>Paso 3: Ingredientes</h3>
             <div class="ingredients-container">
-
               <div class="ingredients-list">
                 <IngredientInput v-model:ingredients="post.ingredients"
                   @validate-ingredients="handleIngredientValidation" />
-
               </div>
 
               <span v-if="errors.ingredients" class="error">
@@ -81,7 +87,7 @@
           </div>
 
           <button type="submit" v-if="currentStep === 3" class="submit-button" :disabled="loading || !validateForm()">
-            {{ postToEdit ? 'Guardar cambios' : 'Subir post' }}
+            {{ postToEdit ? "Guardar cambios" : "Subir post" }}
           </button>
         </form>
       </main>
@@ -90,120 +96,587 @@
 </template>
 
 <script>
-import { useNotificationStore } from '../stores/notification';
-import { apiService } from '../services/api';
-import IngredientInput from '../components/IngredientInput.vue';
+import { useNotificationStore } from "../stores/notification";
+import { apiService } from "../services/api";
+import IngredientInput from "../components/IngredientInput.vue";
 
 export default {
-  name: 'Crear',
+  name: "Crear",
   components: {
-    IngredientInput
+    IngredientInput,
+  },
+  mounted() {
+    console.log('[Crear] mounted');
   },
   props: {
     postToEdit: {
-      type: Array,
-      default: null
-    }
+      type: [Object, Array],
+      default: null,
+    },
   },
   data() {
     return {
       notificationStore: useNotificationStore(),
       currentStep: 1,
       post: {
-        title: '',
-        description: '',
+        title: "",
+        description: "",
         image: null,
         is_private: false,
-        ingredients: []
+        ingredients: [{ name: "", quantity: "", unit: "" }],
       },
-      imagePreviewUrl: '',
+      imagePreviewUrl: "",
       loading: false,
       errors: {},
-      selectedFileName: '',
+      selectedFileName: "",
       maxDescriptionLength: 2000,
-      isIngredientListValid: false // Nueva propiedad para rastrear la validez de la lista de ingredientes
+      isIngredientListValid: false,
+      isTypingUpdate: false,
     };
+  },
+  computed: {
+    renderedMarkdown() {
+      // render inline markdown (seguro escapando)
+      return (
+        this.parseMarkdown(this.post.description) ||
+        '<span class="placeholder">Descripción del post...</span>'
+      );
+    },
   },
   watch: {
     postToEdit: {
       immediate: true,
       handler(newPost) {
+        console.log('[Crear] watcher postToEdit trigger:', !!newPost);
         if (newPost) {
-          this.post.title = newPost.title || '';
-          this.post.description = newPost.description || '';
+          this.post.title = newPost.title || "";
+          this.post.description = newPost.description || "";
           this.post.is_private = newPost.is_private || false;
-
           this.post.ingredients = this.parseIngredients(newPost.ingredients);
 
           if (newPost.imagen) {
             this.imagePreviewUrl = newPost.imagen; // muestra la URL
             this.post.image = null; // no pongas el URL aquí
           } else {
-            this.imagePreviewUrl = '';
+            this.imagePreviewUrl = "";
             this.post.image = null;
           }
+
+          // Asegurar que estamos en el paso 2 (editor visible)
+          if (this.currentStep !== 2) this.currentStep = 2;
+          this.$nextTick(() => {
+            console.log('[Crear] nextTick to render description in editor');
+            this.renderDescriptionToEditor();
+          });
         }
+      },
+    },
+    currentStep(newVal) {
+      if (newVal === 2) {
+        console.log('[Crear] currentStep=2 → intentar renderizar descripción');
+        this.$nextTick(() => this.renderDescriptionToEditor());
       }
     },
-    'post.title'() {
+    "post.title"() {
       this.validateTitle();
     },
-    'post.description'() {
+    "post.description"(newVal) {
+      if (this.isTypingUpdate) return;
+      // sincroniza el contenido del contenteditable si el cambio viene desde fuera
+      this.$nextTick(() => {
+        if (!this.$refs.editable) return;
+        const currentPlain = this.$refs.editable.innerText || "";
+        const desired = newVal || "";
+        console.log('[Crear] watcher post.description -> desired.len:', desired.length, 'currentPlain.len:', currentPlain.length);
+        if (currentPlain !== desired) {
+          console.log('[Crear] watcher applying formatToHtml to sync editor');
+          this.$refs.editable.innerHTML = this.formatToHtml(desired);
+          console.log('[Crear] watcher after sync -> innerText.len:', (this.$refs.editable.innerText || '').length);
+        }
+      });
       this.validateDescription();
     },
-    'post.ingredients': {
+    "post.ingredients": {
       deep: true,
       handler() {
         this.validateIngredients();
-      }
-    }
+      },
+    },
   },
   methods: {
+    // ----------------- MARKDOWN / INPUT EDITABLE -----------------
+    onMarkdownInput() {
+      if (!this.$refs.editable) return;
+      const el = this.$refs.editable;
+
+      // Normalizar desde texto plano del contenteditable (más confiable que innerHTML)
+      // Primero garantizamos un token en caret si aún no existe
+      if (!((el.textContent || '').includes('[[CARET]]'))) {
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+          const range = sel.getRangeAt(0).cloneRange();
+          range.collapse(false);
+          range.insertNode(document.createTextNode('[[CARET]]'));
+          console.log('[Crear] token insertado en caret (colapsado).');
+        }
+      }
+
+      // Extraemos texto plano preservando listas y saltos de línea coherentes
+      const plain = this.extractPlainText(el);
+      let textWithToken = plain
+        .replace(/\u00A0/g, ' ')     // nbsp -> espacio
+        .replace(/\u200B/g, '')      // zero-width space
+        .replace(/\r\n?/g, '\n');  // normalizar CRLF -> LF
+      console.log('[Crear] onInput textWithToken.len:', textWithToken.length, '| sample:', textWithToken.slice(0, 80));
+
+      // Límite de longitud (sobre el texto con token)
+      if (textWithToken.length > this.maxDescriptionLength) {
+        textWithToken = textWithToken.slice(0, this.maxDescriptionLength);
+      }
+
+      // Texto real para el modelo sin token
+      const text = textWithToken.replace('[[CARET]]', '');
+      console.log('[Crear] onInput text(len):', text.length);
+
+      // Renderizado estilo WhatsApp con reglas solicitadas
+      const formatInline = (s) => {
+        return s
+          // Monoespaciado entre tres backticks
+          .replace(/```([^`\n]+)```/g, '<code class="mono">$1</code>')
+          // Código inline entre un backtick
+          .replace(/`([^`\n]+)`/g, '<code>$1</code>')
+          // Negrita: *texto*
+          .replace(/\*([^*\n]+)\*/g, '<span class="md-marker">*</span><b>$1<\/b><span class="md-marker">*</span>')
+          // Cursiva: _texto_
+          .replace(/_([^_\n]+)_/g, '<span class="md-marker">_<\/span><i>$1<\/i><span class="md-marker">_<\/span>')
+          // Tachado: ~texto~
+          .replace(/~([^~\n]+)~/g, '<span class="md-marker">~<\/span><s>$1<\/s><span class="md-marker">~<\/span>');
+      };
+
+      const toHtml = (str) => {
+        const lines = str.split('\n');
+        const out = [];
+        let i = 0;
+        while (i < lines.length) {
+          const line = lines[i];
+          // Lista con viñetas
+          if (/^\s*([*-])\s+\S+/.test(line)) {
+            const items = [];
+            while (i < lines.length && /^\s*([*-])\s+\S+/.test(lines[i])) {
+              const text = lines[i].replace(/^\s*([*-])\s+/, '');
+              items.push('<li>' + formatInline(text) + '</li>');
+              i++;
+            }
+            out.push('<ul>' + items.join('') + '</ul>');
+            continue;
+          }
+          // Lista numerada (si accidentalmente vino con '- 1. texto', limpiamos el guión)
+          if (/^\s*(?:[-*]\s+)?\d+\.\s+\S+/.test(line)) {
+            const items = [];
+            while (i < lines.length && /^\s*(?:[-*]\s+)?\d+\.\s+\S+/.test(lines[i])) {
+              const cleaned = lines[i].replace(/^\s*[-*]\s+/, '');
+              const text = cleaned.replace(/^\s*\d+\.\s+/, '');
+              items.push('<li>' + formatInline(text) + '</li>');
+              i++;
+            }
+            out.push('<ol>' + items.join('') + '</ol>');
+            continue;
+          }
+          // Cita
+          if (/^\s*>\s+\S+/.test(line)) {
+            const parts = [];
+            while (i < lines.length && /^\s*>\s+\S+/.test(lines[i])) {
+              parts.push(formatInline(lines[i].replace(/^\s*>\s+/, '')));
+              i++;
+            }
+            out.push('<blockquote>' + parts.join('<br>') + '</blockquote>');
+            continue;
+          }
+          // Línea normal: no añadir <br> al final; separaremos con join
+          out.push(formatInline(line));
+          i++;
+        }
+        return out.join('<br>');
+      };
+
+      let htmlWithToken = toHtml(textWithToken);
+      htmlWithToken = htmlWithToken.replace('[[CARET]]', '<span id="__caret__"></span>');
+
+      this.isTypingUpdate = true;
+      el.innerHTML = htmlWithToken;
+      console.log('[Crear] onInput innerHTML.len:', (el.innerHTML || '').length, 'innerText.len:', (el.innerText || '').length);
+
+      // Restaurar caret en el marcador
+      const marker = el.querySelector('#__caret__');
+      if (marker) {
+        const range = document.createRange();
+        range.setStartAfter(marker);
+        range.collapse(true);
+        const sel2 = window.getSelection();
+        sel2.removeAllRanges();
+        sel2.addRange(range);
+        marker.parentNode.removeChild(marker);
+        console.log('[Crear] caret restaurado tras marcador');
+      }
+
+      this.post.description = text;
+      this.$nextTick(() => { this.isTypingUpdate = false; });
+    },
+    onKeydown(e) {
+      if (e.key !== 'Enter') return;
+      const el = this.$refs.editable;
+      if (!el) return;
+
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const anchor = sel.anchorNode;
+
+      // Utilidad para subir en el árbol hasta tag
+      const closestTag = (node, tagNames) => {
+        const set = Array.isArray(tagNames) ? new Set(tagNames) : new Set([tagNames]);
+        let n = node && (node.nodeType === Node.ELEMENT_NODE ? node : node.parentNode);
+        while (n) {
+          if (n.nodeType === Node.ELEMENT_NODE && set.has(n.nodeName)) return n;
+          n = n.parentNode;
+        }
+        return null;
+      };
+
+      const li = closestTag(anchor, 'LI');
+      if (!li) return; // fuera de listas: comportamiento por defecto
+
+      const list = closestTag(li, ['UL', 'OL']);
+      if (!list) return;
+
+      const liText = (li.innerText || '').trim();
+
+      // Si la viñeta/ítem está vacío: salir de la lista y crear una línea normal debajo
+      if (liText === '') {
+        e.preventDefault();
+        const parent = list.parentNode;
+        // Quitar el LI vacío; si es el único, quitar la lista también
+        if (list.children.length <= 1) {
+          const br = document.createElement('br');
+          parent.insertBefore(br, list.nextSibling);
+          parent.removeChild(list);
+          // Colocar caret tras el br
+          this.placeCaretAfterNode(br);
+        } else {
+          const nextSibling = list.nextSibling;
+          li.parentNode.removeChild(li);
+          // Insertar un br tras la lista para romper el flujo de numeración
+          if (!nextSibling || nextSibling.nodeName !== 'BR') {
+            const br = document.createElement('br');
+            list.parentNode.insertBefore(br, nextSibling);
+            this.placeCaretAfterNode(br);
+          } else {
+            this.placeCaretAfterNode(nextSibling);
+          }
+        }
+        // Sincronizar modelo tras la modificación manual del DOM
+        this.onMarkdownInput();
+        return;
+      }
+      // Ítem con contenido: permitir comportamiento por defecto (creará nuevo LI)
+    },
+    onEditorFocus() {
+      console.log('[Crear] editor focus. innerText.len:', (this.$refs.editable?.innerText || '').length);
+    },
+    // Genera HTML desde texto plano (sin token). Reutiliza las mismas reglas del editor
+    formatToHtml(str) {
+      const formatInline = (s) => {
+        return String(s || '')
+          .replace(/```([^`\n]+)```/g, '<code class="mono">$1</code>')
+          .replace(/`([^`\n]+)`/g, '<code>$1</code>')
+          .replace(/\*([^*\n]+)\*/g, '<span class="md-marker">*</span><b>$1<\/b><span class="md-marker">*</span>')
+          .replace(/_([^_\n]+)_/g, '<span class="md-marker">_<\/span><i>$1<\/i><span class="md-marker">_<\/span>')
+          .replace(/~([^~\n]+)~/g, '<span class="md-marker">~<\/span><s>$1<\/s><span class="md-marker">~<\/span>');
+      };
+      const lines = String(str || '').split('\n');
+      const out = [];
+      let i = 0;
+      while (i < lines.length) {
+        const line = lines[i];
+        if (/^\s*(?:[-*])\s+\S+/.test(line) && !/^\s*(?:[-*])\s+\d+\.\s+\S+/.test(line)) {
+          const items = [];
+          while (i < lines.length && /^\s*(?:[-*])\s+\S+/.test(lines[i]) && !/^\s*(?:[-*])\s+\d+\.\s+\S+/.test(lines[i])) {
+            const text = lines[i].replace(/^\s*([*-])\s+/, '');
+            items.push('<li>' + formatInline(text) + '</li>');
+            i++;
+          }
+          out.push('<ul>' + items.join('') + '</ul>');
+          continue;
+        }
+        if (/^\s*\d+\.\s+\S+/.test(line)) {
+          const items = [];
+          while (i < lines.length && /^\s*\d+\.\s+\S+/.test(lines[i])) {
+            const text = lines[i].replace(/^\s*\d+\.\s+/, '');
+            items.push('<li>' + formatInline(text) + '</li>');
+            i++;
+          }
+          out.push('<ol>' + items.join('') + '</ol>');
+          continue;
+        }
+        if (/^\s*>\s+\S+/.test(line)) {
+          const parts = [];
+          while (i < lines.length && /^\s*>\s+\S+/.test(lines[i])) {
+            parts.push(formatInline(lines[i].replace(/^\s*>\s+/, '')));
+            i++;
+          }
+          out.push('<blockquote>' + parts.join('<br>') + '</blockquote>');
+          continue;
+        }
+        out.push(line ? formatInline(line) : '<br>');
+        i++;
+      }
+      return out.join('');
+    },
+    // Convierte el DOM del editor a texto plano preservando viñetas y numeración
+    extractPlainText(rootEl) {
+      function normalizeSpaces(s) {
+        return String(s || '')
+          .replace(/\u00A0/g, ' ')
+          .replace(/\u200B/g, '')
+          .replace(/\r\n?/g, '\n');
+      }
+      const parts = [];
+      function walk(node) {
+        if (!node) return;
+        const name = node.nodeName;
+        if (node.nodeType === Node.TEXT_NODE) {
+          parts.push(node.textContent);
+          return;
+        }
+        if (name === 'BR') {
+          parts.push('\n');
+          return;
+        }
+        if (name === 'UL') {
+          const items = Array.from(node.children).filter((n) => n.nodeName === 'LI');
+          items.forEach((li, idx) => {
+            const txt = (li.innerText || '');
+            // Si el contenido del LI parece una línea numerada, respétalo como tal en vez de forzarlo a viñeta
+            const isNumbered = /^\s*\d+\.\s+\S+/.test(txt);
+            const line = isNumbered ? txt : ('- ' + txt);
+            parts.push(line);
+            if (idx < items.length - 1) parts.push('\n');
+          });
+          return;
+        }
+        if (name === 'OL') {
+          const items = Array.from(node.children).filter((n) => n.nodeName === 'LI');
+          items.forEach((li, idx) => {
+            const line = (idx + 1) + '. ' + (li.innerText || '');
+            parts.push(line);
+            if (idx < items.length - 1) parts.push('\n');
+          });
+          return;
+        }
+        if (name === 'DIV' || name === 'P' || name === 'BLOCKQUOTE') {
+          const beforeLen = parts.length;
+          Array.from(node.childNodes).forEach(walk);
+          // Añadir salto entre bloques si no terminó en salto
+          if (parts.length > 0 && parts[parts.length - 1] !== '\n') parts.push('\n');
+          return;
+        }
+        Array.from(node.childNodes).forEach(walk);
+      }
+      walk(rootEl);
+      let text = normalizeSpaces(parts.join(''));
+      // Evitar saltos dobles accidentales (permitimos como máx. uno)
+      text = text.replace(/\n{2,}/g, '\n');
+      return text;
+    },
+    renderDescriptionToEditor() {
+      const el = this.$refs.editable;
+      if (!el) {
+        console.log('[Crear] renderDescriptionToEditor: ref editable no disponible aún');
+        return;
+      }
+      const txt = this.post.description || '';
+      console.log('[Crear] renderDescriptionToEditor -> txt.len:', txt.length);
+      el.innerHTML = this.formatToHtml(txt);
+      console.log('[Crear] render -> innerHTML.len:', (el.innerHTML || '').length, 'innerText.len:', (el.innerText || '').length);
+      if ((el.innerText || '').trim() === '' && txt.trim() !== '') {
+        console.warn('[Crear] render: innerText vacío; fallback a texto plano');
+        el.innerText = txt;
+      }
+      this.placeCaretAtEnd(el);
+    },
+    placeCaretAtEnd(el) {
+      try {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        range.collapse(false);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      } catch (err) {
+        console.warn('[Crear] placeCaretAtEnd error', err);
+      }
+    },
+    placeCaretAfterNode(node) {
+      try {
+        const range = document.createRange();
+        range.setStartAfter(node);
+        range.collapse(true);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      } catch (err) {
+        console.warn('[Crear] placeCaretAfterNode error', err);
+      }
+    },
+    focusInput() {
+      if (this.$refs.editable) {
+        this.$refs.editable.focus();
+        // colocar caret al final
+        this.placeCaretAtEnd(this.$refs.editable);
+      }
+    },
+    setCaretByOffset(el, offset) {
+      const range = document.createRange();
+      const sel = window.getSelection();
+      let node = el.firstChild;
+      let traversed = 0;
+      function nextNode(n) {
+        if (n.firstChild) return n.firstChild;
+        while (n && !n.nextSibling) n = n.parentNode;
+        return n ? n.nextSibling : null;
+      }
+      while (node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const len = node.textContent.length;
+          if (traversed + len >= offset) {
+            range.setStart(node, offset - traversed);
+            range.collapse(true);
+            break;
+          }
+          traversed += len;
+        } else if (node.nodeName === "BR") {
+          if (traversed + 1 >= offset) {
+            range.setStartAfter(node);
+            range.collapse(true);
+            break;
+          }
+          traversed += 1;
+        }
+        node = nextNode(node);
+      }
+      if (!node) {
+        range.selectNodeContents(el);
+        range.collapse(false);
+      }
+      sel.removeAllRanges();
+      sel.addRange(range);
+    },
+    getCaretOffset(el) {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return 0;
+      const range = sel.getRangeAt(0);
+      const preRange = range.cloneRange();
+      preRange.selectNodeContents(el);
+      preRange.setEnd(range.endContainer, range.endOffset);
+      const walker = document.createTreeWalker(preRange.commonAncestorContainer || el, NodeFilter.SHOW_ALL, null);
+      let offset = 0;
+      function count(node) {
+        if (node.nodeType === Node.TEXT_NODE) offset += node.textContent.length;
+        if (node.nodeName === "BR") offset += 1;
+        let c = node.firstChild;
+        while (c) { count(c); c = c.nextSibling; }
+      }
+      count(preRange.cloneContents());
+      return offset;
+    },
+    parseMarkdown(str) {
+      if (!str) return "";
+      // escapamos caracteres HTML primero
+      let out = String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+      // reglas simples (WhatsApp-like)
+      // **bold** o *bold*
+      out = out.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+      out = out.replace(/\*(.*?)\*/g, "<strong>$1</strong>");
+      // _italic_
+      out = out.replace(/_(.*?)_/g, "<em>$1</em>");
+      // ~strike~
+      out = out.replace(/~(.*?)~/g, "<del>$1</del>");
+      // links [text](http...)
+      out = out.replace(
+        /\[(.*?)\]\((https?:\/\/[^\s]+)\)/g,
+        '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
+      );
+      // convert simple urls to links (http... or www.)
+      out = out.replace(
+        /(^|\s)(https?:\/\/[^\s<>]+)(\s|$)/g,
+        '$1<a href="$2" target="_blank" rel="noopener noreferrer">$2</a>$3'
+      );
+      out = out.replace(
+        /(^|\s)(www\.[^\s<>]+)(\s|$)/g,
+        '$1<a href="http://$2" target="_blank" rel="noopener noreferrer">$2</a>$3'
+      );
+
+      // saltos de línea
+      out = out.replace(/\n/g, "<br>");
+      return out;
+    },
+
+    // ----------------- ARCHIVO -----------------
     handleFileChange(event) {
       const file = event.target.files[0];
       if (file) {
-        const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        const validTypes = [
+          "image/jpeg",
+          "image/png",
+          "image/gif",
+          "image/webp",
+        ];
         if (!validTypes.includes(file.type)) {
-          this.errors.image = 'Solo se permiten JPEG, PNG, GIF o WEBP.';
-          this.selectedFileName = '';
+          this.errors.image = "Solo se permiten JPEG, PNG, GIF o WEBP.";
+          this.selectedFileName = "";
           this.post.image = null;
-          this.imagePreviewUrl = '';
+          this.imagePreviewUrl = "";
           return;
         }
         this.selectedFileName = file.name;
         this.post.image = file;
-        this.errors.image = '';
+        this.errors.image = "";
         this.imagePreviewUrl = URL.createObjectURL(file);
       } else {
-        this.selectedFileName = '';
+        this.selectedFileName = "";
         this.post.image = null;
-        this.imagePreviewUrl = '';
+        this.imagePreviewUrl = "";
       }
     },
 
+    // ----------------- INGREDIENTES -----------------
     addIngredient() {
       const lastIdx = this.post.ingredients.length - 1;
       const lastIngr = this.post.ingredients[lastIdx];
 
       // Validar último ingrediente
       if (!lastIngr.name || !lastIngr.name.trim()) {
-        this.errors[`ingredient_name_${lastIdx}`] = 'El nombre es requerido.';
+        this.errors[`ingredient_name_${lastIdx}`] = "El nombre es requerido.";
         return;
       }
-      if (lastIngr.quantity === '' || lastIngr.quantity == null) {
-        this.errors[`ingredient_quantity_${lastIdx}`] = 'La cantidad es requerida.';
+      if (lastIngr.quantity === "" || lastIngr.quantity == null) {
+        this.errors[`ingredient_quantity_${lastIdx}`] =
+          "La cantidad es requerida.";
         return;
       }
       if (!lastIngr.unit || !lastIngr.unit.trim()) {
-        this.errors[`ingredient_unit_${lastIdx}`] = 'La unidad es requerida.';
+        this.errors[`ingredient_unit_${lastIdx}`] = "La unidad es requerida.";
         return;
       }
 
       // Limpiar errores y agregar uno nuevo
-      this.errors[`ingredient_name_${lastIdx}`] = '';
-      this.errors[`ingredient_quantity_${lastIdx}`] = '';
-      this.errors[`ingredient_unit_${lastIdx}`] = '';
-      this.post.ingredients.push({ name: '', quantity: '', unit: '' });
+      this.errors[`ingredient_name_${lastIdx}`] = "";
+      this.errors[`ingredient_quantity_${lastIdx}`] = "";
+      this.errors[`ingredient_unit_${lastIdx}`] = "";
+      this.post.ingredients.push({ name: "", quantity: "", unit: "" });
     },
 
     removeIngredient(index) {
@@ -223,60 +696,71 @@ export default {
     },
 
     parseIngredients(raw) {
-      if (!raw || !Array.isArray(raw)) return [{ name: '', quantity: '', unit: '' }];
+      // Acepta array de objetos o string JSON (tolerante a claves sin comillas)
+      if (!raw) return [{ name: "", quantity: "", unit: "" }];
+      let arr = raw;
+      if (typeof raw === 'string') {
+        try {
+          const validJSON = raw.replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
+          arr = JSON.parse(validJSON);
+        } catch (e) {
+          return [{ name: "", quantity: "", unit: "" }];
+        }
+      }
+      if (!Array.isArray(arr)) return [{ name: "", quantity: "", unit: "" }];
 
-      return raw.map((ing) => {
-        const quantity = ing.quantity ?? '';
-        const parts = quantity.split(' ');
+      return arr.map((ing) => {
+        const quantity = ing?.quantity ?? "";
+        const parts = String(quantity).trim().split(/\s+/);
         const [value, ...unitParts] = parts;
-
         return {
-          name: ing.name || '',
-          quantity: value || '',
-          unit: unitParts.join(' ') || ''
+          name: ing?.name || "",
+          quantity: value || "",
+          unit: unitParts.join(" ") || "",
         };
       });
     },
 
+    // ----------------- VALIDACIONES -----------------
     validateTitle() {
       if (!this.post.title || !this.post.title.trim()) {
-        this.errors.title = 'El título es requerido.';
+        this.errors.title = "El título es requerido.";
       } else if (this.post.title.trim().length < 3) {
-        this.errors.title = 'Debe tener al menos 3 caracteres.';
+        this.errors.title = "Debe tener al menos 3 caracteres.";
       } else {
-        this.errors.title = '';
+        this.errors.title = "";
       }
     },
 
     validateDescription() {
       if (!this.post.description || !this.post.description.trim()) {
-        this.errors.content = 'La descripción es requerida.';
+        this.errors.content = "La descripción es requerida.";
       } else if (this.post.description.trim().length < 10) {
-        this.errors.content = 'Debe tener al menos 10 caracteres.';
+        this.errors.content = "Debe tener al menos 10 caracteres.";
       } else {
-        this.errors.content = '';
+        this.errors.content = "";
       }
     },
 
     validateIngredients() {
-      this.errors.ingredients = '';
+      this.errors.ingredients = "";
       this.post.ingredients.forEach((ing, i) => {
         if (!ing.name || !ing.name.trim()) {
-          this.errors[`ingredient_name_${i}`] = 'El nombre es requerido.';
+          this.errors[`ingredient_name_${i}`] = "El nombre es requerido.";
         } else {
-          this.errors[`ingredient_name_${i}`] = '';
+          this.errors[`ingredient_name_${i}`] = "";
         }
-        if (ing.quantity === '' || ing.quantity == null) {
-          this.errors[`ingredient_quantity_${i}`] = 'La cantidad es requerida.';
+        if (ing.quantity === "" || ing.quantity == null) {
+          this.errors[`ingredient_quantity_${i}`] = "La cantidad es requerida.";
         } else if (ing.quantity <= 0) {
-          this.errors[`ingredient_quantity_${i}`] = 'Debe ser mayor a 0.';
+          this.errors[`ingredient_quantity_${i}`] = "Debe ser mayor a 0.";
         } else {
-          this.errors[`ingredient_quantity_${i}`] = '';
+          this.errors[`ingredient_quantity_${i}`] = "";
         }
         if (!ing.unit || !ing.unit.trim()) {
-          this.errors[`ingredient_unit_${i}`] = 'La unidad es requerida.';
+          this.errors[`ingredient_unit_${i}`] = "La unidad es requerida.";
         } else {
-          this.errors[`ingredient_unit_${i}`] = '';
+          this.errors[`ingredient_unit_${i}`] = "";
         }
       });
     },
@@ -284,31 +768,31 @@ export default {
     validateIngredientName(index) {
       const ing = this.post.ingredients[index];
       if (!ing.name || !ing.name.trim()) {
-        this.errors[`ingredient_name_${index}`] = 'El nombre es requerido.';
+        this.errors[`ingredient_name_${index}`] = "El nombre es requerido.";
       } else {
-        this.errors[`ingredient_name_${index}`] = '';
+        this.errors[`ingredient_name_${index}`] = "";
       }
     },
 
     validateIngredientQuantity(index) {
       const ing = this.post.ingredients[index];
-      if (ing.quantity === '' || ing.quantity == null) {
+      if (ing.quantity === "" || ing.quantity == null) {
         this.errors[`ingredient_quantity_${index}`] =
-          'La cantidad es requerida.';
+          "La cantidad es requerida.";
       } else if (ing.quantity <= 0) {
         this.errors[`ingredient_quantity_${index}`] =
-          'La cantidad debe ser mayor a 0.';
+          "La cantidad debe ser mayor a 0.";
       } else {
-        this.errors[`ingredient_quantity_${index}`] = '';
+        this.errors[`ingredient_quantity_${index}`] = "";
       }
     },
 
     validateIngredientUnit(index) {
       const ing = this.post.ingredients[index];
       if (!ing.unit || !ing.unit.trim()) {
-        this.errors[`ingredient_unit_${index}`] = 'La unidad es requerida.';
+        this.errors[`ingredient_unit_${index}`] = "La unidad es requerida.";
       } else {
-        this.errors[`ingredient_unit_${index}`] = '';
+        this.errors[`ingredient_unit_${index}`] = "";
       }
     },
 
@@ -316,12 +800,12 @@ export default {
       this.isIngredientListValid = isValid;
     },
 
+    // ----------------- FORM / SUBMIT -----------------
     validateForm() {
       this.validateTitle();
       this.validateDescription();
       return (
-        !Object.values(this.errors).some((e) => e) &&
-        this.isIngredientListValid // Validar que la lista de ingredientes no esté vacía
+        !Object.values(this.errors).some((e) => e) && this.isIngredientListValid
       );
     },
 
@@ -339,67 +823,62 @@ export default {
 
       const ingredientsPayload = this.post.ingredients.map((ing) => ({
         name: ing.name,
-        quantity: `${ing.quantity} ${ing.unit}`.trim()
+        quantity: `${ing.quantity} ${ing.unit}`.trim(),
       }));
 
-      console.log('Ingredientes a enviar:', ingredientsPayload);
-
-
-
       const formData = new FormData();
-      formData.append('title', this.post.title);
-      formData.append('description', this.post.description);
-      formData.append('is_private', this.post.is_private);
-      formData.append('ingredients', JSON.stringify(ingredientsPayload));
-
+      formData.append("title", this.post.title);
+      formData.append("description", this.post.description);
+      formData.append("is_private", this.post.is_private);
+      formData.append("ingredients", JSON.stringify(ingredientsPayload));
 
       // Solo adjuntar imagen si es un archivo nuevo (File), no URL
       if (this.post.image && this.post.image instanceof File) {
-        formData.append('imagen', this.post.image);
+        formData.append("imagen", this.post.image);
       }
 
       // Añadimos el método override si estamos editando
       if (this.postToEdit) {
-        formData.append('_method', 'PUT');
+        formData.append("_method", "PUT");
       }
 
       try {
-        console.log(this.postToEdit);
         const response = this.postToEdit
           ? await apiService.updatePost(this.postToEdit.id, formData)
           : await apiService.createPost(formData);
 
-        if (response.data.status === 'success') {
+        if (response.data.status === "success") {
           const updatedPost = response.data.data;
 
           // Actualizamos localmente el post con la respuesta del backend
-          this.post.title = updatedPost.title || '';
-          this.post.description = updatedPost.description || '';
+          this.post.title = updatedPost.title || "";
+          this.post.description = updatedPost.description || "";
           this.post.is_private = updatedPost.is_private || false;
-          this.post.ingredients = this.parseIngredients(updatedPost.ingredients);
+          this.post.ingredients = this.parseIngredients(
+            updatedPost.ingredients
+          );
           this.post.image = null; // No hay archivo nuevo seleccionado
-          this.imagePreviewUrl = updatedPost.imagen || '';
+          this.imagePreviewUrl = updatedPost.imagen || "";
 
           // Emitimos el evento para notificar al padre
           this.$emit(
-            this.postToEdit ? 'post-updated' : 'post-created',
+            this.postToEdit ? "post-updated" : "post-created",
             updatedPost
           );
           this.closeModal();
         }
-
       } catch (err) {
         if (err.response && err.response.data) {
-          console.error('Error backend:', err.response.data);
+          console.error("Error backend:", err.response.data);
           this.notificationStore.show(
-            'Error: ' + JSON.stringify(err.response.data),
-            'error'
+            "Error: " + JSON.stringify(err.response.data),
+            "error"
           );
         } else {
-          console.error('Error al procesar el post:', err);
+          console.error("Error al procesar el post:", err);
           this.notificationStore.show(
-            'Ocurrió un error al procesar el formulario.',
-            'error'
+            "Ocurrió un error al procesar el formulario.",
+            "error"
           );
         }
       } finally {
@@ -407,21 +886,17 @@ export default {
       }
     },
 
-
-    closeModal() {
-      this.$emit('close');
-    },
-
     nextStep() {
       if (this.currentStep === 1) {
         const hasImageFile = this.post.image instanceof File;
-        const hasImageUrl = this.imagePreviewUrl && this.imagePreviewUrl.trim() !== '';
+        const hasImageUrl =
+          this.imagePreviewUrl && this.imagePreviewUrl.trim() !== "";
 
         if (!hasImageFile && !hasImageUrl) {
-          this.errors.image = 'Debes seleccionar una imagen.';
+          this.errors.image = "Debes seleccionar una imagen.";
           return;
         } else {
-          this.errors.image = '';
+          this.errors.image = "";
         }
       }
 
@@ -435,14 +910,16 @@ export default {
       }
 
       this.currentStep++;
-    }
-    ,
-
+    },
 
     prevStep() {
       this.currentStep--;
-    }
-  }
+    },
+
+    closeModal() {
+      this.$emit("close");
+    },
+  },
 };
 </script>
 
@@ -505,7 +982,6 @@ section main {
   display: flex;
   flex-direction: row;
   height: auto;
-
 }
 
 form {
@@ -743,10 +1219,93 @@ textarea {
   align-items: stretch;
 }
 
+/* --- NUEVOS ESTILOS PARA EL INPUT MARKDOWN --- */
+.markdown-input {
+  position: relative;
+  border: 1px solid var(--sombra-color);
+  border-radius: 6px;
+  background: white;
+  min-height: 80px;
+  padding: 12px;
+  font-size: 16px;
+  color: black;
+  overflow-y: auto;
+  cursor: text;
+}
+
+/* Editor único */
+.editor {
+  min-height: 80px;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 6px;
+  outline: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-y: auto;
+  caret-color: black;
+  color: black;
+  background: white;
+}
+
+/* Los marcadores de sintaxis se vuelven invisibles para conservar el estilo al teclear espacios */
+.md-marker {
+  color: inherit;
+  display: inline;
+}
+
+/* estilos visuales para markdown */
+.editor b {
+  font-weight: bold;
+}
+
+.editor i {
+  font-style: italic;
+}
+
+.editor s {
+  text-decoration: line-through;
+}
+
+.editor code {
+  background: #f5f5f5;
+  padding: 0 3px;
+  border-radius: 3px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.editor code.mono {
+  display: inline-block;
+  padding: 2px 4px;
+}
+
+.editor ul {
+  margin: 6px 0;
+  padding-left: 20px;
+  list-style: disc;
+  list-style-position: inside;
+}
+
+.editor ol {
+  margin: 6px 0;
+  padding-left: 22px;
+  list-style: decimal;
+  list-style-position: inside;
+}
+
+.editor blockquote {
+  border-left: 3px solid #aaa;
+  margin: 6px 0;
+  padding-left: 8px;
+  color: #555;
+}
+
+.placeholder {
+  color: #aaa;
+}
 
 /* Media queries para responsivo */
 @media (max-width: 768px) {
-
   .crear-post-container main {
     flex-direction: column;
     align-items: center;
@@ -788,11 +1347,11 @@ textarea {
 
   input,
   textarea,
-  button[type='submit'] {
+  button[type="submit"] {
     padding: 12px;
   }
 
-  button[type='submit'] {
+  button[type="submit"] {
     margin: 1em;
   }
 
