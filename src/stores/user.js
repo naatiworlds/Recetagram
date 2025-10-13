@@ -84,57 +84,44 @@ export const useUserStore = defineStore('user', {
       )
     },
 
-    toggleLike(post, notificationStore) {
+    async toggleLike(post, notificationStore) {
       const userId = this.user?.id
       if (!this.isAuthenticated || !userId) {
         notificationStore.show('Debes iniciar sesión para dar like', 'warning')
         return
       }
 
-      const alreadyLikedInBackend = post.liked_by?.some(l => l.id === userId)
+      const alreadyLiked = Array.isArray(post.liked_by)
+        ? post.liked_by.some(l => l.id === userId)
+        : false
 
-      // Buscar si hay un like o unlike en buffer
-      const hasPendingLike = this.buffer.some(
-        a => a.type === 'like' && a.post_id === post.id && a.user_id === userId
-      )
-      const hasPendingUnlike = this.buffer.some(
-        a => a.type === 'unlike' && a.post_id === post.id && a.user_id === userId
-      )
+      // Estado original para revertir en caso de error
+      const originalLikes = Number(post.likes_count || 0)
+      const originalLikedBy = Array.isArray(post.liked_by) ? [...post.liked_by] : []
 
-      // CASO 1: Ya existe en backend y usuario da unlike
-      if (alreadyLikedInBackend && !hasPendingUnlike) {
-        this.buffer.push({ type: 'unlike', post_id: post.id, user_id: userId })
-        post.likes_count--
-        notificationStore.show('Like eliminado correctamente', 'success')
-        return
+      // Actualización optimista
+      if (alreadyLiked) {
+        post.likes_count = Math.max(0, originalLikes - 1)
+        post.liked_by = originalLikedBy.filter(u => u.id !== userId)
+      } else {
+        post.likes_count = originalLikes + 1
+        post.liked_by = [...originalLikedBy, { id: userId }]
       }
 
-      // CASO 2: Usuario ya puso un unlike pendiente → lo cancela (vuelve al estado backend)
-      if (hasPendingUnlike) {
-        this.buffer = this.buffer.filter(
-          a => !(a.type === 'unlike' && a.post_id === post.id && a.user_id === userId)
+      try {
+        await apiService.toggleLike(post.id)
+        notificationStore.show(
+          alreadyLiked ? 'Like eliminado correctamente' : 'Like agregado correctamente',
+          'success'
         )
-        post.likes_count++
-        notificationStore.show('Like restaurado', 'success')
-        return
-      }
-
-      // CASO 3: No estaba en backend → se agrega like (nuevo like local)
-      if (!alreadyLikedInBackend && !hasPendingLike) {
-        this.buffer.push({ type: 'like', post_id: post.id, user_id: userId })
-        post.likes_count++
-        notificationStore.show('Like agregado correctamente', 'success')
-        return
-      }
-
-      // CASO 4: Ya hay like pendiente → se cancela
-      if (hasPendingLike) {
-        this.buffer = this.buffer.filter(
-          a => !(a.type === 'like' && a.post_id === post.id && a.user_id === userId)
+      } catch (error) {
+        // Revertir cambios optimistas en caso de error
+        post.likes_count = originalLikes
+        post.liked_by = originalLikedBy
+        notificationStore.show(
+          error?.response?.data?.message || 'Error al procesar el like',
+          'error'
         )
-        post.likes_count--
-        notificationStore.show('Like cancelado', 'success')
-        return
       }
     },
     addCommentToBuffer(postId, content) {

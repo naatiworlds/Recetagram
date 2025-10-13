@@ -330,6 +330,9 @@ export default {
     handleEdit() {
       this.$emit('edit-post', this.post)
     },
+    handleLike() {
+      this.userStore.toggleLike(this.post, this.notificationStore)
+    },
     async handlePostUpdated() {
       this.handleModalClose();
       // Aquí recargas los posts (ver opción 1)
