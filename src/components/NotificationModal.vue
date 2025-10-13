@@ -19,8 +19,14 @@
         No tienes notificaciones nuevas
       </div>
 
-      <div v-else v-for="notification in notifications" :key="notification.id" class="notification-item"
-        :class="{ 'unread': !notification.read }">
+      <div
+        v-else
+        v-for="notification in notifications"
+        :key="notification.id"
+        class="notification-item"
+        :class="{ 'unread': !notification.read, 'is-clickable': canNavigate(notification) }"
+        @click="handleNavigate(notification)"
+      >
         <div class="notification-icon">
           <i :class="getNotificationIcon(notification.type)"></i>
         </div>
@@ -90,6 +96,44 @@ export default {
       } finally {
         this.loading = false
       }
+    },
+    getPostId(notification) {
+      return (
+        notification?.post_id ||
+        notification?.comment?.post_id ||
+        notification?.post?.id ||
+        null
+      )
+    },
+    getActorUserId(notification) {
+      // El actor es quien generó la notificación (no el receptor). Evitamos user_id porque suele ser el receptor.
+      return (
+        notification?.actor_id ||
+        notification?.follower_id ||
+        notification?.follower?.id ||
+        notification?.from_user_id ||
+        notification?.from_user?.id ||
+        notification?.user?.id || // fallback: algunos backends usan "user" como actor
+        null
+      )
+    },
+    canNavigate(notification) {
+      const t = notification?.type
+      if (!t) return false
+      if (['comment', 'like'].includes(t)) return Boolean(this.getPostId(notification))
+      if (['new_follower', 'follow_request', 'follow_request_accepted', 'unfollow'].includes(t)) return Boolean(this.getActorUserId(notification))
+      return false
+    },
+    handleNavigate(notification) {
+      if (!this.canNavigate(notification)) return
+      const t = notification.type
+      if (['comment', 'like'].includes(t)) {
+        const postId = this.getPostId(notification)
+        if (postId) this.$router.push(`/posts/${postId}`)
+        return
+      }
+      const actorId = this.getActorUserId(notification)
+      if (actorId) this.$router.push(`/user/${actorId}`)
     },
     async markAllAsRead() {
       if (this.userNotifications.unreadCount === 0) {
@@ -265,6 +309,10 @@ export default {
 
 .notification-item:hover {
   background-color: #FFF3D4;
+}
+
+.notification-item.is-clickable {
+  cursor: pointer;
 }
 
 .notification-item.unread {
