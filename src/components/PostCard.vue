@@ -20,7 +20,29 @@
     <router-link :to="postUrl" class="post-image-link">
       <img :src="getImageUrl(post.imagen)" class="post-img" :alt="post.title" @error="handleImageError" />
     </router-link>
+    <div class="actions">
+      <button @click="handleLike">
+        <i class="fas fa-heart" :class="isLikedByCurrentUser ? 'green-heart' : 'white-heart'"></i>
+        {{ post.likes_count }}
+      </button>
 
+      <button class="comment-button" @click="handleComments">
+        <i class="fas fa-comment"></i>
+        {{ post.comments_count }}
+      </button>
+
+      <button class="share-button" @click="handleShare">
+        <i class="fas fa-share"></i>
+      </button>
+
+      <!-- Botón de edición -->
+      <button v-if="isProfileView && isOwnProfile" @click="handleEdit" class="edit-button">
+        <i class="fas fa-edit"></i>
+      </button>
+      <button v-if="isProfileView && isOwnProfile" @click="confirmDelete" class="action-button delete">
+        <i class="fas fa-trash"></i>
+      </button>
+    </div>
     <h2 class="post-title">{{ post.title }}</h2>
     <div class="post-description" v-html="renderedDisplayedDescription"></div>
     <div v-if="post.description && post.description.length > 42" class="see-more" @click="toggleDescription">
@@ -47,29 +69,7 @@
 
     <p class="date">{{ formatDate(post.created_at) }}</p>
 
-    <div class="actions">
-      <button @click="handleLike">
-        <i class="fas fa-heart" :class="isLikedByCurrentUser ? 'green-heart' : 'white-heart'"></i>
-        {{ post.likes_count }}
-      </button>
 
-      <button class="comment-button" @click="handleComments">
-        <i class="fas fa-comment"></i>
-        {{ post.comments_count }}
-      </button>
-
-      <button class="share-button" @click="handleShare">
-        <i class="fas fa-share"></i>
-      </button>
-
-      <!-- Botón de edición -->
-      <button v-if="isProfileView && isOwnProfile" @click="handleEdit" class="edit-button">
-        <i class="fas fa-edit"></i>
-      </button>
-      <button v-if="isProfileView && isOwnProfile" @click="confirmDelete" class="action-button delete">
-        <i class="fas fa-trash"></i>
-      </button>
-    </div>
 
     <!-- Modal de confirmación -->
     <div v-if="showDeleteModal" class="modal">
@@ -357,7 +357,7 @@ export default {
           this.showDeleteModal = false
         })
     },
- 
+
 
     toggleDescription() {
       this.showFullDescription = !this.showFullDescription;
@@ -375,7 +375,7 @@ export default {
   background-color: var(--sombra-color);
   border-radius: 10px;
   color: var(--text-color-important);
-  height: calc((100vh - 240px) * 1);
+  height: calc(100vh - 130px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -446,6 +446,7 @@ export default {
   display: block;
   cursor: pointer;
   transition: transform 0.2s ease;
+  max-height: 50%;
 }
 
 .post-image-link:hover {
@@ -456,9 +457,10 @@ export default {
   width: 100%;
   /* 40% de la altura del card */
   object-fit: contain;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: auto;
   border-radius: 10px;
   margin: 10px 0;
+  max-height: 100%;
 }
 
 /* === Título y descripción === */
@@ -649,6 +651,10 @@ export default {
 /* Media queries para ajustar la imagen en pantallas más pequeñas */
 @media (max-width: 768px) {
 
+  .post-card {
+    height: calc(100vh - 130px);
+    padding: 15px;
+  }
 
   .post-title {
     font-size: 1.3em;
@@ -670,9 +676,17 @@ export default {
   }
 }
 
+@media (max-width: 600px) {
+  .post-card {
+    height: calc(100vh - 180px);
+    padding: 15px;
+  }
+
+
+}
+
 @media (max-width: 480px) {
   .post-card {
-    height: calc(100vh - 280px);
     padding: 10px;
   }
 

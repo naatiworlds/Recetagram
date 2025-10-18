@@ -80,7 +80,7 @@ export default {
     },
 
     handleShowComments(postId) {
-      console.log('Post ID:', postId) // Verificar el ID del post
+  // Post ID debugging removed
       this.selectedPostId = postId
       this.showComments = true
       this.router.replace({

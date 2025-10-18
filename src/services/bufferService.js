@@ -11,18 +11,18 @@ let isFlushing = false;
 // Obtener el buffer desde localStorage
 function getBuffer() {
     const buffer = localStorage.getItem(BUFFER_KEY);
-    console.log('Obteniendo buffer desde localStorage:', buffer); // Verificar datos obtenidos
+    // obtained buffer from localStorage
     return buffer ? JSON.parse(buffer) : {}; // Cambiar [] por {}
 }
 
 // Guardar el buffer en localStorage
 function saveBuffer(buffer) {
-    console.log('Guardando buffer en localStorage:', JSON.stringify(buffer, null, 2)); // Verificar datos guardados
+    // saved buffer to localStorage
     localStorage.setItem(BUFFER_KEY, JSON.stringify(buffer));
 }
 
 function removeBuffer() {
-    console.log('Limpiando buffer del localStorage');
+    // cleared buffer from localStorage
     localStorage.removeItem(BUFFER_KEY);
 }
 
@@ -31,7 +31,7 @@ export function addToBuffer(actionType, data, notificationStore, options = {}) {
     // options puede incluir: { uniqueKey: ['post_id', 'user_id'], replace: true }
     // Ejemplo: addToBuffer('likes', { post_id, user_id }, store, { uniqueKey: ['post_id', 'user_id'], replace: true })
 
-    console.log(`addToBuffer llamado con actionType: ${actionType}, data:`, data);
+    // addToBuffer called
 
     try {
         const buffer = getBuffer();
@@ -77,7 +77,7 @@ export function addToBuffer(actionType, data, notificationStore, options = {}) {
         // Enviar la petición directamente al backend como respaldo
         apiService.sendBatchRequests({ [actionType]: [data] })
             .then(response => {
-                console.log('Petición enviada directamente al backend:', response);
+                // request sent directly to backend
                 notificationStore?.show?.('Petición enviada directamente al backend', 'success');
             })
             .catch(err => {
@@ -105,7 +105,7 @@ export async function flushBuffer() {
     flushPromise = (async () => {
         try {
             const response = await apiService.sendBatchRequests(buffer);
-            console.log('Buffer enviado con éxito:', response);
+            // buffer sent successfully
             removeBuffer();
         } catch (error) {
             console.error('Error al enviar el buffer:', error);

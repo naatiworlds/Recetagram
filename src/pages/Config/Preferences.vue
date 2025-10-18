@@ -139,7 +139,7 @@ export default {
             const selectedTheme = event.target.checked ? 'dark' : 'light';
             this.isDarkMode = event.target.checked;
             applyTheme(selectedTheme);
-            console.log(`Tema cambiado a: ${selectedTheme}`);
+            // theme changed
         },
         setTheme(event) {
             const selectedTheme = event.target.value;

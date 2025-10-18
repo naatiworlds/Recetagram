@@ -1,7 +1,7 @@
 <template>
   <UpdateBanner />
   <Header @toggle-menu="toggleMenu" />
-  <Nav :menu-visible="isMenuVisible" />
+  <Nav :menu-visible="isMenuVisible" @toggle-menu="toggleMenu" />
   <Notification />
   <router-view />
   
@@ -57,11 +57,23 @@ export default {
           }
         }
       }
+    },
+
+    // initUpdateSystem moved into this methods block so we don't overwrite toggleMenu
+    initUpdateSystem() {
+      // Importar dinámicamente el store de actualizaciones
+      import('./stores/update.js').then(({ useUpdateStore }) => {
+        const updateStore = useUpdateStore();
+        updateStore.initUpdateChecker();
+      });
     }
   },
 
   created() {
     this.router = useRouter();
+    this.router.afterEach((to, from) => {
+      // route change - debug removed
+    });
     // this.hideMenuOnUserConfig(); // Llamar al método para ocultar el menú en UserConfig
     // this.router.afterEach(() => {
     //   this.hideMenuOnUserConfig(); // Actualizar visibilidad del menú después de cada navegación
@@ -71,17 +83,7 @@ export default {
     this.initUpdateSystem();
   },
 
-  methods: {
-    // ... existing methods ...
-    
-    initUpdateSystem() {
-      // Importar dinámicamente el store de actualizaciones
-      import('./stores/update.js').then(({ useUpdateStore }) => {
-        const updateStore = useUpdateStore();
-        updateStore.initUpdateChecker();
-      });
-    }
-  }
+  // methods merged above
 }
 </script>
 

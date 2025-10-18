@@ -106,7 +106,7 @@ export default {
     IngredientInput,
   },
   mounted() {
-    console.log('[Crear] mounted');
+  // Crear mounted
   },
   props: {
     postToEdit: {
@@ -147,7 +147,7 @@ export default {
     postToEdit: {
       immediate: true,
       handler(newPost) {
-        console.log('[Crear] watcher postToEdit trigger:', !!newPost);
+  // Crear watcher postToEdit triggered
         if (newPost) {
           this.post.title = newPost.title || "";
           this.post.description = newPost.description || "";
@@ -165,7 +165,7 @@ export default {
           // Asegurar que estamos en el paso 2 (editor visible)
           if (this.currentStep !== 2) this.currentStep = 2;
           this.$nextTick(() => {
-            console.log('[Crear] nextTick to render description in editor');
+            // nextTick to render description
             this.renderDescriptionToEditor();
           });
         }
@@ -173,7 +173,7 @@ export default {
     },
     currentStep(newVal) {
       if (newVal === 2) {
-        console.log('[Crear] currentStep=2 → intentar renderizar descripción');
+  // trying to render description for step 2
         this.$nextTick(() => this.renderDescriptionToEditor());
       }
     },
@@ -187,11 +187,11 @@ export default {
         if (!this.$refs.editable) return;
         const currentPlain = this.$refs.editable.innerText || "";
         const desired = newVal || "";
-        console.log('[Crear] watcher post.description -> desired.len:', desired.length, 'currentPlain.len:', currentPlain.length);
+  // description watcher sync
         if (currentPlain !== desired) {
-          console.log('[Crear] watcher applying formatToHtml to sync editor');
+          // applying formatToHtml
           this.$refs.editable.innerHTML = this.formatToHtml(desired);
-          console.log('[Crear] watcher after sync -> innerText.len:', (this.$refs.editable.innerText || '').length);
+          // after sync
         }
       });
       this.validateDescription();
@@ -217,7 +217,7 @@ export default {
           const range = sel.getRangeAt(0).cloneRange();
           range.collapse(false);
           range.insertNode(document.createTextNode('[[CARET]]'));
-          console.log('[Crear] token insertado en caret (colapsado).');
+          // token inserted
         }
       }
 
@@ -227,7 +227,7 @@ export default {
         .replace(/\u00A0/g, ' ')     // nbsp -> espacio
         .replace(/\u200B/g, '')      // zero-width space
         .replace(/\r\n?/g, '\n');  // normalizar CRLF -> LF
-      console.log('[Crear] onInput textWithToken.len:', textWithToken.length, '| sample:', textWithToken.slice(0, 80));
+  // onInput sample
 
       // Límite de longitud (sobre el texto con token)
       if (textWithToken.length > this.maxDescriptionLength) {
@@ -236,7 +236,7 @@ export default {
 
       // Texto real para el modelo sin token
       const text = textWithToken.replace('[[CARET]]', '');
-      console.log('[Crear] onInput text(len):', text.length);
+  // onInput text length
 
       // Renderizado estilo WhatsApp con reglas solicitadas
       const formatInline = (s) => {
@@ -304,7 +304,7 @@ export default {
 
       this.isTypingUpdate = true;
       el.innerHTML = htmlWithToken;
-      console.log('[Crear] onInput innerHTML.len:', (el.innerHTML || '').length, 'innerText.len:', (el.innerText || '').length);
+  // input inner lengths
 
       // Restaurar caret en el marcador
       const marker = el.querySelector('#__caret__');
@@ -316,7 +316,7 @@ export default {
         sel2.removeAllRanges();
         sel2.addRange(range);
         marker.parentNode.removeChild(marker);
-        console.log('[Crear] caret restaurado tras marcador');
+  // caret restored
       }
 
       this.post.description = text;
@@ -380,7 +380,7 @@ export default {
       // Ítem con contenido: permitir comportamiento por defecto (creará nuevo LI)
     },
     onEditorFocus() {
-      console.log('[Crear] editor focus. innerText.len:', (this.$refs.editable?.innerText || '').length);
+  // editor focus
     },
     // Genera HTML desde texto plano (sin token). Reutiliza las mismas reglas del editor
     formatToHtml(str) {
@@ -490,13 +490,13 @@ export default {
     renderDescriptionToEditor() {
       const el = this.$refs.editable;
       if (!el) {
-        console.log('[Crear] renderDescriptionToEditor: ref editable no disponible aún');
+  // renderDescriptionToEditor: ref not available
         return;
       }
       const txt = this.post.description || '';
-      console.log('[Crear] renderDescriptionToEditor -> txt.len:', txt.length);
+  // renderDescriptionToEditor text length
       el.innerHTML = this.formatToHtml(txt);
-      console.log('[Crear] render -> innerHTML.len:', (el.innerHTML || '').length, 'innerText.len:', (el.innerText || '').length);
+  // render inner lengths
       if ((el.innerText || '').trim() === '' && txt.trim() !== '') {
         console.warn('[Crear] render: innerText vacío; fallback a texto plano');
         el.innerText = txt;

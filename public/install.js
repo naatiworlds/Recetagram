@@ -25,7 +25,7 @@ function hideBanner() {
 
 // Escuchar el evento beforeinstallprompt
 window.addEventListener('beforeinstallprompt', (e) => {
-  console.log('beforeinstallprompt event fired');
+  // beforeinstallprompt event fired
   e.preventDefault();
   deferredPrompt = e;
   
@@ -43,7 +43,7 @@ if (installBtn) {
     }
     
     if (!deferredPrompt) {
-      console.log('No hay deferredPrompt disponible');
+  // No deferredPrompt available
       return;
     }
     
@@ -53,12 +53,12 @@ if (installBtn) {
       
       // Esperar la respuesta del usuario
       const choice = await deferredPrompt.userChoice;
-      console.log('Instalación:', choice.outcome);
+  // Installation outcome logged
       
       if (choice.outcome === 'accepted') {
-        console.log('Usuario aceptó la instalación');
+  // User accepted installation
       } else {
-        console.log('Usuario rechazó la instalación');
+  // User rejected installation
       }
       
       // Limpiar el prompt
@@ -74,7 +74,7 @@ if (installBtn) {
 
 // Escuchar cuando la app se instala
 window.addEventListener('appinstalled', () => {
-  console.log('PWA instalada exitosamente');
+  // PWA installed successfully
   
   // Ocultar el banner después de la instalación
   hideBanner();
@@ -96,6 +96,6 @@ if (isIOS) {
 
 // Verificar si ya está instalada
 if (window.matchMedia('(display-mode: standalone)').matches) {
-  console.log('PWA ya está instalada');
+  // PWA already installed
   hideBanner();
 }

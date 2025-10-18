@@ -1,6 +1,6 @@
 <template>
     <aside id="aside" :class="{ 'oculto': !menuVisible }">
-        <nav>
+    <nav @click="onNavClick">
             <ul>
                 <h1>
                     <a href="/">Recetagram</a>
@@ -121,6 +121,8 @@ export default {
         }
     },
 
+    emits: ['toggle-menu'],
+
     data() {
         return {
             showCrearModal: false,
@@ -140,6 +142,16 @@ export default {
     computed: {
         isAuthenticated() {
             return this.userStore?.isAuthenticated;
+        }
+    },
+
+    mounted() {
+    // debug removed
+    },
+
+    watch: {
+        menuVisible(newVal) {
+            // debug removed
         }
     },
 
@@ -183,6 +195,29 @@ export default {
         closeConfigModal() {
             this.showConfigModal = false; // Cerrar el modal de configuración
         },
+
+        // Close/hide the menu when a link is clicked on small screens
+        onNavClick(event) {
+            // debug removed
+
+            // Find the nearest anchor element from the click target
+            const anchor = event.target && event.target.closest ? event.target.closest('a') : null;
+            if (!anchor) {
+                // debug removed
+                return;
+            }
+
+            const href = anchor.getAttribute('href') || anchor.getAttribute('to') || anchor.getAttribute('data-vue-router-link');
+            // debug removed
+
+            // Only auto-hide on small-ish screens where the nav is shown as a bubble/bar
+            // Broadened breakpoint to 900 to catch tablet / narrower desktop layouts used in testing
+            if (window.innerWidth <= 900 && this.menuVisible) {
+                this.$emit('toggle-menu');
+            } else {
+                // not auto-hiding
+            }
+        }
 
 
     }

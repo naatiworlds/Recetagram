@@ -121,7 +121,7 @@ export default {
           this.comments = response.data.data
         }
       } catch (err) {
-        console.log(err)
+  // error logged
         this.error = 'Error al cargar los comentarios'
         this.notificationStore.show('Error al cargar los comentarios', 'error')
       } finally {

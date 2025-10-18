@@ -19,7 +19,7 @@ export function setupTheme() {
     timerId = setTimeout(function () {
       const selectedTheme = event.target.checked ? 'dark' : 'light';
       applyTheme(selectedTheme);
-      console.log(`Tema cambiado a: ${selectedTheme}`);
+  // theme changed
     }, 3000);
   });
 

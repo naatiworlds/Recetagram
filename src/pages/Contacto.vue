@@ -137,14 +137,14 @@ export default {
     },
     handleSubmit() {
       if (this.validateForm()) {
-        console.log('Formulario válido:', this.form);
+  // form valid
         // Preparar la función para enviar los datos en el futuro
         this.sendData();
       }
     },
     sendData() {
       // Esta función se implementará en el futuro para enviar los datos
-      console.log('Preparando para enviar los datos:', this.form);
+  // preparing to send form data
     }
   }
 };
