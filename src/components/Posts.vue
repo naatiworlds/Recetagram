@@ -350,7 +350,7 @@ export default {
     width: 100%;
     overflow: hidden;
     margin: auto;
-    padding: 20px;
+    padding: 10px;
     scroll-behavior: smooth;
     -ms-overflow-style: none;
     scrollbar-width: none;

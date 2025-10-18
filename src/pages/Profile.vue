@@ -230,11 +230,11 @@ export default {
 
 <style scoped>
 .oculto~.container {
-  position: absolute;
-  top: 9%;
-  left: 5%;
-  width: 90%;
-  z-index: 1;
+    position: absolute;
+    top: 5%;
+    left: 0%;
+    width: 100%;
+    z-index: 1;
 }
 
 .container {

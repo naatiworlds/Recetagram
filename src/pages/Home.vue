@@ -25,7 +25,7 @@ export default {
   position: absolute;
   top: 55%;
   left: 50%;
-  width: 90%;
+  width: 100%;
   z-index: 1;
   max-width: 100%;
   transform: translate(-50%, -50%);
