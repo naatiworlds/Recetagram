@@ -987,7 +987,6 @@ export default {
   align-items: flex-start;
   box-sizing: border-box;
   /* allow internal scrolling when content is taller than modal */
-  overflow-y: auto;
 }
 
 form {
