@@ -196,26 +196,9 @@ export default {
             this.showConfigModal = false; // Cerrar el modal de configuración
         },
 
-        // Close/hide the menu when a link is clicked on small screens
-        onNavClick(event) {
-            // debug removed
-
-            // Find the nearest anchor element from the click target
-            const anchor = event.target && event.target.closest ? event.target.closest('a') : null;
-            if (!anchor) {
-                // debug removed
-                return;
-            }
-
-            const href = anchor.getAttribute('href') || anchor.getAttribute('to') || anchor.getAttribute('data-vue-router-link');
-            // debug removed
-
-            // Do NOT auto-hide on mobile. Consider mobile width <= 600px as mobile.
-            const isMobile = window.innerWidth <= 600;
-            if (!isMobile && this.menuVisible) {
-                // only auto-hide on non-mobile (tablet/desktop) to preserve mobile UX
-                this.$emit('toggle-menu');
-            }
+        // Intentionally do nothing on nav clicks. Menu toggling is controlled only by the header button.
+        onNavClick(/* event */) {
+            // no-op
         }
 
 
