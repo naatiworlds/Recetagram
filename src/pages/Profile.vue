@@ -244,7 +244,7 @@ export default {
   height: 100%;
   overflow-y: auto;
   scrollbar-width: none;
-  padding: 20px;
+  padding: 10px;
   /* Añade padding para el scrollbar */
 }
 
