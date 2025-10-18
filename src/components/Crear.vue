@@ -1236,7 +1236,6 @@ textarea {
 /* Editor único */
 .editor {
   min-height: 80px;
-  padding: 12px;
   font-size: 16px;
   border-radius: 6px;
   outline: none;
