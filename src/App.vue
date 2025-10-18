@@ -218,8 +218,6 @@ main {
 
 /* Fix for mobile navigation overlap */
 @media only screen and (max-width: 600px) {
-  main {
-  }
   
   /* Ensure all content areas have proper bottom spacing */
   [class*="container"], 

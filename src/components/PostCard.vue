@@ -474,7 +474,7 @@ export default {
   font-size: 16px;
   color: black;
   margin-top: 10px;
-  max-width: 50%;
+  max-width: 90%;
   word-wrap: break-word;
   white-space: pre-wrap;
   /* Esto hará que se respeten los saltos de línea */
