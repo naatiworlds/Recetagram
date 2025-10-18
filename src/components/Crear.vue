@@ -947,7 +947,8 @@ export default {
   display: flex;
   flex-direction: column;
   max-width: 700px;
-  max-height: 600px;
+  /* keep modal within viewport and allow internal scrolling */
+  max-height: 80vh;
 }
 
 .crear-post-container header {
@@ -976,28 +977,40 @@ export default {
   cursor: pointer;
 }
 
-section main {
+/* Main area inside the modal: make it a scrollable flex container so children don't escape */
+.form-container {
   padding: 50px;
   flex: 1;
   display: flex;
   flex-direction: row;
-  height: auto;
+  gap: 20px;
+  align-items: flex-start;
+  box-sizing: border-box;
+  /* allow internal scrolling when content is taller than modal */
+  overflow-y: auto;
 }
 
 form {
   display: flex;
   flex-direction: column;
-  width: 80%;
-  margin: 0 auto;
+  /* allow the form to take the remaining space and scroll if needed */
+  flex: 1 1 auto;
+  width: auto;
+  max-width: 100%;
+  margin: 0;
   align-items: stretch;
-  justify-content: center;
-  flex-wrap: wrap;
-  align-content: center;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  box-sizing: border-box;
+  overflow: auto;
+  max-height: 100%;
 }
 
 .image-preview {
-  width: 30%;
+  flex: 0 0 30%;
+  max-width: 30%;
   height: auto;
+  box-sizing: border-box;
 }
 
 img {
@@ -1005,6 +1018,13 @@ img {
   max-height: 80px;
   margin: 20px auto;
   border-radius: 10px;
+  object-fit: cover;
+}
+
+/* make inputs respect the container width */
+input,
+textarea {
+  box-sizing: border-box;
 }
 
 input,
@@ -1225,7 +1245,9 @@ textarea {
   border: 1px solid var(--sombra-color);
   border-radius: 6px;
   background: white;
-  min-height: 80px;
+  /* fixed height so the input doesn't grow indefinitely */
+  height: 220px;
+  max-height: 420px;
   padding: 12px;
   font-size: 16px;
   color: black;
@@ -1235,7 +1257,8 @@ textarea {
 
 /* Editor único */
 .editor {
-  min-height: 80px;
+  /* fill the markdown-input container and scroll internally */
+  height: 100%;
   font-size: 16px;
   border-radius: 6px;
   outline: none;
