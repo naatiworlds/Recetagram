@@ -210,12 +210,11 @@ export default {
             const href = anchor.getAttribute('href') || anchor.getAttribute('to') || anchor.getAttribute('data-vue-router-link');
             // debug removed
 
-            // Only auto-hide on small-ish screens where the nav is shown as a bubble/bar
-            // Broadened breakpoint to 900 to catch tablet / narrower desktop layouts used in testing
-            if (window.innerWidth <= 900 && this.menuVisible) {
+            // Do NOT auto-hide on mobile. Consider mobile width <= 600px as mobile.
+            const isMobile = window.innerWidth <= 600;
+            if (!isMobile && this.menuVisible) {
+                // only auto-hide on non-mobile (tablet/desktop) to preserve mobile UX
                 this.$emit('toggle-menu');
-            } else {
-                // not auto-hiding
             }
         }
 
