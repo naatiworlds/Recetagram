@@ -420,13 +420,6 @@ article {
     margin-right: 20px;
 }
 
-.post-card {
-    width: 100%;
-    max-width: calc(33.33% - 14px);
-    height: calc(100vh - 130px);
-    margin: 0 auto;
-}
-
 .post-header {
     display: flex;
     align-items: center;
