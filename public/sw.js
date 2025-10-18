@@ -9,7 +9,7 @@ const urlsToCache = [
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/install.js"
-];
+]; 
 
 // Instalación del Service Worker y cacheo de recursos
 self.addEventListener("install", (event) => {
