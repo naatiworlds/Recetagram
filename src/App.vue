@@ -219,9 +219,6 @@ main {
 /* Fix for mobile navigation overlap */
 @media only screen and (max-width: 600px) {
   main {
-    padding-bottom: var(--mobile-nav-height); /* Add space for mobile navigation bar */
-    min-height: calc(100vh - var(--header-height) - var(--mobile-nav-height));
-    box-sizing: border-box;
   }
   
   /* Ensure all content areas have proper bottom spacing */
