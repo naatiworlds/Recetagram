@@ -553,7 +553,7 @@ article {
 
 
     article {
-        min-width: calc(50% - 10px);
+        min-width: calc(50% - 20px);
         /* Mostrar dos publicaciones por fila */
     }
 
