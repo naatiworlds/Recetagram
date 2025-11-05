@@ -66,7 +66,7 @@
             <h3>Paso 3: Ingredientes</h3>
             <div class="ingredients-container">
               <div class="ingredients-list">
-                <IngredientInput v-model:ingredients="post.ingredients"
+                <IngredientInput :key="ingredientsKey" v-model:ingredients="post.ingredients"
                   @validate-ingredients="handleIngredientValidation" />
               </div>
 
@@ -132,6 +132,8 @@ export default {
       maxDescriptionLength: 2000,
       isIngredientListValid: false,
       isTypingUpdate: false,
+      // key to force IngredientInput to remount when ingredients are loaded/parsed
+      ingredientsKey: 0,
     };
   },
   computed: {
@@ -153,6 +155,8 @@ export default {
           this.post.description = newPost.description || "";
           this.post.is_private = newPost.is_private || false;
           this.post.ingredients = this.parseIngredients(newPost.ingredients);
+          // force remount so IngredientInput picks up initial value reliably
+          this.ingredientsKey++;
 
           if (newPost.imagen) {
             this.imagePreviewUrl = newPost.imagen; // muestra la URL
@@ -710,14 +714,24 @@ export default {
       if (!Array.isArray(arr)) return [{ name: "", quantity: "", unit: "" }];
 
       return arr.map((ing) => {
-        const quantity = ing?.quantity ?? "";
-        const parts = String(quantity).trim().split(/\s+/);
-        const [value, ...unitParts] = parts;
-        return {
-          name: ing?.name || "",
-          quantity: value || "",
-          unit: unitParts.join(" ") || "",
-        };
+        // Soportar distintas claves provenientes del backend
+        const name = ing?.name ?? ing?.ingredient ?? ing?.nombre ?? "";
+        const qtyRaw = ing?.quantity ?? ing?.cantidad ?? ing?.qty ?? "";
+        // qtyRaw puede venir como "100 g" ó separado en value/unit
+        let value = "";
+        let unit = "";
+        if (typeof qtyRaw === 'string') {
+          const parts = qtyRaw.trim().split(/\s+/);
+          [value, ...unit] = parts;
+          unit = unit.join(' ');
+        } else if (typeof qtyRaw === 'number') {
+          value = String(qtyRaw);
+          unit = ing?.unit ?? ing?.unidad ?? '';
+        } else {
+          value = String(ing?.value ?? '');
+          unit = ing?.unit ?? ing?.unidad ?? '';
+        }
+        return { name, quantity: value || '', unit: unit || '' };
       });
     },
 
