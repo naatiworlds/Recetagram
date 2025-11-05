@@ -36,8 +36,8 @@
               <li v-for="(ing, index) in localIngredients" :key="index">
                 • {{ ing.quantity }} {{ ing.unit }} de {{ ing.name }}
                 <div class="actions">
-                  <button class="edit-button" @click="editIngredient(index)">✏️</button>
-                  <button class="remove-button" @click="removeIngredient(index)">🗑️</button>
+                  <button type="button" class="edit-button" @click="editIngredient(index)">✏️</button>
+                  <button type="button" class="remove-button" @click="removeIngredient(index)">🗑️</button>
                 </div>
               </li>
             </ul>
