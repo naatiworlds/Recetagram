@@ -211,7 +211,7 @@ export const apiService = {
     return api
       .post("/fcm-token", { fcm_token: formattedToken })
       .then((response) => {
-  // Token FCM sent to backend
+        // Token FCM sent to backend
         return response.data;
       })
       .catch((err) => {
@@ -228,7 +228,7 @@ export const apiService = {
   sendBatchRequests: async (batchData) => {
     try {
       const response = await api.post("/batch", batchData);
-  // batch requests sent successfully
+      // batch requests sent successfully
       return response.data;
     } catch (error) {
       console.error("[API] Error al enviar peticiones en lote:", error);
