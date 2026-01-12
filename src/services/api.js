@@ -8,7 +8,7 @@ import throttle from 'lodash/throttle';
 // Configuración de Axios
 // =====================================
 const api = axios.create({
-  baseURL: "https://51.178.85.46:8443/api/v1",
+  baseURL: "https://vps-a29998d6.vps.ovh.net:8443/api/v1",
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -211,7 +211,7 @@ export const apiService = {
     return api
       .post("/fcm-token", { fcm_token: formattedToken })
       .then((response) => {
-  // Token FCM sent to backend
+        // Token FCM sent to backend
         return response.data;
       })
       .catch((err) => {
@@ -228,7 +228,7 @@ export const apiService = {
   sendBatchRequests: async (batchData) => {
     try {
       const response = await api.post("/batch", batchData);
-  // batch requests sent successfully
+      // batch requests sent successfully
       return response.data;
     } catch (error) {
       console.error("[API] Error al enviar peticiones en lote:", error);
