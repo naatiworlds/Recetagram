@@ -5,18 +5,20 @@
         <div v-if="loading" class="loading">Cargando post...</div>
         <div v-else-if="error" class="error">{{ error }}</div>
         <template v-else>
-          <PostCard v-if="post" :post="post" :show-in-modal="false" @show-comments="handleShowComments" />
+          <PostCard v-if="post" :post="post" :show-in-modal="false" @show-comments="handleShowComments" @show-share-modal="handleShowShareModal" />
         </template>
       </section>
     </div>
 
     <CommentModal v-if="showComments" :post-id="selectedPostId" :is-open="showComments" @close="handleCloseComments" />
+    <ShareModal :is-visible="showShareModal" :share-data="shareData" @close="handleCloseShareModal" />
   </div>
 </template>
 
 <script>
 import CommentModal from '../components/CommentModal.vue'
 import PostCard from '../components/PostCard.vue'
+import ShareModal from '../components/ShareModal.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNotificationStore } from '../stores/notification'
 import { usePostsStore } from '../stores/posts'
@@ -26,7 +28,8 @@ export default {
 
   components: {
     CommentModal,
-    PostCard
+    PostCard,
+    ShareModal
   },
 
   data() {
@@ -39,7 +42,14 @@ export default {
       route: useRoute(),
       router: useRouter(),
       postsStore: usePostsStore(),
-      notificationStore: useNotificationStore()
+      notificationStore: useNotificationStore(),
+      showShareModal: false,
+      shareData: {
+        url: '',
+        title: '',
+        description: '',
+        imageUrl: ''
+      }
     }
   },
 
@@ -95,6 +105,15 @@ export default {
         path: this.route.path,
         query: {} // Eliminar la query string
       })
+    },
+
+    handleShowShareModal(data) {
+      this.shareData = data;
+      this.showShareModal = true;
+    },
+
+    handleCloseShareModal() {
+      this.showShareModal = false;
     }
   }
 }

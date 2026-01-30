@@ -292,29 +292,34 @@ export default {
       this.$emit('show-comments', this.post.id);
     },
 
-    handleShare() {
+    async handleShare() {
       const postUrl = `${window.location.origin}/posts/${this.post.id}`
+      const imageUrl = this.getImageUrl(this.post.imagen)
+      
+      // Intentar compartir con la Web Share API (solo enlace)
       if (navigator.share) {
-        navigator.share({
-          title: this.post.title,
-          text: this.post.description || '',
-          url: postUrl
-        }).catch((error) => {
-          window.location.href = postUrl
-        })
-      } else {
         try {
-          navigator.clipboard.writeText(postUrl)
-            .then(() => {
-              this.notificationStore.show('Enlace copiado al portapapeles', 'success')
-            })
-            .catch(() => {
-              window.location.href = postUrl
-            })
-        } catch {
-          window.location.href = postUrl
+          await navigator.share({
+            title: this.post.title,
+            text: `${this.post.description || ''}\n\nReceta: ${this.post.title}`,
+            url: postUrl
+          })
+          return
+        } catch (error) {
+          // Usuario canceló o error - continuar con fallback
+          if (error.name !== 'AbortError') {
+            console.log('Error al compartir:', error)
+          }
         }
       }
+      
+      // Fallback: mostrar modal estilo Instagram
+      this.$emit('show-share-modal', {
+        url: postUrl,
+        title: this.post.title,
+        description: this.post.description,
+        imageUrl: imageUrl
+      })
     },
 
     navigateToPost() {

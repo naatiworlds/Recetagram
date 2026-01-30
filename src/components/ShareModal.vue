@@ -1,0 +1,349 @@
+<template>
+  <div v-if="isVisible" class="share-modal-overlay" @click="closeModal">
+    <div class="share-modal" @click.stop>
+      <div class="share-header">
+        <h3>Compartir</h3>
+        <button class="close-btn" @click="closeModal">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="share-preview">
+        <img :src="shareData.imageUrl" :alt="shareData.title" class="preview-image" />
+        <div class="preview-info">
+          <h4>{{ shareData.title }}</h4>
+          <p>{{ truncateText(shareData.description, 80) }}</p>
+        </div>
+      </div>
+
+      <div class="share-options">
+        <button @click="copyLink" class="share-option">
+          <div class="option-icon">
+            <i class="fas fa-link"></i>
+          </div>
+          <span>Copiar enlace</span>
+        </button>
+
+        <a :href="whatsappUrl" target="_blank" class="share-option" @click="trackShare('whatsapp')">
+          <div class="option-icon whatsapp">
+            <i class="fab fa-whatsapp"></i>
+          </div>
+          <span>WhatsApp</span>
+        </a>
+
+        <a :href="facebookUrl" target="_blank" class="share-option" @click="trackShare('facebook')">
+          <div class="option-icon facebook">
+            <i class="fab fa-facebook"></i>
+          </div>
+          <span>Facebook</span>
+        </a>
+
+        <a :href="twitterUrl" target="_blank" class="share-option" @click="trackShare('twitter')">
+          <div class="option-icon twitter">
+            <i class="fab fa-twitter"></i>
+          </div>
+          <span>Twitter</span>
+        </a>
+
+        <a :href="telegramUrl" target="_blank" class="share-option" @click="trackShare('telegram')">
+          <div class="option-icon telegram">
+            <i class="fab fa-telegram"></i>
+          </div>
+          <span>Telegram</span>
+        </a>
+
+        <a :href="`mailto:?subject=${encodeURIComponent(shareData.title)}&body=${encodeURIComponent(shareText + '\n\n' + shareData.url)}`" class="share-option" @click="trackShare('email')">
+          <div class="option-icon email">
+            <i class="fas fa-envelope"></i>
+          </div>
+          <span>Email</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { useNotificationStore } from '../stores/notification'
+
+export default {
+  name: 'ShareModal',
+  
+  props: {
+    isVisible: {
+      type: Boolean,
+      default: false
+    },
+    shareData: {
+      type: Object,
+      default: () => ({
+        url: '',
+        title: '',
+        description: '',
+        imageUrl: ''
+      })
+    }
+  },
+
+  computed: {
+    notificationStore() {
+      return useNotificationStore()
+    },
+    shareText() {
+      return `${this.shareData.description || ''}\n\nReceta: ${this.shareData.title}`
+    },
+    whatsappUrl() {
+      return `https://wa.me/?text=${encodeURIComponent(this.shareText + '\n\n' + this.shareData.url)}`
+    },
+    facebookUrl() {
+      return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(this.shareData.url)}`
+    },
+    twitterUrl() {
+      return `https://twitter.com/intent/tweet?text=${encodeURIComponent(this.shareText)}&url=${encodeURIComponent(this.shareData.url)}`
+    },
+    telegramUrl() {
+      return `https://t.me/share/url?url=${encodeURIComponent(this.shareData.url)}&text=${encodeURIComponent(this.shareText)}`
+    }
+  },
+
+  methods: {
+    closeModal() {
+      this.$emit('close')
+    },
+    
+    async copyLink() {
+      try {
+        await navigator.clipboard.writeText(this.shareData.url)
+        this.notificationStore.show('Enlace copiado al portapapeles', 'success')
+        this.closeModal()
+      } catch (error) {
+        this.notificationStore.show('No se pudo copiar el enlace', 'error')
+      }
+    },
+
+    truncateText(text, maxLength) {
+      if (!text || text.length <= maxLength) return text
+      return text.substring(0, maxLength) + '...'
+    },
+
+    trackShare(platform) {
+      console.log(`Compartido en ${platform}`)
+      // Aquí podrías agregar analytics si lo deseas
+    }
+  }
+}
+</script>
+
+<style scoped>
+.share-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.share-modal {
+  background: var(--sombra-color);
+  border-radius: 16px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.share-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.share-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-color-important);
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--text-color-important);
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.share-preview {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.preview-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.preview-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.preview-info h4 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-color-important);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preview-info p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-color);
+  line-height: 1.4;
+}
+
+.share-options {
+  padding: 8px 0;
+}
+
+.share-option {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  text-decoration: none;
+  color: var(--text-color-important);
+  font-size: 15px;
+}
+
+.share-option:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.option-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-color-important);
+}
+
+.option-icon.whatsapp {
+  background: #25D366;
+  color: white;
+}
+
+.option-icon.facebook {
+  background: #1877F2;
+  color: white;
+}
+
+.option-icon.twitter {
+  background: #1DA1F2;
+  color: white;
+}
+
+.option-icon.telegram {
+  background: #0088cc;
+  color: white;
+}
+
+.option-icon.email {
+  background: #EA4335;
+  color: white;
+}
+
+/* Scrollbar personalizado */
+.share-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.share-modal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.share-modal::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.share-modal::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .share-modal {
+    max-width: 100%;
+    width: 100%;
+    border-radius: 16px 16px 0 0;
+    position: absolute;
+    bottom: 0;
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+}
+</style>

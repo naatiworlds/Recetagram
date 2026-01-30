@@ -38,7 +38,7 @@
                     <PostCard v-for="post in filteredPosts" :key="post.id" :post="post" :show-in-modal="false"
                         :is-profile-view="isProfileView" :is-own-profile="isOwnProfile" @edit-post="handleEditPost"
                         @post-deleted="handlePostDelete" @show-comments="handleShowComments"
-                        @post-updated="handlePostUpdate" />
+                        @post-updated="handlePostUpdate" @show-share-modal="handleShowShareModal" />
                     
                 </template>
             </section>
@@ -50,6 +50,7 @@
         </div>
         <CommentModal v-if="showComments" :post-id="selectedPostId" :is-open="showComments" @close="handleCloseComments"
             @post-updated="handlePostUpdate" />
+        <ShareModal :is-visible="showShareModal" :share-data="shareData" @close="handleCloseShareModal" />
     </main>
 </template>
 
@@ -62,13 +63,15 @@ import { useNotificationStore } from '../stores/notification'
 import { useUserStore } from '../stores/user'
 import { useRoute } from 'vue-router'
 import CommentModal from './CommentModal.vue'
+import ShareModal from './ShareModal.vue'
 
 export default {
     name: 'Posts',
 
     components: {
         PostCard,
-        CommentModal
+        CommentModal,
+        ShareModal
     },
 
     props: {
@@ -116,7 +119,14 @@ export default {
             notificationStore: null,
             userStore: null,
             route: null,
-            CrearComponent
+            CrearComponent,
+            showShareModal: false,
+            shareData: {
+                url: '',
+                title: '',
+                description: '',
+                imageUrl: ''
+            }
 
         }
     },
@@ -266,6 +276,17 @@ export default {
         handleCloseComments() {
             this.showComments = false;
             this.selectedPostId = null;
+        },
+
+        // Mostrar modal de compartir
+        handleShowShareModal(data) {
+            this.shareData = data;
+            this.showShareModal = true;
+        },
+
+        // Cerrar modal de compartir
+        handleCloseShareModal() {
+            this.showShareModal = false;
         },
 
         // Método para el scroll a la izquierda centrándolo horizontalmente
