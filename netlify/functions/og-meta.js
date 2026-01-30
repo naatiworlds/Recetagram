@@ -1,36 +1,36 @@
 const fetch = require('node-fetch');
 
 exports.handler = async (event, context) => {
-  const postId = event.queryStringParameters?.id;
-  
-  if (!postId) {
-    return {
-      statusCode: 400,
-      body: 'Missing post ID'
-    };
-  }
+    const postId = event.queryStringParameters?.id;
 
-  try {
-    // Obtener datos del post desde tu API
-    const apiUrl = "https://vps-a29998d6.vps.ovh.net:8443/api/v1";
-    const response = await fetch(`${apiUrl}/posts/${postId}`);
-    const data = await response.json();
-    
-    if (data.status !== 'success' || !data.data) {
-      throw new Error('Post not found');
+    if (!postId) {
+        return {
+            statusCode: 400,
+            body: 'Missing post ID'
+        };
     }
 
-    const post = data.data;
-    const storageUrl = 'https://vps-a29998d6.vps.ovh.net:8443/storage';
-    const imageUrl = post.imagen?.startsWith('http') 
-      ? post.imagen 
-      : `${storageUrl}/${post.imagen}`;
-    
-    const siteUrl = 'https://recetagram.netlify.app';
-    const postUrl = `${siteUrl}/posts/${postId}`;
+    try {
+        // Obtener datos del post desde tu API
+        const apiUrl = "https://vps-a29998d6.vps.ovh.net:8443/api/v1";
+        const response = await fetch(`${apiUrl}/posts/${postId}`);
+        const data = await response.json();
 
-    // HTML con meta tags dinámicos
-    const html = `<!DOCTYPE html>
+        if (data.status !== 'success' || !data.data) {
+            throw new Error('Post not found');
+        }
+
+        const post = data.data;
+        const storageUrl = 'https://vps-a29998d6.vps.ovh.net:8443/storage';
+        const imageUrl = post.imagen?.startsWith('http')
+            ? post.imagen
+            : `${storageUrl}/${post.imagen}`;
+
+        const siteUrl = 'https://recetagram.netlify.app';
+        const postUrl = `${siteUrl}/posts/${postId}`;
+
+        // HTML con meta tags dinámicos
+        const html = `<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -64,39 +64,39 @@ exports.handler = async (event, context) => {
 </body>
 </html>`;
 
-    return {
-      statusCode: 200,
-      headers: {
-        'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': 'public, max-age=3600'
-      },
-      body: html
-    };
-  } catch (error) {
-    console.error('Error fetching post:', error);
-    
-    // Si hay error, intentar redirigir al post de todos modos
-    const siteUrl = 'https://recetagram.netlify.app';
-    const postUrl = `${siteUrl}/posts/${postId}`;
-    
-    return {
-      statusCode: 302,
-      headers: {
-        'Location': postUrl
-      },
-      body: ''
-    };
-  }
+        return {
+            statusCode: 200,
+            headers: {
+                'Content-Type': 'text/html; charset=utf-8',
+                'Cache-Control': 'public, max-age=3600'
+            },
+            body: html
+        };
+    } catch (error) {
+        console.error('Error fetching post:', error);
+
+        // Si hay error, intentar redirigir al post de todos modos
+        const siteUrl = 'https://recetagram.netlify.app';
+        const postUrl = `${siteUrl}/posts/${postId}`;
+
+        return {
+            statusCode: 302,
+            headers: {
+                'Location': postUrl
+            },
+            body: ''
+        };
+    }
 };
 
 function escapeHtml(text) {
-  if (!text) return '';
-  const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  };
-  return text.replace(/[&<>"']/g, m => map[m]);
+    if (!text) return '';
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
 }

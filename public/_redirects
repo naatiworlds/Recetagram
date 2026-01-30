@@ -1,3 +1,2 @@
-/share/posts/:id /.netlify/functions/og-meta?id=:id 200!
 /users/* /profile/:splat 200
 /* /index.html 200

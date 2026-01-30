@@ -8,18 +8,16 @@
   # Directorio donde se generan los archivos de producción
   publish = "dist"
 
+# Edge Functions para meta tags dinámicos en posts
+[[edge_functions]]
+  function = "og-tags"
+  path = "/posts/*"
+
 # Redirecciones específicas para rutas de usuario
 [[redirects]]
   from = "/users/*"
   to = "/profile/:splat"
   status = 200
-
-# Redirección para compartir posts con meta tags dinámicos
-[[redirects]]
-  from = "/share/posts/:id"
-  to = "/.netlify/functions/og-meta?id=:id"
-  status = 200
-  force = true
 
 # Redirección general para SPA
 [[redirects]]

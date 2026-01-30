@@ -293,8 +293,8 @@ export default {
     },
 
     async handleShare() {
-      // URL especial para compartir con meta tags dinámicos
-      const shareUrl = `${window.location.origin}/share/posts/${this.post.id}`
+      // URL normal del post (no /share)
+      const postUrl = `${window.location.origin}/posts/${this.post.id}`
       const imageUrl = this.getImageUrl(this.post.imagen)
       
       // Intentar compartir con la Web Share API (solo enlace)
@@ -303,7 +303,7 @@ export default {
           await navigator.share({
             title: this.post.title,
             text: `${this.post.description || ''}\n\nReceta: ${this.post.title}`,
-            url: shareUrl
+            url: postUrl
           })
           return
         } catch (error) {
@@ -316,7 +316,7 @@ export default {
       
       // Fallback: mostrar modal estilo Instagram
       this.$emit('show-share-modal', {
-        url: shareUrl,
+        url: postUrl,
         title: this.post.title,
         description: this.post.description,
         imageUrl: imageUrl
