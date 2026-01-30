@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 
 exports.handler = async (event, context) => {
-  const postId = event.queryStringParameters.id;
+  const postId = event.queryStringParameters?.id;
   
   if (!postId) {
     return {
@@ -13,15 +13,15 @@ exports.handler = async (event, context) => {
   try {
     // Obtener datos del post desde tu API
     const apiUrl = "https://vps-a29998d6.vps.ovh.net:8443/api/v1";
-    const response = await fetch(`${apiUrl}/api/posts/${postId}`);
+    const response = await fetch(`${apiUrl}/posts/${postId}`);
     const data = await response.json();
     
-    if (!data.status === 'success' || !data.data) {
+    if (data.status !== 'success' || !data.data) {
       throw new Error('Post not found');
     }
 
     const post = data.data;
-    const storageUrl = process.env.VITE_STORAGE_URL || 'https://recetagramapi-production.up.railway.app/storage';
+    const storageUrl = 'https://vps-a29998d6.vps.ovh.net:8443/storage';
     const imageUrl = post.imagen?.startsWith('http') 
       ? post.imagen 
       : `${storageUrl}/${post.imagen}`;
@@ -30,8 +30,7 @@ exports.handler = async (event, context) => {
     const postUrl = `${siteUrl}/posts/${postId}`;
 
     // HTML con meta tags dinámicos
-    const html = `
-<!DOCTYPE html>
+    const html = `<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -53,15 +52,17 @@ exports.handler = async (event, context) => {
   
   <!-- Redirect to the actual post page -->
   <meta http-equiv="refresh" content="0; url=${postUrl}">
-  <script>window.location.href = '${postUrl}';</script>
+  <script>
+    window.location.href = '${postUrl}';
+  </script>
   
   <title>${escapeHtml(post.title)} - Recetagram</title>
 </head>
-<body>
-  <p>Redirigiendo a <a href="${postUrl}">${escapeHtml(post.title)}</a>...</p>
+<body style="font-family: sans-serif; padding: 20px; text-align: center;">
+  <p>Redirigiendo a <a href="${postUrl}" style="color: #18C894;">${escapeHtml(post.title)}</a>...</p>
+  <p><small>Si no eres redirigido automáticamente, haz clic en el enlace.</small></p>
 </body>
-</html>
-    `;
+</html>`;
 
     return {
       statusCode: 200,
@@ -74,12 +75,16 @@ exports.handler = async (event, context) => {
   } catch (error) {
     console.error('Error fetching post:', error);
     
-    // Fallback a la página principal
+    // Si hay error, intentar redirigir al post de todos modos
+    const siteUrl = 'https://recetagram.netlify.app';
+    const postUrl = `${siteUrl}/posts/${postId}`;
+    
     return {
       statusCode: 302,
       headers: {
-        'Location': 'https://recetagram.netlify.app'
-      }
+        'Location': postUrl
+      },
+      body: ''
     };
   }
 };
