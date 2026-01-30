@@ -1,5 +1,6 @@
 import { createPinia } from 'pinia';
 import { createApp } from 'vue';
+import { createHead } from '@vueuse/head';
 import App from './App.vue';
 import router from './router';
 
@@ -28,8 +29,10 @@ const firebaseApp = initializeApp(firebaseConfig);
 // Crear la app y Pinia
 const app = createApp(App);
 const pinia = createPinia();
+const head = createHead();
 
 app.use(pinia);
+app.use(head);
 
 const initializeVueApp = async () => {
   const userStore = useUserStore();

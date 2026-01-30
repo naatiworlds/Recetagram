@@ -14,6 +14,13 @@
   to = "/profile/:splat"
   status = 200
 
+# Redirección para compartir posts con meta tags dinámicos
+[[redirects]]
+  from = "/share/posts/:id"
+  to = "/.netlify/functions/og-meta?id=:id"
+  status = 200
+  force = true
+
 # Redirección general para SPA
 [[redirects]]
   from = "/*"

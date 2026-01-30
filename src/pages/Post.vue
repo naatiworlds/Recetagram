@@ -16,12 +16,15 @@
 </template>
 
 <script>
+import { useHead } from '@vueuse/head'
+import { computed } from 'vue'
 import CommentModal from '../components/CommentModal.vue'
 import PostCard from '../components/PostCard.vue'
 import ShareModal from '../components/ShareModal.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNotificationStore } from '../stores/notification'
 import { usePostsStore } from '../stores/posts'
+import { STORAGE_URL } from '../utils/globalConstants'
 
 export default {
   name: 'PostView',
@@ -32,17 +35,27 @@ export default {
     ShareModal
   },
 
+  setup() {
+    const route = useRoute()
+    const router = useRouter()
+    const postsStore = usePostsStore()
+    const notificationStore = useNotificationStore()
+
+    return {
+      route,
+      router,
+      postsStore,
+      notificationStore
+    }
+  },
+
   data() {
     return {
       post: null,
       loading: true,
       error: null,
       showComments: false,
-      selectedPostId: null, // <-- agregada
-      route: useRoute(),
-      router: useRouter(),
-      postsStore: usePostsStore(),
-      notificationStore: useNotificationStore(),
+      selectedPostId: null,
       showShareModal: false,
       shareData: {
         url: '',
@@ -56,6 +69,14 @@ export default {
   watch: {
     'route.query.showComments'(newVal) {
       this.showComments = newVal === 'true'
+    },
+    post: {
+      handler(newPost) {
+        if (newPost) {
+          this.updateMetaTags()
+        }
+      },
+      immediate: true
     }
   },
 
@@ -77,6 +98,7 @@ export default {
         const fetchedPost = await this.postsStore.fetchPostById(this.route.params.id)
         if (fetchedPost) {
           this.post = fetchedPost
+          this.updateMetaTags()
         } else {
           this.error = 'Post no encontrado'
           this.router.push('/404')
@@ -89,13 +111,64 @@ export default {
       }
     },
 
+    updateMetaTags() {
+      if (!this.post) return
+
+      const imageUrl = this.post.imagen?.startsWith('http') 
+        ? this.post.imagen 
+        : `${STORAGE_URL}/${this.post.imagen}`
+      
+      const postUrl = `${window.location.origin}/posts/${this.post.id}`
+
+      useHead({
+        title: `${this.post.title} - Recetagram`,
+        meta: [
+          {
+            property: 'og:title',
+            content: this.post.title
+          },
+          {
+            property: 'og:description',
+            content: this.post.description || '¡Mira esta increíble receta en Recetagram!'
+          },
+          {
+            property: 'og:image',
+            content: imageUrl
+          },
+          {
+            property: 'og:url',
+            content: postUrl
+          },
+          {
+            property: 'og:type',
+            content: 'article'
+          },
+          {
+            name: 'twitter:card',
+            content: 'summary_large_image'
+          },
+          {
+            name: 'twitter:title',
+            content: this.post.title
+          },
+          {
+            name: 'twitter:description',
+            content: this.post.description || '¡Mira esta increíble receta en Recetagram!'
+          },
+          {
+            name: 'twitter:image',
+            content: imageUrl
+          }
+        ]
+      })
+    },
+
     handleShowComments(postId) {
-  // Post ID debugging removed
       this.selectedPostId = postId
       this.showComments = true
       this.router.replace({
         path: this.route.path,
-        query: { showComments: 'true' } // Actualizar la query string
+        query: { showComments: 'true' }
       })
     },
 
@@ -103,7 +176,7 @@ export default {
       this.showComments = false
       this.router.replace({
         path: this.route.path,
-        query: {} // Eliminar la query string
+        query: {}
       })
     },
 
