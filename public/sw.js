@@ -1,5 +1,5 @@
 // Nombre del caché - Cambiar la versión cuando hay actualizaciones
-const CACHE_NAME = "recetagram-cache-v4";
+const CACHE_NAME = "recetagram-cache-v5";
 
 // Archivos a cachear
 const urlsToCache = [
