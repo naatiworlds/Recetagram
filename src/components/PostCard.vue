@@ -297,12 +297,11 @@ export default {
       const postUrl = `${window.location.origin}/posts/${this.post.id}`
       const imageUrl = this.getImageUrl(this.post.imagen)
       
-      // Intentar compartir con la Web Share API (solo enlace)
+      // Intentar compartir con la Web Share API (solo enlace y título)
       if (navigator.share) {
         try {
           await navigator.share({
             title: this.post.title,
-            text: `${this.post.description || ''}\n\nReceta: ${this.post.title}`,
             url: postUrl
           })
           return
