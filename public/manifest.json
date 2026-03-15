@@ -7,7 +7,7 @@
   "theme_color": "#18C894",
   "description": "Red social de recetas de cocina, donde puedes compartir tus recetas y descubrir nuevas.",
   "share_target": {
-    "action": "https://vps-a29998d6.vps.ovh.net:8443/api/v1/posts",
+    "action": "/share",
     "method": "POST",
     "params": {
       "title": "title",
