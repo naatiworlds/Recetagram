@@ -19,7 +19,7 @@ self.addEventListener("install", (event) => {
   // cache opened
       return cache.addAll(urlsToCache);
     }).catch((error) => {
-      console.error("Error al cachear archivos:", error);
+      console.error("Error al cachear archivos :", error);
       // Continuar aunque falle el cache
       return Promise.resolve();
     })
