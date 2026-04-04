@@ -1,5 +1,5 @@
 // Nombre del caché - Cambiar la versión cuando hay actualizaciones
-const CACHE_NAME = "recetagram-cache-v6";
+const CACHE_NAME = "recetagram-cache-v7";
 
 // Archivos a cachear
 const urlsToCache = [
@@ -56,6 +56,32 @@ self.addEventListener("message", (event) => {
 
 // Intercepción de solicitudes (modo offline básico)
 self.addEventListener("fetch", (event) => {
+  const requestUrl = new URL(event.request.url);
+
+  if (event.request.method === "POST" && requestUrl.pathname === "/share-target") {
+    event.respondWith(
+      (async () => {
+        try {
+          const formData = await event.request.formData();
+          const title = String(formData.get("title") || "");
+          const text = String(formData.get("text") || "");
+          const url = String(formData.get("url") || "");
+
+          const redirectUrl = new URL("/share-target", self.location.origin);
+          if (title) redirectUrl.searchParams.set("title", title);
+          if (text) redirectUrl.searchParams.set("text", text);
+          if (url) redirectUrl.searchParams.set("url", url);
+
+          return Response.redirect(redirectUrl.toString(), 303);
+        } catch (error) {
+          console.error("Error procesando share_target:", error);
+          return Response.redirect("/share-target", 303);
+        }
+      })()
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((response) => {
       // Devolver desde cache si está disponible, sino hacer fetch

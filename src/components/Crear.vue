@@ -113,6 +113,10 @@ export default {
       type: [Object, Array],
       default: null,
     },
+    initialSharedData: {
+      type: Object,
+      default: null,
+    },
   },
   data() {
     return {
@@ -175,6 +179,13 @@ export default {
         }
       },
     },
+    initialSharedData: {
+      immediate: true,
+      handler(newSharedData) {
+        if (!newSharedData || this.postToEdit) return;
+        this.applyInitialSharedData(newSharedData);
+      },
+    },
     currentStep(newVal) {
       if (newVal === 2) {
   // trying to render description for step 2
@@ -208,6 +219,21 @@ export default {
     },
   },
   methods: {
+    applyInitialSharedData(sharedData) {
+      const sharedTitle = String(sharedData?.title || "").trim();
+      const sharedText = String(sharedData?.text || "").trim();
+      const sharedUrl = String(sharedData?.url || "").trim();
+
+      if (sharedTitle) {
+        this.post.title = sharedTitle;
+      }
+
+      const descriptionParts = [sharedText, sharedUrl].filter(Boolean);
+      if (descriptionParts.length > 0) {
+        this.post.description = descriptionParts.join("\n\n");
+      }
+    },
+
     // ----------------- MARKDOWN / INPUT EDITABLE -----------------
     onMarkdownInput() {
       if (!this.$refs.editable) return;

@@ -153,6 +153,15 @@ export default {
       this.$emit('close')
     },
 
+    async getShareImageFile() {
+      if (!this.shareData.imageUrl) return null
+
+      const response = await fetch(this.shareData.imageUrl)
+      const blob = await response.blob()
+      const fileName = `${(this.shareData.title || 'receta').replace(/[^a-z0-9]+/gi, '_').toLowerCase()}.jpg`
+      return new File([blob], fileName, { type: blob.type || 'image/jpeg' })
+    },
+
     async shareNatively() {
       if (!this.canUseNativeShare) {
         this.notificationStore.show('Tu navegador no permite el menú nativo de compartir', 'warning')
@@ -160,10 +169,19 @@ export default {
       }
 
       try {
+        if (this.isMobileDevice) {
+          const file = await this.getShareImageFile()
+          if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file] })
+            this.closeModal()
+            return
+          }
+        }
+
         await navigator.share({
           title: this.shareData.title,
           text: this.shareText,
-          url: this.shareData.url
+          url: this.shareData.url,
         })
         this.closeModal()
       } catch (error) {
@@ -187,17 +205,11 @@ export default {
           url: this.shareData.url,
         }
 
-        if (this.shareData.imageUrl) {
-          const response = await fetch(this.shareData.imageUrl)
-          const blob = await response.blob()
-          const fileName = `${(this.shareData.title || 'receta').replace(/[^a-z0-9]+/gi, '_').toLowerCase()}.jpg`
-          const file = new File([blob], fileName, { type: blob.type || 'image/jpeg' })
-
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({ ...payload, files: [file] })
-            this.closeModal()
-            return
-          }
+        const file = await this.getShareImageFile()
+        if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file] })
+          this.closeModal()
+          return
         }
 
         await navigator.share(payload)

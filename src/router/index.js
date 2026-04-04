@@ -50,6 +50,11 @@ const routes = [
     props: true
   },
   {
+    path: '/share-target',
+    name: 'ShareTarget',
+    component: () => import('../pages/ShareTarget.vue')
+  },
+  {
     path: '/settings',
     name: 'UserConfig',
     component: () => import('../pages/Config/UserConfig.vue'),
