@@ -976,9 +976,25 @@ export default {
       formData.append("is_private", this.post.is_private);
       formData.append("ingredients", JSON.stringify(ingredientsPayload));
 
+      let imageFile = null;
+      if (this.post.image instanceof File) {
+        imageFile = this.post.image;
+      } else if (!this.postToEdit && this.imagePreviewUrl) {
+        imageFile = await this.buildImageFileFromPreview();
+
+        if (!imageFile) {
+          this.notificationStore.show(
+            "No pude adjuntar la imagen compartida automáticamente. Selecciona una imagen manualmente para publicar.",
+            "error"
+          );
+          this.loading = false;
+          return;
+        }
+      }
+
       // Solo adjuntar imagen si es un archivo nuevo (File), no URL
-      if (this.post.image && this.post.image instanceof File) {
-        formData.append("imagen", this.post.image);
+      if (imageFile) {
+        formData.append("imagen", imageFile);
       }
 
       // Añadimos el método override si estamos editando
@@ -1028,6 +1044,51 @@ export default {
       } finally {
         this.loading = false;
       }
+    },
+
+    async buildImageFileFromPreview() {
+      const sourceUrl = String(this.imagePreviewUrl || "").trim();
+      if (!sourceUrl) return null;
+
+      const directBlob = await this.fetchImageBlob(sourceUrl);
+      const blob = directBlob || await this.fetchImageBlobFromProxy(sourceUrl);
+      if (!blob) return null;
+
+      const contentType = blob.type || "image/jpeg";
+      const extension = this.getExtensionFromContentType(contentType);
+      const fileName = `shared-image.${extension}`;
+
+      return new File([blob], fileName, { type: contentType });
+    },
+
+    async fetchImageBlob(url) {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) return null;
+        return await response.blob();
+      } catch {
+        return null;
+      }
+    },
+
+    async fetchImageBlobFromProxy(url) {
+      try {
+        const endpoint = `/.netlify/functions/share-image?url=${encodeURIComponent(url)}`;
+        const response = await fetch(endpoint);
+        if (!response.ok) return null;
+        return await response.blob();
+      } catch {
+        return null;
+      }
+    },
+
+    getExtensionFromContentType(contentType) {
+      const normalized = String(contentType || "").toLowerCase();
+      if (normalized.includes("png")) return "png";
+      if (normalized.includes("webp")) return "webp";
+      if (normalized.includes("gif")) return "gif";
+      if (normalized.includes("svg")) return "svg";
+      return "jpg";
     },
 
     nextStep() {
