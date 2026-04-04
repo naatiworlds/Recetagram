@@ -7,6 +7,35 @@
 <script>
 import Crear from '../components/Crear.vue'
 
+function normalizeString(value) {
+  return String(value || '').trim()
+}
+
+function extractFirstUrl(value) {
+  const normalized = normalizeString(value)
+  if (!normalized) return ''
+
+  const match = normalized.match(/https?:\/\/[^\s]+/i)
+  return match ? match[0] : ''
+}
+
+function parseShareQuery(route) {
+  const query = route?.query || {}
+  const title = normalizeString(query.title)
+  const text = normalizeString(query.text || query.description)
+  const explicitUrl = normalizeString(query.url || query.link)
+  const fallbackUrl = extractFirstUrl(text)
+  const url = explicitUrl || fallbackUrl
+
+  return {
+    title,
+    text,
+    url,
+    description: '',
+    imageUrl: '',
+  }
+}
+
 export default {
   name: 'ShareTarget',
   components: {
@@ -25,15 +54,7 @@ export default {
     }
   },
   async created() {
-    const query = this.$route.query || {}
-    this.sharedData = {
-      title: String(query.title || ''),
-      text: String(query.text || ''),
-      url: String(query.url || ''),
-      description: '',
-      imageUrl: '',
-    }
-
+    this.sharedData = parseShareQuery(this.$route)
     const preview = await this.resolveSharedPreview(this.sharedData)
 
     this.sharedData.imageUrl = preview.imageUrl

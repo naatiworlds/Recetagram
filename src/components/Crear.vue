@@ -58,6 +58,25 @@
                 {{ post.description.length }} /
                 {{ maxDescriptionLength }} caracteres
               </span>
+
+              <div v-if="sharedSourceUrl" class="shared-debug">
+                <span class="shared-debug-label">Enlace compartido:</span>
+                <a :href="sharedSourceUrl" target="_blank" rel="noopener noreferrer" class="shared-debug-link">
+                  {{ sharedSourceUrl }}
+                </a>
+              </div>
+
+              <p v-else-if="initialSharedData" class="shared-debug-empty">
+                No se detectó enlace en el contenido compartido.
+              </p>
+
+              <button
+                type="button"
+                class="shared-clipboard-btn"
+                @click="importFromClipboard"
+              >
+                Pegar enlace desde portapapeles
+              </button>
             </label>
           </div>
 
@@ -136,6 +155,7 @@ export default {
       maxDescriptionLength: 2000,
       isIngredientListValid: false,
       isTypingUpdate: false,
+      sharedSourceUrl: "",
       // key to force IngredientInput to remount when ingredients are loaded/parsed
       ingredientsKey: 0,
     };
@@ -240,8 +260,97 @@ export default {
         this.post.image = null;
       }
 
+      this.sharedSourceUrl = sharedUrl;
+
       if ((sharedTitle || descriptionFromShare || sharedImageUrl || sharedUrl) && this.currentStep < 2) {
         this.currentStep = 2;
+      }
+    },
+
+    async importFromClipboard() {
+      if (!navigator?.clipboard?.readText) {
+        this.notificationStore.show(
+          "Tu navegador no permite leer el portapapeles en esta vista.",
+          "error"
+        );
+        return;
+      }
+
+      try {
+        const clipboardText = await navigator.clipboard.readText();
+        const urlFromClipboard = this.extractFirstUrl(clipboardText);
+
+        if (!urlFromClipboard) {
+          this.notificationStore.show(
+            "No encontré un enlace válido en el portapapeles.",
+            "error"
+          );
+          return;
+        }
+
+        this.sharedSourceUrl = urlFromClipboard;
+
+        const preview = await this.resolveSharePreview(urlFromClipboard);
+
+        if (!this.post.title && preview.title) {
+          this.post.title = preview.title;
+        }
+
+        if (!this.post.description && preview.description && !this.isUrlOnlyText(preview.description)) {
+          this.post.description = preview.description;
+        }
+
+        if (preview.imageUrl) {
+          this.imagePreviewUrl = preview.imageUrl;
+          this.post.image = null;
+        }
+
+        if (this.currentStep < 2) {
+          this.currentStep = 2;
+        }
+
+        this.notificationStore.show(
+          "Enlace importado. Revisa y completa antes de publicar.",
+          "success"
+        );
+      } catch (error) {
+        console.error("No se pudo leer el portapapeles:", error);
+        this.notificationStore.show(
+          "No pude leer el portapapeles. Copia el enlace y vuelve a intentarlo.",
+          "error"
+        );
+      }
+    },
+
+    extractFirstUrl(value) {
+      const normalized = String(value || "").trim();
+      if (!normalized) return "";
+      const match = normalized.match(/https?:\/\/[^\s]+/i);
+      return match ? match[0] : "";
+    },
+
+    isUrlOnlyText(value) {
+      return /^https?:\/\/[^\s]+$/i.test(String(value || "").trim());
+    },
+
+    async resolveSharePreview(sharedUrl) {
+      const url = String(sharedUrl || "").trim();
+      if (!url) return { imageUrl: "", title: "", description: "" };
+
+      try {
+        const endpoint = `/.netlify/functions/share-preview?url=${encodeURIComponent(url)}`;
+        const response = await fetch(endpoint);
+        if (!response.ok) return { imageUrl: "", title: "", description: "" };
+        const data = await response.json();
+
+        return {
+          imageUrl: String(data?.image || ""),
+          title: String(data?.title || "").trim(),
+          description: String(data?.description || "").trim(),
+        };
+      } catch (error) {
+        console.warn("No se pudo resolver preview desde enlace compartido", error);
+        return { imageUrl: "", title: "", description: "" };
       }
     },
 
@@ -1231,6 +1340,51 @@ textarea {
   text-align: right;
   margin-top: 4px;
   display: block;
+}
+
+.shared-debug {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border: 1px dashed rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.shared-debug-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-color-important);
+  margin-bottom: 4px;
+}
+
+.shared-debug-link {
+  display: inline-block;
+  font-size: 12px;
+  word-break: break-all;
+  color: #0a58ca;
+  text-decoration: underline;
+}
+
+.shared-debug-empty {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--contrast-color);
+}
+
+.shared-clipboard-btn {
+  margin-top: 10px;
+  border: 1px solid var(--contrast-color);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text-color-important);
+  background: transparent;
+  cursor: pointer;
+}
+
+.shared-clipboard-btn:hover {
+  background: rgba(24, 200, 148, 0.1);
 }
 
 .file-upload {
