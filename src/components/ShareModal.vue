@@ -16,19 +16,29 @@
         </div>
       </div>
 
+      <section class="share-tutorial">
+        <div class="tutorial-header">
+          <i class="fas fa-circle-info"></i>
+          <h4>Mini tutorial</h4>
+        </div>
+
+        <ol class="tutorial-steps">
+          <li>Elige la red social que quieras usar.</li>
+          <li>Si es WhatsApp, Telegram o email, se abrirá tu app o enlace.</li>
+          <li>Si usas el botón de compartir del sistema, Android o iPhone te mostrarán sus opciones.</li>
+        </ol>
+
+        <p class="tutorial-note">
+          Tip: en Instagram, lo más fiable desde la web es abrir el menú nativo del móvil y elegir Instagram desde ahí.
+        </p>
+      </section>
+
       <div class="share-options">
         <button v-if="canUseNativeShare" @click="shareNatively" class="share-option native-share-option">
           <div class="option-icon native">
             <i class="fas fa-share-alt"></i>
           </div>
           <span>Compartir con el sistema</span>
-        </button>
-
-        <button v-if="canUseInstagramShare && isMobileDevice" @click="shareToInstagramStory" class="share-option instagram-share-option">
-          <div class="option-icon instagram">
-            <i class="fab fa-instagram"></i>
-          </div>
-          <span>Instagram Story</span>
         </button>
 
         <button @click="copyLink" class="share-option">
@@ -106,20 +116,6 @@ export default {
     canUseNativeShare() {
       return typeof navigator !== 'undefined' && typeof navigator.share === 'function'
     },
-    canUseInstagramShare() {
-      return this.canUseNativeShare && typeof navigator.canShare === 'function'
-    },
-    isMobileDevice() {
-      if (typeof navigator === 'undefined') return false
-
-      const mobilePattern = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i
-      const hasTouchSupport = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0)
-
-      return mobilePattern.test(navigator.userAgent || '') && hasTouchSupport
-    },
-    instagramSourceApplication() {
-      return import.meta.env.VITE_INSTAGRAM_SOURCE_APP_ID || import.meta.env.VITE_FIREBASE_APP_ID || ''
-    },
     shareText() {
       return `${this.shareData.description || ''}\n\nReceta: ${this.shareData.title}`
     },
@@ -159,46 +155,6 @@ export default {
         if (error?.name !== 'AbortError') {
           console.error('Error al abrir el menú nativo de compartir:', error)
           this.notificationStore.show('No se pudo abrir el menú nativo de compartir', 'error')
-        }
-      }
-    },
-
-    async shareToInstagramStory() {
-      if (!this.canUseInstagramShare) {
-        this.notificationStore.show('Tu navegador no soporta compartir contenido para Instagram Story', 'warning')
-        return
-      }
-
-      try {
-        if (this.shareData.imageUrl) {
-          const response = await fetch(this.shareData.imageUrl)
-          const blob = await response.blob()
-          if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
-            const clipboardType = blob.type || 'image/jpeg'
-            await navigator.clipboard.write([
-              new ClipboardItem({
-                [clipboardType]: blob,
-              }),
-            ])
-          }
-        }
-
-        const sourceApplication = this.instagramSourceApplication
-        const storyUrl = sourceApplication
-          ? `instagram-stories://share?source_application=${encodeURIComponent(sourceApplication)}`
-          : 'instagram-stories://share'
-
-        window.location.href = storyUrl
-        setTimeout(() => {
-          this.notificationStore.show(
-            'Si Instagram no se abrió, usa el menú nativo del sistema como alternativa.',
-            'warning'
-          )
-        }, 1200)
-      } catch (error) {
-        if (error?.name !== 'AbortError') {
-          console.error('Error al compartir en Instagram:', error)
-          this.notificationStore.show('No se pudo abrir Instagram Story', 'error')
         }
       }
     },
@@ -311,6 +267,50 @@ export default {
   border-bottom: 1px solid var(--border-color);
 }
 
+.share-tutorial {
+  margin: 12px 16px 8px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tutorial-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.tutorial-header i {
+  color: var(--text-color-important);
+}
+
+.tutorial-header h4 {
+  margin: 0;
+  color: var(--text-color-important);
+  font-size: 15px;
+}
+
+.tutorial-steps {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-color);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.tutorial-steps li + li {
+  margin-top: 6px;
+}
+
+.tutorial-note {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--text-color);
+  opacity: 0.9;
+}
+
 .preview-image {
   width: 80px;
   height: 80px;
@@ -405,18 +405,9 @@ export default {
   color: white;
 }
 
-.option-icon.instagram {
-  background: linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5);
-  color: white;
-}
-
 .option-icon.native {
   background: var(--primary-color);
   color: white;
-}
-
-.instagram-share-option {
-  width: 100%;
 }
 
 /* Scrollbar personalizado */
