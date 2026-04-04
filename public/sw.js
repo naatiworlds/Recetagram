@@ -22,7 +22,7 @@ self.addEventListener("install", (event) => {
       console.error("Error al cachear archivos: ", error);
       // Continuar aunque falle el cache
       return Promise.resolve();
-    }) 
+    })
   );
   // Forzar activación inmediata
   self.skipWaiting();
@@ -68,6 +68,3 @@ self.addEventListener("fetch", (event) => {
     })
   );
 });
-
-
-// Comentario de actualización

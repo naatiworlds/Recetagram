@@ -24,11 +24,11 @@
           <span>Compartir con el sistema</span>
         </button>
 
-        <button v-if="canUseInstagramShare" @click="shareToInstagram" class="share-option instagram-share-option">
+        <button v-if="canUseInstagramShare && isMobileDevice" @click="shareToInstagramStory" class="share-option instagram-share-option">
           <div class="option-icon instagram">
             <i class="fab fa-instagram"></i>
           </div>
-          <span>Instagram (historia o post)</span>
+          <span>Instagram Story</span>
         </button>
 
         <button @click="copyLink" class="share-option">
@@ -109,6 +109,17 @@ export default {
     canUseInstagramShare() {
       return this.canUseNativeShare && typeof navigator.canShare === 'function'
     },
+    isMobileDevice() {
+      if (typeof navigator === 'undefined') return false
+
+      const mobilePattern = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i
+      const hasTouchSupport = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0)
+
+      return mobilePattern.test(navigator.userAgent || '') && hasTouchSupport
+    },
+    instagramSourceApplication() {
+      return import.meta.env.VITE_INSTAGRAM_SOURCE_APP_ID || import.meta.env.VITE_FIREBASE_APP_ID || ''
+    },
     shareText() {
       return `${this.shareData.description || ''}\n\nReceta: ${this.shareData.title}`
     },
@@ -152,38 +163,42 @@ export default {
       }
     },
 
-    async shareToInstagram() {
+    async shareToInstagramStory() {
       if (!this.canUseInstagramShare) {
-        this.notificationStore.show('Tu navegador no soporta compartir contenido para Instagram', 'warning')
+        this.notificationStore.show('Tu navegador no soporta compartir contenido para Instagram Story', 'warning')
         return
       }
 
       try {
-        const payload = {
-          title: this.shareData.title,
-          text: this.shareText,
-          url: this.shareData.url
-        }
-
         if (this.shareData.imageUrl) {
           const response = await fetch(this.shareData.imageUrl)
           const blob = await response.blob()
-          const file = new File([blob], `${this.shareData.title || 'receta'}.jpg`, { type: blob.type || 'image/jpeg' })
-          const files = [file]
-
-          if (navigator.canShare({ files })) {
-            await navigator.share({ ...payload, files })
-            this.closeModal()
-            return
+          if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
+            const clipboardType = blob.type || 'image/jpeg'
+            await navigator.clipboard.write([
+              new ClipboardItem({
+                [clipboardType]: blob,
+              }),
+            ])
           }
         }
 
-        await navigator.share(payload)
-        this.closeModal()
+        const sourceApplication = this.instagramSourceApplication
+        const storyUrl = sourceApplication
+          ? `instagram-stories://share?source_application=${encodeURIComponent(sourceApplication)}`
+          : 'instagram-stories://share'
+
+        window.location.href = storyUrl
+        setTimeout(() => {
+          this.notificationStore.show(
+            'Si Instagram no se abrió, usa el menú nativo del sistema como alternativa.',
+            'warning'
+          )
+        }, 1200)
       } catch (error) {
         if (error?.name !== 'AbortError') {
           console.error('Error al compartir en Instagram:', error)
-          this.notificationStore.show('No se pudo compartir en Instagram', 'error')
+          this.notificationStore.show('No se pudo abrir Instagram Story', 'error')
         }
       }
     },
