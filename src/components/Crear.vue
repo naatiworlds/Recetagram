@@ -28,14 +28,6 @@
               <span v-if="errors.image" class="error">
                 <i class="fa fa-warning"></i> {{ errors.image }}
               </span>
-
-              <button
-                type="button"
-                class="shared-clipboard-btn"
-                @click="importFromClipboard"
-              >
-                Pegar enlace desde portapapeles
-              </button>
             </div>
           </div>
 
@@ -268,80 +260,8 @@ export default {
       }
     },
 
-    async importFromClipboard() {
-      if (!navigator?.clipboard?.readText) {
-        this.notificationStore.show(
-          "Tu navegador no permite leer el portapapeles en esta vista.",
-          "error"
-        );
-        return;
-      }
-
-      try {
-        const clipboardText = await navigator.clipboard.readText();
-        const urlFromClipboard = this.extractFirstUrl(clipboardText);
-
-        if (!urlFromClipboard) {
-          this.notificationStore.show(
-            "No encontré un enlace válido en el portapapeles.",
-            "error"
-          );
-          return;
-        }
-
-        this.sharedSourceUrl = urlFromClipboard;
-
-        const preview = await this.resolveSharePreview(urlFromClipboard);
-        const normalizedTitle = this.normalizeSharedTitle(preview.title);
-        const normalizedDescription = this.normalizeSharedDescription(preview.description, urlFromClipboard);
-
-        if (!this.post.title && normalizedTitle) {
-          this.post.title = normalizedTitle;
-        }
-
-        if (!this.post.description && normalizedDescription && !this.isUrlOnlyText(normalizedDescription)) {
-          this.post.description = normalizedDescription;
-        }
-
-        if (preview.imageUrl) {
-          this.imagePreviewUrl = preview.imageUrl;
-          this.post.image = null;
-        }
-
-        if (this.currentStep < 2) {
-          this.currentStep = 2;
-        }
-
-        this.notificationStore.show(
-          "Enlace importado. Revisa y completa antes de publicar.",
-          "success"
-        );
-      } catch (error) {
-        console.error("No se pudo leer el portapapeles:", error);
-        this.notificationStore.show(
-          "No pude leer el portapapeles. Copia el enlace y vuelve a intentarlo.",
-          "error"
-        );
-      }
-    },
-
-    extractFirstUrl(value) {
-      const normalized = String(value || "").trim();
-      if (!normalized) return "";
-      const match = normalized.match(/https?:\/\/[^\s]+/i);
-      return match ? match[0] : "";
-    },
-
     isUrlOnlyText(value) {
       return /^https?:\/\/[^\s]+$/i.test(String(value || "").trim());
-    },
-
-    isInstagramUrl(value) {
-      return /https?:\/\/(?:www\.)?instagram\.com\//i.test(String(value || "").trim());
-    },
-
-    isInstagramStoryUrl(value) {
-      return /https?:\/\/(?:www\.)?instagram\.com\/stories\//i.test(String(value || "").trim());
     },
 
     isGenericInstagramTitle(value) {
@@ -414,39 +334,6 @@ export default {
       if (this.isUrlOnlyText(cleaned)) return "";
 
       return cleaned;
-    },
-
-    async resolveSharePreview(sharedUrl) {
-      const url = String(sharedUrl || "").trim();
-      if (!url) return { imageUrl: "", title: "", description: "" };
-
-      try {
-        const endpoint = `/.netlify/functions/share-preview?url=${encodeURIComponent(url)}`;
-        const response = await fetch(endpoint);
-        if (!response.ok) return { imageUrl: "", title: "", description: "" };
-        const data = await response.json();
-
-        const normalizedTitle = this.normalizeSharedTitle(data?.title);
-        const normalizedDescription = this.normalizeSharedDescription(data?.description, url);
-        const isStoryWithGenericMeta =
-          this.isInstagramStoryUrl(url) &&
-          (!normalizedTitle || this.isGenericInstagramTitle(data?.title)) &&
-          (!normalizedDescription || this.isGenericInstagramDescription(data?.description));
-
-        let imageUrl = String(data?.image || "").trim();
-        if (isStoryWithGenericMeta && this.isInstagramUrl(imageUrl)) {
-          imageUrl = "";
-        }
-
-        return {
-          imageUrl,
-          title: normalizedTitle,
-          description: normalizedDescription,
-        };
-      } catch (error) {
-        console.warn("No se pudo resolver preview desde enlace compartido", error);
-        return { imageUrl: "", title: "", description: "" };
-      }
     },
 
     // ----------------- MARKDOWN / INPUT EDITABLE -----------------
@@ -1465,21 +1352,6 @@ textarea {
   margin-top: 10px;
   font-size: 12px;
   color: var(--contrast-color);
-}
-
-.shared-clipboard-btn {
-  margin-top: 10px;
-  border: 1px solid var(--contrast-color);
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 13px;
-  color: var(--text-color-important);
-  background: transparent;
-  cursor: pointer;
-}
-
-.shared-clipboard-btn:hover {
-  background: rgba(24, 200, 148, 0.1);
 }
 
 .file-upload {
