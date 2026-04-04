@@ -25,11 +25,11 @@
         <ol class="tutorial-steps">
           <li>Elige la red social que quieras usar.</li>
           <li>Si es WhatsApp, Telegram o email, se abrirá tu app o enlace.</li>
-          <li>Si usas el botón de compartir del sistema, Android o iPhone te mostrarán sus opciones.</li>
+          <li>Si usas el botón de compartir con el sistema, Android o iPhone te mostrarán sus opciones.</li>
         </ol>
 
         <p class="tutorial-note">
-          Tip: en Instagram, lo más fiable desde la web es abrir el menú nativo del móvil y elegir Instagram desde ahí.
+          Tip: para compartir en Instagram, busca la aplicación en compartir con el sistema.
         </p>
       </section>
 
@@ -39,6 +39,13 @@
             <i class="fas fa-share-alt"></i>
           </div>
           <span>Compartir con el sistema</span>
+        </button>
+
+        <button v-if="canUseNativeShare && isMobileDevice" @click="shareToInstagram" class="share-option instagram-share-option">
+          <div class="option-icon instagram">
+            <i class="fab fa-instagram"></i>
+          </div>
+          <span>Compartir en Instagram</span>
         </button>
 
         <button @click="copyLink" class="share-option">
@@ -116,6 +123,14 @@ export default {
     canUseNativeShare() {
       return typeof navigator !== 'undefined' && typeof navigator.share === 'function'
     },
+    isMobileDevice() {
+      if (typeof navigator === 'undefined') return false
+
+      const mobilePattern = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i
+      const hasTouchSupport = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0)
+
+      return mobilePattern.test(navigator.userAgent || '') && hasTouchSupport
+    },
     shareText() {
       return `${this.shareData.description || ''}\n\nReceta: ${this.shareData.title}`
     },
@@ -155,6 +170,42 @@ export default {
         if (error?.name !== 'AbortError') {
           console.error('Error al abrir el menú nativo de compartir:', error)
           this.notificationStore.show('No se pudo abrir el menú nativo de compartir', 'error')
+        }
+      }
+    },
+
+    async shareToInstagram() {
+      if (!this.canUseNativeShare) {
+        this.notificationStore.show('Tu navegador no permite compartir en Instagram', 'warning')
+        return
+      }
+
+      try {
+        const payload = {
+          title: this.shareData.title,
+          text: this.shareText,
+          url: this.shareData.url,
+        }
+
+        if (this.shareData.imageUrl) {
+          const response = await fetch(this.shareData.imageUrl)
+          const blob = await response.blob()
+          const fileName = `${(this.shareData.title || 'receta').replace(/[^a-z0-9]+/gi, '_').toLowerCase()}.jpg`
+          const file = new File([blob], fileName, { type: blob.type || 'image/jpeg' })
+
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ ...payload, files: [file] })
+            this.closeModal()
+            return
+          }
+        }
+
+        await navigator.share(payload)
+        this.closeModal()
+      } catch (error) {
+        if (error?.name !== 'AbortError') {
+          console.error('Error al compartir en Instagram:', error)
+          this.notificationStore.show('No se pudo abrir Instagram desde el menú del sistema', 'error')
         }
       }
     },
@@ -408,6 +459,15 @@ export default {
 .option-icon.native {
   background: var(--primary-color);
   color: white;
+}
+
+.option-icon.instagram {
+  background: linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5);
+  color: white;
+}
+
+.instagram-share-option {
+  width: 100%;
 }
 
 /* Scrollbar personalizado */
