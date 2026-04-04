@@ -19,6 +19,14 @@
   to = "/profile/:splat"
   status = 200
 
+# Endpoint para Web Share Target (POST)
+[[redirects]]
+  from = "/share-target"
+  to = "/.netlify/functions/share-target"
+  status = 200
+  force = true
+  conditions = { Method = ["POST"] }
+
 # Redirección general para SPA
 [[redirects]]
   from = "/*"
