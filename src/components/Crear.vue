@@ -28,6 +28,14 @@
               <span v-if="errors.image" class="error">
                 <i class="fa fa-warning"></i> {{ errors.image }}
               </span>
+
+              <button
+                type="button"
+                class="shared-clipboard-btn"
+                @click="importFromClipboard"
+              >
+                Pegar enlace desde portapapeles
+              </button>
             </div>
           </div>
 
@@ -70,13 +78,6 @@
                 No se detectó enlace en el contenido compartido.
               </p>
 
-              <button
-                type="button"
-                class="shared-clipboard-btn"
-                @click="importFromClipboard"
-              >
-                Pegar enlace desde portapapeles
-              </button>
             </label>
           </div>
 
@@ -240,9 +241,9 @@ export default {
   },
   methods: {
     applyInitialSharedData(sharedData) {
-      const sharedTitle = String(sharedData?.title || "").trim();
+      const sharedTitle = this.normalizeSharedTitle(sharedData?.title);
       const sharedText = String(sharedData?.text || "").trim();
-      const sharedDescription = String(sharedData?.description || "").trim();
+      const sharedDescription = this.normalizeSharedDescription(sharedData?.description, sharedData?.url);
       const sharedUrl = String(sharedData?.url || "").trim();
       const sharedImageUrl = String(sharedData?.imageUrl || "").trim();
 
@@ -291,13 +292,15 @@ export default {
         this.sharedSourceUrl = urlFromClipboard;
 
         const preview = await this.resolveSharePreview(urlFromClipboard);
+        const normalizedTitle = this.normalizeSharedTitle(preview.title);
+        const normalizedDescription = this.normalizeSharedDescription(preview.description, urlFromClipboard);
 
-        if (!this.post.title && preview.title) {
-          this.post.title = preview.title;
+        if (!this.post.title && normalizedTitle) {
+          this.post.title = normalizedTitle;
         }
 
-        if (!this.post.description && preview.description && !this.isUrlOnlyText(preview.description)) {
-          this.post.description = preview.description;
+        if (!this.post.description && normalizedDescription && !this.isUrlOnlyText(normalizedDescription)) {
+          this.post.description = normalizedDescription;
         }
 
         if (preview.imageUrl) {
@@ -333,6 +336,62 @@ export default {
       return /^https?:\/\/[^\s]+$/i.test(String(value || "").trim());
     },
 
+    decodeHtmlEntities(value) {
+      const text = String(value || "");
+      if (!text) return "";
+      const textarea = document.createElement("textarea");
+      textarea.innerHTML = text;
+      return textarea.value;
+    },
+
+    normalizeSharedTitle(value) {
+      const decoded = this.decodeHtmlEntities(value)
+        .replace(/\s+/g, " ")
+        .trim();
+
+      if (!decoded) return "";
+
+      const instagramMatch = decoded.match(/^(.*?)\s+on\s+Instagram:\s*(.*)$/i);
+      if (instagramMatch) {
+        const caption = String(instagramMatch[2] || "")
+          .replace(/^['"“”]+|['"“”]+$/g, "")
+          .trim();
+
+        if (caption) {
+          return caption.slice(0, 90);
+        }
+
+        const account = String(instagramMatch[1] || "").trim();
+        return account ? `${account} (Instagram)` : "Instagram";
+      }
+
+      return decoded.slice(0, 90);
+    },
+
+    normalizeSharedDescription(value, sourceUrl = "") {
+      const decoded = this.decodeHtmlEntities(value)
+        .replace(/\s+/g, " ")
+        .trim();
+
+      if (!decoded) return "";
+
+      let cleaned = decoded
+        .replace(/^\d+[\d.,]*\s+likes?,\s*\d+[\d.,]*\s+comments?\s*-\s*[^:]+:\s*/i, "")
+        .replace(/^\d+[\d.,]*\s+likes?\s*-\s*[^:]+:\s*/i, "")
+        .replace(/^\d+[\d.,]*\s+comments?\s*-\s*[^:]+:\s*/i, "")
+        .trim();
+
+      const normalizedUrl = String(sourceUrl || "").trim();
+      if (normalizedUrl) {
+        cleaned = cleaned.replaceAll(normalizedUrl, "").trim();
+      }
+
+      cleaned = cleaned.replace(/\s+/g, " ").trim();
+      if (this.isUrlOnlyText(cleaned)) return "";
+
+      return cleaned;
+    },
+
     async resolveSharePreview(sharedUrl) {
       const url = String(sharedUrl || "").trim();
       if (!url) return { imageUrl: "", title: "", description: "" };
@@ -345,8 +404,8 @@ export default {
 
         return {
           imageUrl: String(data?.image || ""),
-          title: String(data?.title || "").trim(),
-          description: String(data?.description || "").trim(),
+          title: this.normalizeSharedTitle(data?.title),
+          description: this.normalizeSharedDescription(data?.description, url),
         };
       } catch (error) {
         console.warn("No se pudo resolver preview desde enlace compartido", error);
