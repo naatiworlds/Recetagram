@@ -336,6 +336,28 @@ export default {
       return /^https?:\/\/[^\s]+$/i.test(String(value || "").trim());
     },
 
+    isInstagramUrl(value) {
+      return /https?:\/\/(?:www\.)?instagram\.com\//i.test(String(value || "").trim());
+    },
+
+    isInstagramStoryUrl(value) {
+      return /https?:\/\/(?:www\.)?instagram\.com\/stories\//i.test(String(value || "").trim());
+    },
+
+    isGenericInstagramTitle(value) {
+      const normalized = String(value || "").trim().toLowerCase();
+      return normalized === "instagram";
+    },
+
+    isGenericInstagramDescription(value) {
+      const normalized = String(value || "").trim().toLowerCase();
+      return (
+        normalized.includes("create an account or log in to instagram") ||
+        normalized.includes("sign up for instagram") ||
+        normalized.includes("share what you're into")
+      );
+    },
+
     decodeHtmlEntities(value) {
       const text = String(value || "");
       if (!text) return "";
@@ -350,6 +372,7 @@ export default {
         .trim();
 
       if (!decoded) return "";
+      if (this.isGenericInstagramTitle(decoded)) return "";
 
       const instagramMatch = decoded.match(/^(.*?)\s+on\s+Instagram:\s*(.*)$/i);
       if (instagramMatch) {
@@ -374,6 +397,7 @@ export default {
         .trim();
 
       if (!decoded) return "";
+      if (this.isGenericInstagramDescription(decoded)) return "";
 
       let cleaned = decoded
         .replace(/^\d+[\d.,]*\s+likes?,\s*\d+[\d.,]*\s+comments?\s*-\s*[^:]+:\s*/i, "")
@@ -402,10 +426,22 @@ export default {
         if (!response.ok) return { imageUrl: "", title: "", description: "" };
         const data = await response.json();
 
+        const normalizedTitle = this.normalizeSharedTitle(data?.title);
+        const normalizedDescription = this.normalizeSharedDescription(data?.description, url);
+        const isStoryWithGenericMeta =
+          this.isInstagramStoryUrl(url) &&
+          (!normalizedTitle || this.isGenericInstagramTitle(data?.title)) &&
+          (!normalizedDescription || this.isGenericInstagramDescription(data?.description));
+
+        let imageUrl = String(data?.image || "").trim();
+        if (isStoryWithGenericMeta && this.isInstagramUrl(imageUrl)) {
+          imageUrl = "";
+        }
+
         return {
-          imageUrl: String(data?.image || ""),
-          title: this.normalizeSharedTitle(data?.title),
-          description: this.normalizeSharedDescription(data?.description, url),
+          imageUrl,
+          title: normalizedTitle,
+          description: normalizedDescription,
         };
       } catch (error) {
         console.warn("No se pudo resolver preview desde enlace compartido", error);
