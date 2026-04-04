@@ -222,15 +222,26 @@ export default {
     applyInitialSharedData(sharedData) {
       const sharedTitle = String(sharedData?.title || "").trim();
       const sharedText = String(sharedData?.text || "").trim();
+      const sharedDescription = String(sharedData?.description || "").trim();
       const sharedUrl = String(sharedData?.url || "").trim();
+      const sharedImageUrl = String(sharedData?.imageUrl || "").trim();
 
       if (sharedTitle) {
         this.post.title = sharedTitle;
       }
 
-      const descriptionParts = [sharedText, sharedUrl].filter(Boolean);
-      if (descriptionParts.length > 0) {
-        this.post.description = descriptionParts.join("\n\n");
+      const descriptionFromShare = sharedDescription || sharedText;
+      if (descriptionFromShare) {
+        this.post.description = descriptionFromShare;
+      }
+
+      if (sharedImageUrl) {
+        this.imagePreviewUrl = sharedImageUrl;
+        this.post.image = null;
+      }
+
+      if ((sharedTitle || descriptionFromShare || sharedImageUrl || sharedUrl) && this.currentStep < 2) {
+        this.currentStep = 2;
       }
     },
 
