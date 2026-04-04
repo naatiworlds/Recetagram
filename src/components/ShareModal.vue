@@ -24,6 +24,13 @@
           <span>Compartir con el sistema</span>
         </button>
 
+        <button v-if="canUseInstagramShare" @click="shareToInstagram" class="share-option instagram-share-option">
+          <div class="option-icon instagram">
+            <i class="fab fa-instagram"></i>
+          </div>
+          <span>Instagram (historia o post)</span>
+        </button>
+
         <button @click="copyLink" class="share-option">
           <div class="option-icon">
             <i class="fas fa-link"></i>
@@ -99,6 +106,9 @@ export default {
     canUseNativeShare() {
       return typeof navigator !== 'undefined' && typeof navigator.share === 'function'
     },
+    canUseInstagramShare() {
+      return this.canUseNativeShare && typeof navigator.canShare === 'function'
+    },
     shareText() {
       return `${this.shareData.description || ''}\n\nReceta: ${this.shareData.title}`
     },
@@ -138,6 +148,42 @@ export default {
         if (error?.name !== 'AbortError') {
           console.error('Error al abrir el menú nativo de compartir:', error)
           this.notificationStore.show('No se pudo abrir el menú nativo de compartir', 'error')
+        }
+      }
+    },
+
+    async shareToInstagram() {
+      if (!this.canUseInstagramShare) {
+        this.notificationStore.show('Tu navegador no soporta compartir contenido para Instagram', 'warning')
+        return
+      }
+
+      try {
+        const payload = {
+          title: this.shareData.title,
+          text: this.shareText,
+          url: this.shareData.url
+        }
+
+        if (this.shareData.imageUrl) {
+          const response = await fetch(this.shareData.imageUrl)
+          const blob = await response.blob()
+          const file = new File([blob], `${this.shareData.title || 'receta'}.jpg`, { type: blob.type || 'image/jpeg' })
+          const files = [file]
+
+          if (navigator.canShare({ files })) {
+            await navigator.share({ ...payload, files })
+            this.closeModal()
+            return
+          }
+        }
+
+        await navigator.share(payload)
+        this.closeModal()
+      } catch (error) {
+        if (error?.name !== 'AbortError') {
+          console.error('Error al compartir en Instagram:', error)
+          this.notificationStore.show('No se pudo compartir en Instagram', 'error')
         }
       }
     },
@@ -344,9 +390,18 @@ export default {
   color: white;
 }
 
+.option-icon.instagram {
+  background: linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5);
+  color: white;
+}
+
 .option-icon.native {
   background: var(--primary-color);
   color: white;
+}
+
+.instagram-share-option {
+  width: 100%;
 }
 
 /* Scrollbar personalizado */
