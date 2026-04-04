@@ -29,7 +29,7 @@
         </ol>
 
         <p class="tutorial-note">
-          Tip: para compartir en Instagram, busca la aplicación en compartir con el sistema.
+          Tip: para compartir en Instagram, busca la aplicación en compartir en instagram.
         </p>
       </section>
 
