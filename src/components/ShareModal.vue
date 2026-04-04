@@ -17,6 +17,13 @@
       </div>
 
       <div class="share-options">
+        <button v-if="canUseNativeShare" @click="shareNatively" class="share-option native-share-option">
+          <div class="option-icon native">
+            <i class="fas fa-share-alt"></i>
+          </div>
+          <span>Compartir con el sistema</span>
+        </button>
+
         <button @click="copyLink" class="share-option">
           <div class="option-icon">
             <i class="fas fa-link"></i>
@@ -89,6 +96,9 @@ export default {
     notificationStore() {
       return useNotificationStore()
     },
+    canUseNativeShare() {
+      return typeof navigator !== 'undefined' && typeof navigator.share === 'function'
+    },
     shareText() {
       return `${this.shareData.description || ''}\n\nReceta: ${this.shareData.title}`
     },
@@ -109,6 +119,27 @@ export default {
   methods: {
     closeModal() {
       this.$emit('close')
+    },
+
+    async shareNatively() {
+      if (!this.canUseNativeShare) {
+        this.notificationStore.show('Tu navegador no permite el menú nativo de compartir', 'warning')
+        return
+      }
+
+      try {
+        await navigator.share({
+          title: this.shareData.title,
+          text: this.shareText,
+          url: this.shareData.url
+        })
+        this.closeModal()
+      } catch (error) {
+        if (error?.name !== 'AbortError') {
+          console.error('Error al abrir el menú nativo de compartir:', error)
+          this.notificationStore.show('No se pudo abrir el menú nativo de compartir', 'error')
+        }
+      }
     },
     
     async copyLink() {
@@ -268,6 +299,10 @@ export default {
   font-size: 15px;
 }
 
+.native-share-option {
+  width: 100%;
+}
+
 .share-option:hover {
   background-color: rgba(255, 255, 255, 0.05);
 }
@@ -306,6 +341,11 @@ export default {
 
 .option-icon.email {
   background: #EA4335;
+  color: white;
+}
+
+.option-icon.native {
+  background: var(--primary-color);
   color: white;
 }
 

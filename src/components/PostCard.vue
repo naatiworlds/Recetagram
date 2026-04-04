@@ -297,23 +297,7 @@ export default {
       const postUrl = `${window.location.origin}/posts/${this.post.id}`
       const imageUrl = this.getImageUrl(this.post.imagen)
       
-      // Intentar compartir con la Web Share API (solo enlace y título)
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: this.post.title,
-            url: postUrl
-          })
-          return
-        } catch (error) {
-          // Usuario canceló o error - continuar con fallback
-          if (error.name !== 'AbortError') {
-            console.log('Error al compartir:', error)
-          }
-        }
-      }
-      
-      // Fallback: mostrar modal estilo Instagram
+      // Siempre mostrar el menú custom; el share nativo se mueve al modal
       this.$emit('show-share-modal', {
         url: postUrl,
         title: this.post.title,
