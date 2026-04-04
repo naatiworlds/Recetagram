@@ -1,5 +1,35 @@
 const fetch = require('node-fetch');
 
+function decodeHtmlEntities(value) {
+  const text = String(value || '');
+  if (!text) return '';
+
+  const namedMap = {
+    amp: '&',
+    quot: '"',
+    apos: "'",
+    lt: '<',
+    gt: '>',
+    nbsp: ' ',
+  };
+
+  return text.replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (fullMatch, entity) => {
+    const normalized = String(entity || '').toLowerCase();
+
+    if (normalized.startsWith('#x')) {
+      const code = parseInt(normalized.slice(2), 16);
+      return Number.isNaN(code) ? fullMatch : String.fromCodePoint(code);
+    }
+
+    if (normalized.startsWith('#')) {
+      const code = parseInt(normalized.slice(1), 10);
+      return Number.isNaN(code) ? fullMatch : String.fromCodePoint(code);
+    }
+
+    return namedMap[normalized] ?? fullMatch;
+  });
+}
+
 function resolveUrl(candidateUrl) {
   try {
     const parsed = new URL(candidateUrl);
@@ -16,12 +46,12 @@ function extractOgImage(html) {
   const ogMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["'][^>]*>/i)
     || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["'][^>]*>/i);
 
-  if (ogMatch && ogMatch[1]) return ogMatch[1];
+  if (ogMatch && ogMatch[1]) return decodeHtmlEntities(ogMatch[1].trim());
 
   const twitterMatch = html.match(/<meta[^>]+name=["']twitter:image(?::src)?["'][^>]+content=["']([^"']+)["'][^>]*>/i)
     || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image(?::src)?["'][^>]*>/i);
 
-  return twitterMatch && twitterMatch[1] ? twitterMatch[1] : '';
+  return twitterMatch && twitterMatch[1] ? decodeHtmlEntities(twitterMatch[1].trim()) : '';
 }
 
 function extractMetaContent(html, keys) {
@@ -31,7 +61,7 @@ function extractMetaContent(html, keys) {
     const secondPattern = new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']${escapedKey}["'][^>]*>`, 'i');
 
     const match = html.match(firstPattern) || html.match(secondPattern);
-    if (match && match[1]) return match[1].trim();
+    if (match && match[1]) return decodeHtmlEntities(match[1].trim());
   }
   return '';
 }

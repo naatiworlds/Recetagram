@@ -188,7 +188,7 @@ export default {
           !normalizedTitle &&
           !normalizedDescription
 
-        let imageUrl = normalizeString(data?.image)
+        let imageUrl = decodeHtmlEntities(data?.image)
         if (isStoryWithGenericMeta && /instagram\.com/i.test(imageUrl)) {
           imageUrl = ''
         }
