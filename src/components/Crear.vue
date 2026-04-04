@@ -123,7 +123,7 @@ export default {
         description: "",
         image: null,
         is_private: false,
-        ingredients: [{ name: "", quantity: "", unit: "" }],
+        ingredients: [],
       },
       imagePreviewUrl: "",
       loading: false,
@@ -701,17 +701,17 @@ export default {
 
     parseIngredients(raw) {
       // Acepta array de objetos o string JSON (tolerante a claves sin comillas)
-      if (!raw) return [{ name: "", quantity: "", unit: "" }];
+      if (!raw) return [];
       let arr = raw;
       if (typeof raw === 'string') {
         try {
           const validJSON = raw.replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
           arr = JSON.parse(validJSON);
         } catch (e) {
-          return [{ name: "", quantity: "", unit: "" }];
+          return [];
         }
       }
-      if (!Array.isArray(arr)) return [{ name: "", quantity: "", unit: "" }];
+      if (!Array.isArray(arr)) return [];
 
       return arr.map((ing) => {
         // Soportar distintas claves provenientes del backend
@@ -732,7 +732,7 @@ export default {
           unit = ing?.unit ?? ing?.unidad ?? '';
         }
         return { name, quantity: value || '', unit: unit || '' };
-      });
+      }).filter((ing) => ing.name || ing.quantity || ing.unit);
     },
 
     // ----------------- VALIDACIONES -----------------
@@ -835,10 +835,12 @@ export default {
 
       this.loading = true;
 
-      const ingredientsPayload = this.post.ingredients.map((ing) => ({
-        name: ing.name,
-        quantity: `${ing.quantity} ${ing.unit}`.trim(),
-      }));
+      const ingredientsPayload = this.post.ingredients
+        .filter((ing) => ing.name?.trim() && ing.quantity !== '' && ing.quantity != null && ing.unit?.trim())
+        .map((ing) => ({
+          name: ing.name.trim(),
+          quantity: `${ing.quantity} ${ing.unit}`.trim(),
+        }));
 
       const formData = new FormData();
       formData.append("title", this.post.title);

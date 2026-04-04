@@ -289,8 +289,8 @@ main {
     }
 
     .scrollable-list {
-        max-height: 0px;
-        /* Aumentar la altura máxima en pantallas pequeñas */
+      max-height: 140px;
+      /* Mantener la lista visible y desplazable en pantallas pequeñas */
     }
 
 }
