@@ -98,6 +98,10 @@ self.addEventListener('notificationclick', (event) => {
 self.addEventListener("fetch", (event) => {
   const requestUrl = new URL(event.request.url);
 
+  if (requestUrl.origin !== self.location.origin) {
+    return;
+  }
+
   if (event.request.method === "POST" && requestUrl.pathname === "/share-target") {
     event.respondWith(
       (async () => {
@@ -119,6 +123,10 @@ self.addEventListener("fetch", (event) => {
         }
       })()
     );
+    return;
+  }
+
+  if (event.request.method !== 'GET') {
     return;
   }
 
