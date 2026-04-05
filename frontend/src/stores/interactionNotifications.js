@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import apiService from '@/services/api.js'
 import { useNotificationStore } from './notification'
 import { connectNotificationSocket, disconnectNotificationSocket } from '@/services/realtimeNotifications'
+import { playNotificationSound } from '@/utils/notificationSound'
 
 export const useUserNotificationStore = defineStore('userNotification', {
   state: () => ({
@@ -34,6 +35,72 @@ export const useUserNotificationStore = defineStore('userNotification', {
 
       const notificationStore = useNotificationStore()
       notificationStore.show('Tienes una nueva notificación', 'info', 2500)
+
+      this.triggerBrowserNotification(normalized)
+    },
+
+    async requestNotificationPermission() {
+      if (typeof window === 'undefined' || !('Notification' in window)) {
+        return 'unsupported'
+      }
+
+      if (Notification.permission === 'granted') {
+        return 'granted'
+      }
+
+      if (Notification.permission === 'denied') {
+        return 'denied'
+      }
+
+      try {
+        return await Notification.requestPermission()
+      } catch (error) {
+        console.warn('[notifications] error solicitando permisos', error)
+        return 'error'
+      }
+    },
+
+    async triggerBrowserNotification(notification) {
+      if (typeof window === 'undefined') return
+
+      const permission = await this.requestNotificationPermission()
+      if (permission !== 'granted') return
+
+      const title = 'Recetagram'
+      const body = notification?.message || 'Tienes una nueva notificación'
+
+      const payload = {
+        title,
+        body,
+        icon: '/icons/icon-192.png',
+        badge: '/icons/icon-192.png',
+        data: {
+          url: '/'
+        }
+      }
+
+      if (notification?.post_id) {
+        payload.data.url = `/posts/${notification.post_id}`
+      } else if (notification?.from_user_id) {
+        payload.data.url = `/user/${notification.from_user_id}`
+      }
+
+      if ('serviceWorker' in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.ready
+          registration.active?.postMessage({
+            type: 'SHOW_NOTIFICATION',
+            payload
+          })
+        } catch (error) {
+          console.warn('[notifications] no se pudo usar SW para notificación', error)
+          new Notification(title, payload)
+        }
+      } else {
+        new Notification(title, payload)
+      }
+
+      playNotificationSound()
     },
 
     async fetchNotifications() {

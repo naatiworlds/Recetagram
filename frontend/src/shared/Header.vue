@@ -50,6 +50,7 @@ export default {
     },
     created() {
         this.userNotifications.fetchNotifications()
+        this.userNotifications.requestNotificationPermission()
         if (this.userStore?.user?.id) {
             this.userNotifications.initRealtime(this.userStore.user.id)
         }

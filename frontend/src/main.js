@@ -7,6 +7,7 @@ import router from './router';
 import { useNotificationStore } from './stores/notification';
 import { useUserStore } from './stores/user';
 import { apiService } from './services/api';
+import { playNotificationSound } from './utils/notificationSound';
 
 // Importar Firebase y FCM
 import { initializeApp } from 'firebase/app';
@@ -44,6 +45,14 @@ const initializeVueApp = async () => {
 };
 
 initializeVueApp();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event?.data?.type === 'SOUND_NOTIFICATION') {
+      playNotificationSound()
+    }
+  })
+}
 
 // Manejo global de errores
 app.config.errorHandler = (error, vm, info) => {

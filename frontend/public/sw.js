@@ -52,6 +52,46 @@ self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
   }
+
+  if (event.data && event.data.type === "SHOW_NOTIFICATION") {
+    const payload = event.data.payload || {};
+    const title = payload.title || "Recetagram";
+    const options = {
+      body: payload.body || "Tienes una nueva notificación",
+      icon: payload.icon || "/icons/icon-192.png",
+      badge: payload.badge || "/icons/icon-192.png",
+      data: payload.data || { url: "/" }
+    };
+
+    event.waitUntil((async () => {
+      await self.registration.showNotification(title, options);
+      const clientsList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      clientsList.forEach((client) => {
+        client.postMessage({ type: 'SOUND_NOTIFICATION' });
+      });
+    })());
+  }
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = event.notification?.data?.url || '/';
+
+  event.waitUntil((async () => {
+    const clientsList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of clientsList) {
+      if ('focus' in client) {
+        await client.focus();
+        if ('navigate' in client) {
+          client.navigate(url);
+        }
+        return;
+      }
+    }
+    if (self.clients.openWindow) {
+      await self.clients.openWindow(url);
+    }
+  })());
 });
 
 // Intercepción de solicitudes (modo offline básico)
