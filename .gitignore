@@ -1,0 +1,35 @@
+# Dependencies
+Frontend/node_modules/
+Backend/vendor/
+
+# Builds
+Frontend/dist/
+Frontend/dist-ssr/
+Backend/public/build/
+Backend/public/hot
+
+# Environment files
+Frontend/.env
+Backend/.env
+Backend/.env.backup
+Backend/.env.production
+
+# Laravel caches and runtime files
+Backend/.phpunit.cache/
+Backend/storage/*.key
+Backend/storage/app/public/
+Backend/storage/app/private/
+Backend/storage/framework/
+Backend/storage/logs/
+Backend/bootstrap/cache/
+Backend/nohup.out
+
+# Local editor / OS files
+.vscode/
+.idea/
+.DS_Store
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

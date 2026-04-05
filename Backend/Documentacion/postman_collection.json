@@ -1,0 +1,181 @@
+{
+  "info": {
+    "name": "Recetagram API - Colección",
+    "_postman_id": "e6c2a4e2-3d6a-4e3d-9b7b-collection-recetagram",
+    "description": "Colección de endpoints para Recetagram API, incluyendo autenticación, posts, moderación y membresías (Stripe).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "https://recetagram.com/api/v1" },
+    { "key": "auth_token", "value": "" },
+    { "key": "email", "value": "user@example.com" },
+    { "key": "password", "value": "password" },
+    { "key": "post_id", "value": "1" },
+    { "key": "session_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/me", "host": ["{{base_url}}"], "path": ["me"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Posts Públicos",
+      "item": [
+        {
+          "name": "Listar Posts Públicos",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/posts/public", "host": ["{{base_url}}"], "path": ["posts","public"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Moderación",
+      "item": [
+        {
+          "name": "Listar Posts (incluye ocultos)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/moderation/posts", "host": ["{{base_url}}"], "path": ["moderation","posts"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Estadísticas Moderación",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/moderation/stats", "host": ["{{base_url}}"], "path": ["moderation","stats"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Ocultar Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/moderation/posts/{{post_id}}/hide", "host": ["{{base_url}}"], "path": ["moderation","posts","{{post_id}}","hide"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Mostrar Post (solo admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/moderation/posts/{{post_id}}/unhide", "host": ["{{base_url}}"], "path": ["moderation","posts","{{post_id}}","unhide"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Membresías (Stripe)",
+      "item": [
+        {
+          "name": "Crear Checkout (monthly)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/membership/checkout", "host": ["{{base_url}}"], "path": ["membership","checkout"] },
+            "body": { "mode": "raw", "raw": "{\n  \"type\": \"monthly\"\n}" }
+          },
+          "response": []
+        },
+        {
+          "name": "Crear Checkout (yearly)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/membership/checkout", "host": ["{{base_url}}"], "path": ["membership","checkout"] },
+            "body": { "mode": "raw", "raw": "{\n  \"type\": \"yearly\"\n}" }
+          },
+          "response": []
+        },
+        {
+          "name": "Confirmar Pago",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/membership/confirm", "host": ["{{base_url}}"], "path": ["membership","confirm"] },
+            "body": { "mode": "raw", "raw": "{\n  \"session_id\": \"{{session_id}}\"\n}" }
+          },
+          "response": []
+        },
+        {
+          "name": "Estado de Membresía",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/membership/status", "host": ["{{base_url}}"], "path": ["membership","status"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancelar Membresía",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/membership/cancel", "host": ["{{base_url}}"], "path": ["membership","cancel"] }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
+
+

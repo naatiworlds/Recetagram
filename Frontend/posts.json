@@ -1,0 +1,42 @@
+[
+    {
+      "id": 1,
+      "title": "Delicious Pancakes",
+      "content": "Learn how to make delicious pancakes with this easy recipe.",
+      "image": "https://img.delicious.com.au/EyhPamCD/del/2023/06/easy-pancake-191698-2.jpg",
+      "author": "John Doe",
+      "date": "2025-02-20"
+    },
+    {
+      "id": 2,
+      "title": "Healthy Smoothies",
+      "content": "Discover the best ingredients for making healthy smoothies.",
+      "image": "https://andianne.com/wp-content/uploads/2021/04/smoothies-07.jpg",
+      "author": "Jane Smith",
+      "date": "2025-02-19"
+    },
+    {
+      "id": 3,
+      "title": "Vegan Tacos",
+      "content": "Try these delicious vegan tacos for a healthy meal.",
+      "image": "https://itdoesnttastelikechicken.com/wp-content/uploads/2024/04/easy-vegan-tacos-shredded-tofu-taco-meat-grated-recipe-best.jpg",
+      "author": "Alice Johnson",
+      "date": "2025-02-18"
+    },
+    {
+      "id": 4,
+      "title": "Chocolate Cake",
+      "content": "Indulge in this rich and moist chocolate cake.",
+      "image": "https://assets.tmecosys.com/image/upload/t_web767x639/img/recipe/ras/Assets/0A475B34-4E78-40D8-9F30-46223B7D77E7/Derivates/E55C7EA4-0E60-403F-B5DC-75EA358197BD.jpg",
+      "author": "Bob Brown",
+      "date": "2025-02-17"
+    },
+    {
+      "id": 5,
+      "title": "Caesar Salad",
+      "content": "A classic Caesar salad recipe with a homemade dressing.",
+      "image": "https://www.noracooks.com/wp-content/uploads/2022/06/vegan-caesar-salad-4.jpg",
+      "author": "Emily Davis",
+      "date": "2025-02-16"
+    }
+  ]
