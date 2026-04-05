@@ -90,6 +90,8 @@ self.addEventListener("fetch", (event) => {
         if (event.request.mode === 'navigate') {
           return caches.match('/index.html');
         }
+
+        return new Response('', { status: 504, statusText: 'Gateway Timeout' });
       });
     })
   );

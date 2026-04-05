@@ -8,7 +8,8 @@
   "description": "Red social de recetas de cocina, donde puedes compartir tus recetas y descubrir nuevas.",
   "share_target": {
     "action": "/share-target",
-    "method": "GET",
+    "method": "POST",
+    "enctype": "multipart/form-data",
     "params": {
       "title": "title",
       "text": "text",
