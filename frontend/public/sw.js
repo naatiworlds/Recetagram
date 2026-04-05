@@ -1,5 +1,5 @@
-// Nombre del caché - Cambiar la versión cuando hay actualizaciones
-const CACHE_NAME = "recetagram-cache-v12";
+// Nombre del caché - Cambiar la versión cuando hay actualizaciones estructurales del SW
+const CACHE_NAME = "recetagram-cache-v13";
 
 // Archivos a cachear
 const urlsToCache = [
@@ -27,6 +27,49 @@ self.addEventListener("install", (event) => {
   // Forzar activación inmediata
   self.skipWaiting();
 });
+
+async function networkFirst(request) {
+  const cache = await caches.open(CACHE_NAME);
+
+  try {
+    const freshResponse = await fetch(request);
+
+    if (freshResponse && freshResponse.status === 200) {
+      cache.put(request, freshResponse.clone());
+    }
+
+    return freshResponse;
+  } catch (error) {
+    const cachedResponse = await cache.match(request);
+
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+
+    if (request.mode === 'navigate') {
+      const fallback = await cache.match('/index.html');
+      if (fallback) return fallback;
+    }
+
+    return new Response('', { status: 504, statusText: 'Gateway Timeout' });
+  }
+}
+
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const cachedResponse = await cache.match(request);
+
+  const networkPromise = fetch(request)
+    .then((networkResponse) => {
+      if (networkResponse && networkResponse.status === 200) {
+        cache.put(request, networkResponse.clone());
+      }
+      return networkResponse;
+    })
+    .catch(() => null);
+
+  return cachedResponse || networkPromise || new Response('', { status: 504, statusText: 'Gateway Timeout' });
+}
 
 // Activación y limpieza de cachés antiguos
 self.addEventListener("activate", (event) => {
@@ -94,6 +137,35 @@ self.addEventListener('notificationclick', (event) => {
   })());
 });
 
+self.addEventListener('push', (event) => {
+  if (!event.data) {
+    return;
+  }
+
+  event.waitUntil((async () => {
+    try {
+      const payload = event.data.json();
+      const title = payload?.notification?.title || payload?.title || 'Recetagram';
+      const body = payload?.notification?.body || payload?.body || 'Nueva actualización disponible';
+      const url = payload?.data?.url || payload?.url || '/';
+
+      await self.registration.showNotification(title, {
+        body,
+        icon: '/icons/icon-192.png',
+        badge: '/icons/icon-192.png',
+        data: { url }
+      });
+    } catch (error) {
+      await self.registration.showNotification('Recetagram', {
+        body: 'Nueva actualización disponible',
+        icon: '/icons/icon-192.png',
+        badge: '/icons/icon-192.png',
+        data: { url: '/' }
+      });
+    }
+  })());
+});
+
 // Intercepción de solicitudes (modo offline básico)
 self.addEventListener("fetch", (event) => {
   const requestUrl = new URL(event.request.url);
@@ -127,6 +199,18 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (event.request.method !== 'GET') {
+    return;
+  }
+
+  if (event.request.mode === 'navigate') {
+    event.respondWith(networkFirst(event.request));
+    return;
+  }
+
+  const isStaticAsset = requestUrl.pathname.startsWith('/assets/') || /\.(?:js|css|png|jpg|jpeg|gif|svg|webp|ico|woff2?)$/i.test(requestUrl.pathname);
+
+  if (isStaticAsset) {
+    event.respondWith(staleWhileRevalidate(event.request));
     return;
   }
 

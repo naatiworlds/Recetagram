@@ -34,16 +34,6 @@ class FollowController extends Controller
             // Usar el servicio para la lógica de follow
             $follow = $this->followService->follow($follower, $user);
 
-            $this->notificationService->createNotification(
-                $user->id,
-                $follow->status === 'pending' ? 'follow_request' : 'new_follower',
-                $follower->id,
-                $follow->id,
-                $follow->status === 'pending'
-                    ? "{$follower->name} quiere seguirte"
-                    : "{$follower->name} ha comenzado a seguirte"
-            );
-
             return ResponseHelper::success([
                 'status' => $follow->status,
                 'follow_id' => $follow->id

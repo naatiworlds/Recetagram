@@ -27,3 +27,29 @@ npm run dev
 ```sh
 npm run build
 ```
+
+## Notificación automática de nueva versión
+
+Se añadió un flujo para avisar por push cuando hay un despliegue nuevo:
+
+- Backend interno: `POST /api/v1/internal/release-notify` (protegido por secreto).
+- Workflow: `/.github/workflows/release-push-notify.yml` (se ejecuta en `push` a `developer`).
+
+### Variables necesarias
+
+En backend (`backend/.env`):
+
+- `APP_RELEASE_NOTIFY_SECRET=<secreto-largo-y-unico>`
+
+En GitHub Actions (Secrets):
+
+- `RELEASE_NOTIFY_URL` (ejemplo: `https://tu-api/api/v1/internal/release-notify`)
+- `RELEASE_NOTIFY_SECRET` (mismo valor que `APP_RELEASE_NOTIFY_SECRET`)
+- `FRONTEND_URL` (opcional, por defecto `https://recetagram.netlify.app`)
+
+### Qué ocurre
+
+1. Se hace `push` a `developer`.
+2. El workflow llama al endpoint interno.
+3. Backend envía push FCM global con mensaje de actualización.
+4. Si el usuario toca la notificación, se abre la app en la URL configurada.

@@ -26,6 +26,7 @@ const firebaseConfig = {
 
 // Inicializar Firebase
 const firebaseApp = initializeApp(firebaseConfig);
+const messaging = getMessaging(firebaseApp);
 
 // Crear la app y Pinia
 const app = createApp(App);
@@ -37,14 +38,68 @@ app.use(head);
 
 const initializeVueApp = async () => {
   const userStore = useUserStore();
-  await userStore.initializeAuth();
+  const isAuthenticated = await userStore.initializeAuth();
 
   // Ahora que la auth está lista, montar router y app
   app.use(router);
   app.mount('#app');
+
+  if (isAuthenticated) {
+    setupFcmNotifications();
+  }
 };
 
 initializeVueApp();
+
+async function setupFcmNotifications() {
+  if (!('serviceWorker' in navigator) || typeof Notification === 'undefined') {
+    return;
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.ready;
+
+    let permission = Notification.permission;
+    if (permission === 'default') {
+      permission = await Notification.requestPermission();
+    }
+
+    if (permission !== 'granted') {
+      return;
+    }
+
+    const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+    if (!vapidKey) {
+      console.warn('[FCM] falta VITE_FIREBASE_VAPID_KEY');
+      return;
+    }
+
+    const currentToken = await getToken(messaging, {
+      vapidKey,
+      serviceWorkerRegistration: registration
+    });
+
+    if (currentToken) {
+      await apiService.sendTokenNotification(currentToken);
+    }
+  } catch (error) {
+    console.error('[FCM] error configurando token', error);
+  }
+}
+
+onMessage(messaging, (payload) => {
+  const title = payload?.notification?.title || 'Recetagram';
+  const body = payload?.notification?.body || 'Nueva actualización disponible';
+
+  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+    new Notification(title, {
+      body,
+      icon: '/icons/icon-192.png'
+    });
+  }
+
+  playNotificationSound();
+});
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('message', (event) => {

@@ -12,6 +12,7 @@ use App\Http\Controllers\FollowController;
 use App\Http\Controllers\BatchController;
 use App\Http\Controllers\ModerationController;
 use App\Http\Controllers\MembershipController;
+use App\Http\Controllers\InternalReleaseController;
 use Illuminate\Support\Facades\DB;
 
 /*
@@ -29,6 +30,7 @@ Route::prefix('v1')->group(function () {
     // Rutas públicas
     Route::post('/register', [AuthController::class, 'store']);
     Route::post('/login', [AuthController::class, 'login'])->name('login');
+    Route::post('/internal/release-notify', [InternalReleaseController::class, 'notifyUpdate']);
 
 
     Route::get('/posts/public', [PostController::class, 'getPublicPosts']); // Primero rutas específicas públicas

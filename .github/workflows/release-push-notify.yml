@@ -1,0 +1,31 @@
+name: Notify App Update
+
+on:
+  push:
+    branches:
+      - developer
+  workflow_dispatch:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger backend release notification
+        env:
+          RELEASE_NOTIFY_URL: ${{ secrets.RELEASE_NOTIFY_URL }}
+          RELEASE_NOTIFY_SECRET: ${{ secrets.RELEASE_NOTIFY_SECRET }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+          VERSION: ${{ github.sha }}
+        run: |
+          if [ -z "$RELEASE_NOTIFY_URL" ] || [ -z "$RELEASE_NOTIFY_SECRET" ]; then
+            echo "Missing RELEASE_NOTIFY_URL or RELEASE_NOTIFY_SECRET"
+            exit 1
+          fi
+
+          SHORT_SHA="${VERSION:0:7}"
+          TARGET_URL="${FRONTEND_URL:-https://recetagram.netlify.app}"
+
+          curl -sS -X POST "$RELEASE_NOTIFY_URL" \
+            -H "Content-Type: application/json" \
+            -H "X-Internal-Secret: $RELEASE_NOTIFY_SECRET" \
+            -d "{\"title\":\"Nueva versión disponible\",\"body\":\"Hemos desplegado mejoras (${SHORT_SHA}). Toca para actualizar.\",\"version\":\"${SHORT_SHA}\",\"url\":\"${TARGET_URL}\"}"

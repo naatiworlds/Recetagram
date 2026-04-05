@@ -33,12 +33,25 @@ class FCMService
     public function send(array $tokens, string $title, string $body, array $data = [])
     {
         try {
+            $targetUrl = $data['url'] ?? env('FRONTEND_URL', 'https://recetagram.netlify.app');
+
             $message = [
                 'notification' => [
                     'title' => $title,
                     'body' => $body,
                 ],
                 'data' => $data,
+                'webpush' => [
+                    'notification' => [
+                        'title' => $title,
+                        'body' => $body,
+                        'icon' => '/icons/icon-192.png',
+                        'badge' => '/icons/icon-192.png',
+                    ],
+                    'fcm_options' => [
+                        'link' => $targetUrl,
+                    ],
+                ],
                 'tokens' => $tokens,
             ];
 
