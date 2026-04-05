@@ -21,7 +21,8 @@ export const useUpdateStore = defineStore('update', {
 
     async updateApp() {
       if (!this.registration || !this.registration.waiting) {
-        throw new Error('No hay actualización disponible')
+        this.showUpdateBanner = false
+        return false
       }
 
       // Enviar mensaje al service worker para que se active
@@ -29,6 +30,7 @@ export const useUpdateStore = defineStore('update', {
       
       // Recargar la página para aplicar la actualización
       window.location.reload()
+      return true
     },
 
     // Método para verificar actualizaciones manualmente
