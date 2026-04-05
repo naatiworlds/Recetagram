@@ -207,9 +207,8 @@ export const apiService = {
 
   // ----------- Notifications -----------
   sendTokenNotification: (currentToken) => {
-    const formattedToken = `"${currentToken}"`;
     return api
-      .post("/fcm-token", { fcm_token: formattedToken })
+      .post("/fcm-token", { fcm_token: currentToken })
       .then((response) => {
         // Token FCM sent to backend
         return response.data;

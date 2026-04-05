@@ -184,20 +184,23 @@ class AuthController extends Controller
 
         $user = $request->user();
 
-        // Decodificar el token como JSON para verificar su validez
-        $fcmToken = $request->input('fcm_token');
-        $decodedToken = json_decode($fcmToken, true);
+        $fcmToken = trim((string) $request->input('fcm_token'));
 
-        if (json_last_error() !== JSON_ERROR_NONE) {
+        if ($fcmToken === '') {
             return response()->json([
                 'status' => 'error',
-                'message' => 'El token FCM no es un JSON válido',
+                'message' => 'El token FCM está vacío',
             ], 400);
+        }
+
+        $decodedToken = json_decode($fcmToken, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_string($decodedToken) && $decodedToken !== '') {
+            $fcmToken = $decodedToken;
         }
 
         // Verificar si el token ya existe en la lista de tokens del usuario
         $existingTokens = $user->notification_tokens ?? [];
-        if (in_array($decodedToken, $existingTokens)) {
+        if (in_array($fcmToken, $existingTokens, true)) {
             return response()->json([
                 'status' => 'success',
                 'message' => 'El token ya existe, no se ha duplicado',
@@ -205,7 +208,7 @@ class AuthController extends Controller
         }
 
         // Agregar el token a la lista y guardar
-        $existingTokens[] = $decodedToken;
+        $existingTokens[] = $fcmToken;
         $user->notification_tokens = $existingTokens;
         $user->save();
 
