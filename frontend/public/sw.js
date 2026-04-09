@@ -103,7 +103,10 @@ self.addEventListener("message", (event) => {
       body: payload.body || "Tienes una nueva notificación",
       icon: payload.icon || "/icons/icon-192.png",
       badge: payload.badge || "/icons/icon-192.png",
-      data: payload.data || { url: "/" }
+      data: payload.data || { url: "/" },
+      silent: false,
+      requireInteraction: true,
+      renotify: true
     };
 
     event.waitUntil((async () => {
@@ -153,14 +156,20 @@ self.addEventListener('push', (event) => {
         body,
         icon: '/icons/icon-192.png',
         badge: '/icons/icon-192.png',
-        data: { url }
+        data: { url },
+        silent: false,
+        requireInteraction: true,
+        renotify: true
       });
     } catch (error) {
       await self.registration.showNotification('Recetagram', {
         body: 'Nueva actualización disponible',
         icon: '/icons/icon-192.png',
         badge: '/icons/icon-192.png',
-        data: { url: '/' }
+        data: { url: '/' },
+        silent: false,
+        requireInteraction: true,
+        renotify: true
       });
     }
   })());
