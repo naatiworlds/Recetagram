@@ -87,6 +87,8 @@ Route::prefix('v1')->group(function () {
         Route::get('/notifications', [NotificationController::class, 'index']);
         Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
         Route::patch('/notifications/markAllRead', [NotificationController::class, 'markAllAsRead']);
+        // Nueva ruta: enviar notificación directa a usuario
+        Route::post('/notifications/send', [NotificationController::class, 'sendToUser']);
 
         // Rutas de follows
         Route::post('/users/{user}/follow', [FollowController::class, 'follow']);

@@ -90,7 +90,6 @@ export const apiService = {
   login: (credentials) => api.post("/login", credentials),
   register: (userData) => api.post("/register", userData),
   logout: () => {
-    api.post("/fcm-token", { fcm_token: null });
     return api.post("/logout");
   },
   getMe: () => requestWithLimit(() => api.get("/me")),

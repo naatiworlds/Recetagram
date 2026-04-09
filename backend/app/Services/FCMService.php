@@ -32,8 +32,15 @@ class FCMService
 
     public function send(array $tokens, string $title, string $body, array $data = [])
     {
+        Log::debug('[FCMService] Tokens recibidos para enviar notificación:', [
+            'tokens' => $tokens,
+            'is_array' => is_array($tokens),
+            'count' => is_array($tokens) ? count($tokens) : null,
+            'raw' => json_encode($tokens),
+        ]);
         try {
             $targetUrl = $data['url'] ?? env('FRONTEND_URL', 'https://recetagram.netlify.app');
+
 
             $message = [
                 'notification' => [
@@ -52,11 +59,10 @@ class FCMService
                         'link' => $targetUrl,
                     ],
                 ],
-                'tokens' => $tokens,
             ];
 
-            // Se agrega 'false' como segundo argumento para indicar que no es una validación solamente
-            $this->messaging->sendMulticast($message, false);
+            // Pasar los tokens como segundo argumento
+            $this->messaging->sendMulticast($message, $tokens, false);
 
             Log::info('Notificación enviada con éxito a través de FCM.', [
                 'tokens' => $tokens,
