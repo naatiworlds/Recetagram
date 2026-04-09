@@ -48,15 +48,27 @@ export default {
             userNotifications: useUserNotificationStore()
         }
     },
-    created() {
-        this.userNotifications.fetchNotifications()
-        this.userNotifications.requestNotificationPermission()
-        if (this.userStore?.user?.id) {
-            this.userNotifications.initRealtime(this.userStore.user.id)
-        }
-    },
     beforeUnmount() {
         this.userNotifications.destroyRealtime()
+    },
+
+    watch: {
+        'userStore.user': {
+            immediate: true,
+            deep: true,
+            handler(user) {
+                const resolvedUserId = user?.id
+                if (resolvedUserId) {
+                    this.userNotifications.fetchNotifications()
+                    this.userNotifications.requestNotificationPermission()
+                    this.userNotifications.startBackgroundRefresh()
+                    this.userNotifications.initRealtime(resolvedUserId)
+                    return
+                }
+
+                this.userNotifications.destroyRealtime()
+            }
+        }
     },
 
     methods: {

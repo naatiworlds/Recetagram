@@ -9,7 +9,8 @@ export const useUserNotificationStore = defineStore('userNotification', {
     notifications: [],
     socketConnected: false,
     socketUserId: null,
-    lastSocketNotificationId: null
+    lastSocketNotificationId: null,
+    refreshIntervalId: null
   }),
   getters: {
     unreadCount: (state) => state.notifications.filter(n => !n.read).length
@@ -116,6 +117,24 @@ export const useUserNotificationStore = defineStore('userNotification', {
       }
     },
 
+    startBackgroundRefresh(intervalMs = 30000) {
+      if (typeof window === 'undefined' || this.refreshIntervalId) {
+        return
+      }
+
+      this.refreshIntervalId = window.setInterval(() => {
+        this.fetchNotifications()
+      }, intervalMs)
+    },
+
+    stopBackgroundRefresh() {
+      if (typeof window !== 'undefined' && this.refreshIntervalId) {
+        window.clearInterval(this.refreshIntervalId)
+      }
+
+      this.refreshIntervalId = null
+    },
+
     initRealtime(userId) {
       if (!userId) return
 
@@ -142,6 +161,7 @@ export const useUserNotificationStore = defineStore('userNotification', {
       disconnectNotificationSocket()
       this.socketConnected = false
       this.socketUserId = null
+      this.stopBackgroundRefresh()
     },
 
     async markAllAsRead() {

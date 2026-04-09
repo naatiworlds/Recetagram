@@ -11,7 +11,7 @@ import { playNotificationSound } from './utils/notificationSound';
 
 // Importar Firebase y FCM
 import { initializeApp } from 'firebase/app';
-import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
 
 // Configuración de Firebase
 const firebaseConfig = {
@@ -24,9 +24,23 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-// Inicializar Firebase
-const firebaseApp = initializeApp(firebaseConfig);
-const messaging = getMessaging(firebaseApp);
+const hasFirebaseMessagingConfig = [
+  firebaseConfig.apiKey,
+  firebaseConfig.authDomain,
+  firebaseConfig.projectId,
+  firebaseConfig.storageBucket,
+  firebaseConfig.messagingSenderId,
+  firebaseConfig.appId
+].every((value) => Boolean(String(value || '').trim()));
+
+let firebaseApp = null;
+let messaging = null;
+
+if (hasFirebaseMessagingConfig) {
+  firebaseApp = initializeApp(firebaseConfig);
+} else {
+  console.warn('[FCM] configuración Firebase incompleta, FCM desactivado en este entorno');
+}
 
 // Crear la app y Pinia
 const app = createApp(App);
@@ -52,11 +66,20 @@ const initializeVueApp = async () => {
 initializeVueApp();
 
 async function setupFcmNotifications() {
-  if (!('serviceWorker' in navigator) || typeof Notification === 'undefined') {
+  if (!firebaseApp || !('serviceWorker' in navigator) || typeof Notification === 'undefined') {
     return;
   }
 
   try {
+    if (!(await isSupported())) {
+      console.warn('[FCM] este navegador no soporta Firebase Messaging');
+      return;
+    }
+
+    if (!messaging) {
+      messaging = getMessaging(firebaseApp);
+    }
+
     const registration = await navigator.serviceWorker.ready;
 
     let permission = Notification.permission;
@@ -87,19 +110,39 @@ async function setupFcmNotifications() {
   }
 }
 
-onMessage(messaging, (payload) => {
-  const title = payload?.notification?.title || 'Recetagram';
-  const body = payload?.notification?.body || 'Nueva actualización disponible';
-
-  if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-    new Notification(title, {
-      body,
-      icon: '/icons/icon-192.png'
-    });
+async function setupForegroundMessaging() {
+  if (!firebaseApp) {
+    return;
   }
 
-  playNotificationSound();
-});
+  try {
+    if (!(await isSupported())) {
+      return;
+    }
+
+    if (!messaging) {
+      messaging = getMessaging(firebaseApp);
+    }
+
+    onMessage(messaging, (payload) => {
+      const title = payload?.notification?.title || 'Recetagram';
+      const body = payload?.notification?.body || 'Nueva actualización disponible';
+
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        new Notification(title, {
+          body,
+          icon: '/icons/icon-192.png'
+        });
+      }
+
+      playNotificationSound();
+    });
+  } catch (error) {
+    console.warn('[FCM] no se pudo inicializar foreground messaging', error);
+  }
+}
+
+setupForegroundMessaging();
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('message', (event) => {

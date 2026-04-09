@@ -1,7 +1,27 @@
 import { io } from 'socket.io-client'
 import { API_ORIGIN } from '@/utils/globalConstants'
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? API_ORIGIN
+function resolveSocketUrl() {
+  const explicitUrl = import.meta.env.VITE_SOCKET_URL
+  if (explicitUrl) {
+    return explicitUrl
+  }
+
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1'
+
+    if (isLocalhost) {
+      return `${window.location.protocol}//${hostname}:6001`
+    }
+
+    return `${window.location.protocol}//${hostname}:6001`
+  }
+
+  return API_ORIGIN
+}
+
+const SOCKET_URL = resolveSocketUrl()
 
 let socket = null
 
@@ -18,9 +38,16 @@ export function connectNotificationSocket(userId, onNotification) {
 
   socket = io(SOCKET_URL, {
     path: '/socket.io',
-    transports: ['websocket'],
+    transports: ['polling', 'websocket'],
+    upgrade: true,
     withCredentials: true,
-    auth: { userId }
+    auth: { userId },
+    reconnection: true,
+    reconnectionAttempts: 10,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
+    timeout: 10000,
+    forceNew: true
   })
 
   socket.on('connect', () => {

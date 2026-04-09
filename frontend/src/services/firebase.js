@@ -13,6 +13,21 @@ export const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-// Inicializar Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+const hasFirebaseConfig = [
+  firebaseConfig.apiKey,
+  firebaseConfig.authDomain,
+  firebaseConfig.projectId,
+  firebaseConfig.storageBucket,
+  firebaseConfig.messagingSenderId,
+  firebaseConfig.appId,
+].every((value) => Boolean(String(value || '').trim()));
+
+let app = null;
+let analytics = null;
+
+if (hasFirebaseConfig) {
+  app = initializeApp(firebaseConfig);
+  analytics = getAnalytics(app);
+}
+
+export { app, analytics };
