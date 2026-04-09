@@ -47,9 +47,21 @@ En GitHub Actions (Secrets):
 - `RELEASE_NOTIFY_SECRET` (mismo valor que `APP_RELEASE_NOTIFY_SECRET`)
 - `FRONTEND_URL` (opcional, por defecto `https://recetagram.netlify.app`)
 
+En frontend (`frontend/.env` o variables de Netlify):
+
+- `VITE_SOCKET_URL` (URL pública real del socket; no debe apuntar a `netlify.app:6001`)
+- `VITE_FIREBASE_VAPID_KEY` (obligatoria para registrar el token FCM en móvil)
+- `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_STORAGE_BUCKET`, `VITE_FIREBASE_MESSAGING_SENDER_ID`, `VITE_FIREBASE_APP_ID`
+
 ### Qué ocurre
 
 1. Se hace `push` a `developer`.
 2. El workflow llama al endpoint interno.
 3. Backend envía push FCM global con mensaje de actualización.
 4. Si el usuario toca la notificación, se abre la app en la URL configurada.
+
+### Nota sobre móvil
+
+- El `websocket` solo funciona mientras la app está abierta o en segundo plano.
+- Para una app cerrada en móvil necesitas `FCM`/push y que `VITE_FIREBASE_VAPID_KEY` esté configurada.
+- El sonido de la notificación cerrada depende del navegador y del sistema operativo; no es un sonido personalizado garantizado por la web.

@@ -7,17 +7,6 @@ function resolveSocketUrl() {
     return explicitUrl
   }
 
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname
-    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1'
-
-    if (isLocalhost) {
-      return `${window.location.protocol}//${hostname}:6001`
-    }
-
-    return `${window.location.protocol}//${hostname}:6001`
-  }
-
   return API_ORIGIN
 }
 

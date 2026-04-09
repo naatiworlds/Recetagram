@@ -63,9 +63,10 @@ class BatchController extends Controller
                                 $results['likes'][] = ['post_id' => $post->id, 'action' => 'like'];
                             }
                         }
-                    } catch (\Exception $e) {
-                        Log::error('Error procesando like/dislike para el post ' . $post->id . ': ' . $e->getMessage());
-                        $results['likes'][] = ['post_id' => $post->id, 'action' => 'error', 'message' => $e->getMessage()];
+                        } catch (\Throwable $e) {
+                            $postId = $like['post_id'] ?? null;
+                            Log::error('Error procesando like/dislike para el post ' . ($postId ?? 'desconocido') . ': ' . $e->getMessage());
+                            $results['likes'][] = ['post_id' => $postId, 'action' => 'error', 'message' => $e->getMessage()];
                     }
                 }
             }
@@ -149,6 +150,7 @@ class BatchController extends Controller
                 'data' => $results,
             ], 200);
         } catch (\Exception $e) {
+            } catch (\Throwable $e) {
             Log::error('Error procesando batch: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
