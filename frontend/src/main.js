@@ -128,14 +128,50 @@ async function setupForegroundMessaging() {
       const title = payload?.notification?.title || 'Recetagram';
       const body = payload?.notification?.body || 'Nueva actualización disponible';
 
-      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-        new Notification(title, {
-          body,
-          icon: '/icons/icon-192.png'
-        });
+      const notificationPayload = {
+        title,
+        body,
+        icon: '/icons/icon-192.png',
+        badge: '/icons/icon-192.png',
+        data: {
+          url: payload?.data?.url || payload?.fcmOptions?.link || payload?.notification?.click_action || '/'
+        }
       }
 
-      playNotificationSound();
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready
+          .then((registration) => {
+            if (registration?.active) {
+              registration.active.postMessage({
+                type: 'SHOW_NOTIFICATION',
+                payload: notificationPayload
+              })
+            } else if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+              new Notification(title, {
+                body,
+                icon: '/icons/icon-192.png'
+              })
+              playNotificationSound()
+            }
+          })
+          .catch(() => {
+            if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+              new Notification(title, {
+                body,
+                icon: '/icons/icon-192.png'
+              })
+            }
+            playNotificationSound()
+          })
+      } else {
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+          new Notification(title, {
+            body,
+            icon: '/icons/icon-192.png'
+          })
+        }
+        playNotificationSound()
+      }
     });
   } catch (error) {
     console.warn('[FCM] no se pudo inicializar foreground messaging', error);
