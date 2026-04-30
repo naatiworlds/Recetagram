@@ -38,10 +38,11 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Frame-Options = "DENY"
+    X-Frame-Options = "ALLOW-FROM https://natiworlds.netlify.app"
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    Content-Security-Policy = "frame-ancestors 'self' https://natiworlds.netlify.app http://localhost:3000"
 
 [[headers]]
   for = "/assets/*"
