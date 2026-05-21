@@ -1,62 +1,42 @@
-import { io } from 'socket.io-client'
-import { API_ORIGIN } from '@/utils/globalConstants'
+import Echo from 'laravel-echo'
+import Pusher from 'pusher-js'
 
-function resolveSocketUrl() {
-  const explicitUrl = import.meta.env.VITE_SOCKET_URL
-  if (explicitUrl) {
-    return explicitUrl
-  }
+window.Pusher = Pusher
 
-  return API_ORIGIN
-}
-
-const SOCKET_URL = resolveSocketUrl()
-
-let socket = null
+let echo = null
 
 export function connectNotificationSocket(userId, onNotification) {
-  if (!userId || typeof onNotification !== 'function') {
-    return null
-  }
+  if (!userId || typeof onNotification !== 'function') return null
 
-  if (socket) {
-    socket.off('notification:new')
-    socket.off('connect_error')
-    socket.disconnect()
-  }
+  disconnectNotificationSocket()
 
-  socket = io(SOCKET_URL, {
-    path: '/socket.io',
-    transports: ['polling', 'websocket'],
-    upgrade: true,
-    withCredentials: true,
-    auth: { userId },
-    reconnection: true,
-    reconnectionAttempts: 10,
-    reconnectionDelay: 1000,
-    reconnectionDelayMax: 5000,
-    timeout: 10000,
-    forceNew: true
+  echo = new Echo({
+    broadcaster: 'reverb',
+    key: import.meta.env.VITE_REVERB_APP_KEY,
+    wsHost: import.meta.env.VITE_REVERB_HOST,
+    wsPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
+    wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
+    forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'http') === 'https',
+    enabledTransports: ['ws', 'wss'],
+    authEndpoint: `${import.meta.env.VITE_API_URL}/broadcasting/auth`,
+    auth: {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    },
   })
 
-  socket.on('connect', () => {
-    socket.emit('join:user', { userId })
-  })
+  echo
+    .private(`notifications.${userId}`)
+    .listen('.notification.new', ({ notification }) => {
+      onNotification({ notification })
+    })
 
-  socket.on('notification:new', onNotification)
-
-  socket.on('connect_error', (error) => {
-    console.error('[realtime] connect_error', error.message)
-  })
-
-  return socket
+  return echo
 }
 
 export function disconnectNotificationSocket() {
-  if (!socket) return
-
-  socket.off('notification:new')
-  socket.off('connect_error')
-  socket.disconnect()
-  socket = null
+  if (!echo) return
+  echo.disconnect()
+  echo = null
 }

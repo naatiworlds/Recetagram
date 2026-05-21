@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Notification;
 use App\Models\User;
 use App\Services\FCMService;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class NotificationService
@@ -71,30 +70,8 @@ class NotificationService
 
     protected function broadcastRealtimeNotification(Notification $notification): void
     {
-        if (!filter_var(env('SOCKET_REALTIME_ENABLED', false), FILTER_VALIDATE_BOOLEAN)) {
-            return;
-        }
-
-        $socketServerUrl = env('SOCKET_SERVER_URL');
-        $socketServerSecret = env('SOCKET_SERVER_SECRET');
-
-        if (!$socketServerUrl || !$socketServerSecret) {
-            return;
-        }
-
         try {
-            $payload = Notification::with(['fromUser', 'post', 'follow'])
-                ->find($notification->id);
-
-            Http::timeout(2)
-                ->withHeaders([
-                    'X-Internal-Secret' => $socketServerSecret,
-                ])
-                ->post($socketServerUrl, [
-                    'room' => 'user:' . $notification->user_id,
-                    'event' => 'notification:new',
-                    'notification' => $payload?->toArray() ?? $notification->toArray(),
-                ]);
+            broadcast(new \App\Events\NotificationCreated($notification));
         } catch (\Throwable $e) {
             Log::warning('Realtime notification broadcast failed', [
                 'notification_id' => $notification->id,
