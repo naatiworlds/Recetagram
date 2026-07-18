@@ -171,24 +171,40 @@ self.addEventListener("push", (event) => {
       const payload = event.data.json();
 
       await self.registration.showNotification(
+
         payload.notification?.title ||
         payload.title ||
         "Recetagram",
+
         {
           body:
             payload.notification?.body ||
             payload.body ||
             "Nueva actualización disponible",
 
+          // Logo de la aplicación
           icon: "/icons/icon-512.png",
+
+          // Icono monocromo
+          badge: "/icons/notification-icon.png",
+
+          // Imagen grande opcional
+          image: payload.image,
 
           data: {
             url:
               payload.data?.url ||
               payload.url ||
               "/"
-          }
+          },
+
+          tag: "recetagram-notification",
+
+          renotify: true,
+
+          requireInteraction: false
         }
+
       );
 
       await playNotificationSound();
