@@ -13,6 +13,7 @@ use App\Http\Controllers\BatchController;
 use App\Http\Controllers\ModerationController;
 use App\Http\Controllers\MembershipController;
 use App\Http\Controllers\InternalReleaseController;
+use App\Http\Controllers\WebPushSubscriptionController;
 use Illuminate\Support\Facades\DB;
 
 /*
@@ -106,6 +107,8 @@ Route::prefix('v1')->group(function () {
         // Nueva ruta para procesar lotes
         Route::post('/batch', [BatchController::class, 'processBatch']);
         Route::post('/fcm-token', [AuthController::class, 'saveFcmToken']);
+        Route::post('/push-subscriptions', [WebPushSubscriptionController::class, 'store']);
+        Route::delete('/push-subscriptions', [WebPushSubscriptionController::class, 'destroy']);
 
         // Rutas de moderación (solo para admins y moderadores)
         Route::middleware(['admin.access', 'moderator.readonly'])->group(function () {

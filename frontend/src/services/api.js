@@ -205,6 +205,8 @@ export const apiService = {
   rejectFollow: (followId) => api.post(`/follows/${followId}/reject`),
 
   // ----------- Notifications -----------
+  savePushSubscription: (subscription) => api.post('/push-subscriptions', subscription),
+  deletePushSubscription: (endpoint) => api.delete('/push-subscriptions', { endpoint }),
   sendTokenNotification: (currentToken) => {
     return api
       .post("/fcm-token", { fcm_token: currentToken })

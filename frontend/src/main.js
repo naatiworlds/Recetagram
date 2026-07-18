@@ -8,6 +8,7 @@ import { useNotificationStore } from './stores/notification';
 import { useUserStore } from './stores/user';
 import { apiService } from './services/api';
 import { playNotificationSound } from './utils/notificationSound';
+import { setupWebPushNotifications } from './services/webPush';
 
 // Importar Firebase y FCM
 import { initializeApp } from 'firebase/app';
@@ -60,6 +61,7 @@ const initializeVueApp = async () => {
 
   if (isAuthenticated) {
     setupFcmNotifications();
+    setupWebPushNotifications().catch((error) => console.warn('[Web Push] error configurando suscripción', error));
   }
 };
 

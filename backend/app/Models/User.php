@@ -24,6 +24,7 @@ class User extends Authenticatable
         'role',
         'is_public', // Se reemplaza is_private por is_public
         'notification_tokens',
+        'web_push_subscriptions',
         'is_verified',
         'verified_at',
         'membership_expires_at',
@@ -52,6 +53,7 @@ class User extends Authenticatable
         'password' => 'hashed',
         'is_public' => 'boolean', // Se usa solo is_public
         'notification_tokens' => 'array',
+        'web_push_subscriptions' => 'array',
         'is_verified' => 'boolean',
         'verified_at' => 'datetime',
         'membership_expires_at' => 'datetime',

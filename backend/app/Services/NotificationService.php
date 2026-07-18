@@ -4,16 +4,15 @@ namespace App\Services;
 
 use App\Models\Notification;
 use App\Models\User;
-use App\Services\FCMService;
 use Illuminate\Support\Facades\Log;
 
 class NotificationService
 {
-    protected FCMService $fcm;
+    protected WebPushService $webPush;
 
-    public function __construct(FCMService $fcm)
+    public function __construct(WebPushService $webPush)
     {
-        $this->fcm = $fcm;
+        $this->webPush = $webPush;
     }
 
     public function createNotification($userId, $type, $fromUserId, $referenceId = null, $message = '')
@@ -44,11 +43,11 @@ class NotificationService
 
             // 🔥 ENVÍO FCM
             $user = User::find($userId);
-            $tokens = $user->notification_tokens ?? []; // Asegúrate de que el usuario tenga este atributo
+            $subscriptions = $user->web_push_subscriptions ?? [];
 
-            if (!empty($tokens)) {
-                $this->fcm->send(
-                    $tokens,
+            if (!empty($subscriptions)) {
+                $this->webPush->send(
+                    $subscriptions,
                     'Nueva notificación',
                     $message,
                     [
