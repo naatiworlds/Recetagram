@@ -1,5 +1,5 @@
 // Nombre del caché - Cambiar la versión cuando hay actualizaciones estructurales del SW
-const CACHE_NAME = "recetagram-cache-v13";
+const CACHE_NAME = "recetagram-cache-v14";
 
 // Archivos a cachear
 const urlsToCache = [
@@ -9,16 +9,16 @@ const urlsToCache = [
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/install.js"
-];  
+];
 
 // Instalación del Service Worker y cacheo de recursos
 self.addEventListener("install", (event) => {
   // Service Worker installing
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-  // cache opened
+      // cache opened
       return cache.addAll(urlsToCache);
-    }).catch((error) => { 
+    }).catch((error) => {
       console.error("Error al cachear archivos: ", error);
       // Continuar aunque falle el cache
       return Promise.resolve();
@@ -99,22 +99,42 @@ self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SHOW_NOTIFICATION") {
     const payload = event.data.payload || {};
     const title = payload.title || "Recetagram";
+
     const options = {
       body: payload.body || "Tienes una nueva notificación",
-      icon: payload.icon || "/icons/icon-192.png",
-      badge: payload.badge || "/icons/icon-192.png",
+
+      // Icono grande de la aplicación
+      icon: payload.icon || "/icons/icon-512.png",
+
+      // Icono monocromo para Android
+      badge: payload.badge || "/icons/notification-icon.png",
+
+      // Imagen grande opcional (foto de receta)
+      image: payload.image,
+
       data: payload.data || { url: "/" },
-      silent: false,
+
+      tag: "recetagram-notification",
+      renotify: true,
       requireInteraction: true,
-      renotify: true
+      silent: false
     };
 
     event.waitUntil((async () => {
+
       await self.registration.showNotification(title, options);
-      const clientsList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-      clientsList.forEach((client) => {
-        client.postMessage({ type: 'SOUND_NOTIFICATION' });
+
+      const clientsList = await self.clients.matchAll({
+        type: "window",
+        includeUncontrolled: true
       });
+
+      clientsList.forEach(client => {
+        client.postMessage({
+          type: "SOUND_NOTIFICATION"
+        });
+      });
+
     })());
   }
 });
@@ -140,45 +160,81 @@ self.addEventListener('notificationclick', (event) => {
   })());
 });
 
-self.addEventListener('push', (event) => {
-  if (!event.data) {
-    return;
-  }
+self.addEventListener("push", (event) => {
+
+  if (!event.data) return;
 
   event.waitUntil((async () => {
+
     try {
+
       const payload = event.data.json();
-      const title = payload?.notification?.title || payload?.title || 'Recetagram';
-      const body = payload?.notification?.body || payload?.body || 'Nueva actualización disponible';
-      const url = payload?.data?.url || payload?.url || '/';
 
-      await self.registration.showNotification(title, {
-        body,
-        icon: '/icons/notification-icon.png',
-        badge: '/icons/notification-icon.png',
-        image: payload?.image || '/icons/notification-icon.png',
-        data: { url },
-        tag: 'recetagram-notification',
-        renotify: true,
-        requireInteraction: false
-      });
+      await self.registration.showNotification(
+
+        payload.notification?.title ||
+        payload.title ||
+        "Recetagram",
+
+        {
+          body:
+            payload.notification?.body ||
+            payload.body ||
+            "Nueva actualización disponible",
+
+          // Logo de la aplicación
+          icon: "/icons/icon-512.png",
+
+          // Icono monocromo
+          badge: "/icons/notification-icon.png",
+
+          // Imagen grande opcional
+          image: payload.image,
+
+          data: {
+            url:
+              payload.data?.url ||
+              payload.url ||
+              "/"
+          },
+
+          tag: "recetagram-notification",
+
+          renotify: true,
+
+          requireInteraction: false
+        }
+
+      );
 
       await playNotificationSound();
+
     } catch (error) {
-      await self.registration.showNotification('Recetagram', {
-        body: 'Nueva actualización disponible',
-        icon: '/icons/notification-icon.png',
-        badge: '/icons/notification-icon.png',
-        image: payload?.image || '/icons/notification-icon.png',
-        data: { url: '/' },
-        tag: 'recetagram-notification',
-        renotify: true,
-        requireInteraction: false
+
+      console.error(error);
+
+      await self.registration.showNotification("Recetagram", {
+
+        body: "Nueva actualización disponible",
+
+        icon: "/icons/icon-512.png",
+
+        badge: "/icons/notification-icon.png",
+
+        data: {
+          url: "/"
+        },
+
+        tag: "recetagram-notification"
+
       });
 
       await playNotificationSound();
+
     }
+
   })());
+
 });
 
 async function playNotificationSound() {
