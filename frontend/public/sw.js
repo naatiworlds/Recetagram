@@ -157,23 +157,54 @@ self.addEventListener('push', (event) => {
         icon: '/icons/icon-192.png',
         badge: '/icons/icon-192.png',
         data: { url },
-        silent: false,
-        requireInteraction: true,
-        renotify: true
+        tag: 'recetagram-notification',
+        renotify: true,
+        requireInteraction: false
       });
+
+      await playNotificationSound();
     } catch (error) {
       await self.registration.showNotification('Recetagram', {
         body: 'Nueva actualización disponible',
         icon: '/icons/icon-192.png',
         badge: '/icons/icon-192.png',
         data: { url: '/' },
-        silent: false,
-        requireInteraction: true,
-        renotify: true
+        tag: 'recetagram-notification',
+        renotify: true,
+        requireInteraction: false
       });
+
+      await playNotificationSound();
     }
   })());
 });
+
+async function playNotificationSound() {
+  try {
+    const AudioContext = self.AudioContext || self.webkitAudioContext;
+    if (!AudioContext) return;
+
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.2);
+
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.1, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.25);
+  } catch (error) {
+    console.warn('[SW] no se pudo reproducir sonido de notificacion', error);
+  }
+}
 
 // Intercepción de solicitudes (modo offline básico)
 self.addEventListener("fetch", (event) => {

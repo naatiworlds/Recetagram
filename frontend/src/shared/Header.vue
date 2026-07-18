@@ -55,7 +55,6 @@ export default {
     watch: {
         'userStore.user': {
             immediate: true,
-            deep: true,
             handler(user) {
                 const resolvedUserId = user?.id
                 if (resolvedUserId) {
