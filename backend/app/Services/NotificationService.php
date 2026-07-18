@@ -46,6 +46,13 @@ class NotificationService
             $subscriptions = $user->web_push_subscriptions ?? [];
 
             if (!empty($subscriptions)) {
+                $image = null;
+
+                if (in_array($type, ['like', 'comment']) && $referenceId) {
+                    $post = \App\Models\Post::find($referenceId);
+                    $image = $post->imagen ?? null;
+                }
+
                 $this->webPush->send(
                     $subscriptions,
                     'Nueva notificación',
@@ -54,7 +61,8 @@ class NotificationService
                         'type' => $type,
                         'from_user_id' => $fromUserId,
                         'reference_id' => $referenceId,
-                    ]
+                    ],
+                    $image
                 );
             }
 

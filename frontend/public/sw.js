@@ -154,9 +154,9 @@ self.addEventListener('push', (event) => {
 
       await self.registration.showNotification(title, {
         body,
-        icon: '/icons/icon-192.png',
-        badge: '/icons/icon-192.png',
-        image: '/icons/icon-192.png',
+        icon: '/icons/notification-icon.png',
+        badge: '/icons/notification-icon.png',
+        image: payload?.image || '/icons/notification-icon.png',
         data: { url },
         tag: 'recetagram-notification',
         renotify: true,
@@ -167,8 +167,9 @@ self.addEventListener('push', (event) => {
     } catch (error) {
       await self.registration.showNotification('Recetagram', {
         body: 'Nueva actualización disponible',
-        icon: '/icons/icon-192.png',
-        badge: '/icons/icon-192.png',
+        icon: '/icons/notification-icon.png',
+        badge: '/icons/notification-icon.png',
+        image: payload?.image || '/icons/notification-icon.png',
         data: { url: '/' },
         tag: 'recetagram-notification',
         renotify: true,

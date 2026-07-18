@@ -9,7 +9,7 @@ use Minishlink\WebPush\WebPush;
 class WebPushService
 {
     /** Sends a standards-based push notification to browser subscriptions. */
-    public function send(array $subscriptions, string $title, string $body, array $data = []): int
+    public function send(array $subscriptions, string $title, string $body, array $data = [], ?string $image = null): int
     {
         $publicKey = trim((string) env('VAPID_PUBLIC_KEY'));
         $privateKey = trim((string) env('VAPID_PRIVATE_KEY'));
@@ -20,11 +20,12 @@ class WebPushService
             return 0;
         }
 
-        $payload = json_encode([
+        $payload = json_encode(array_filter([
             'title' => $title,
             'body' => $body,
+            'image' => $image,
             'data' => $data,
-        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        ]), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         $webPush = new WebPush([
             'VAPID' => [
