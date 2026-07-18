@@ -156,6 +156,7 @@ self.addEventListener('push', (event) => {
         body,
         icon: '/icons/icon-192.png',
         badge: '/icons/icon-192.png',
+        image: '/icons/icon-192.png',
         data: { url },
         tag: 'recetagram-notification',
         renotify: true,

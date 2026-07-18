@@ -44,6 +44,7 @@ export default {
     min-width: 300px;
     animation: slideIn 0.3s ease-out;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    background-color: rgba(24, 200, 148, 0.95);
 }
 
 .success {
